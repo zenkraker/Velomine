@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:material_ui/material_ui.dart';
 
 import '../theme.dart';
@@ -10,6 +11,11 @@ import 'nice_ticks.dart';
 
 /// A total per period: rounded bars that fade toward the base, the current one in the accent and
 /// only the current and the peak carrying a value.
+///
+/// Drawn by `fl_chart` (see `docs/dependencies/fl_chart.md`): the bars, axis lines, grid, dashes and
+/// the value labels are its widgets. Everything the design fixes — the colours, the two labels, the
+/// tick step, the label step — is passed in here, because fl_chart's own theme is Flutter-Material's
+/// fallback and not Velomine's.
 class BarChart extends StatelessWidget {
   const BarChart({
     super.key,
@@ -18,7 +24,7 @@ class BarChart extends StatelessWidget {
     required this.format,
     required this.semanticLabel,
     required this.emptyMessage,
-    this.currentIndex,
+    required this.currentIndex,
     this.average,
     this.averageText,
     this.height = AppChart.height,
@@ -37,8 +43,9 @@ class BarChart extends StatelessWidget {
   /// What a chart with nothing to show says, instead of empty axes.
   final String emptyMessage;
 
-  /// The bar drawn in the accent; the last one by default.
-  final int? currentIndex;
+  /// The bar drawn in the accent: the caller names the period it means, so a chart never assumes
+  /// its last bar is the current one.
+  final int currentIndex;
 
   /// A mean drawn across the bars as a dashed line, in the same unit as [values].
   final double? average;
@@ -58,242 +65,168 @@ class BarChart extends StatelessWidget {
     }
     final scheme = Theme.of(context).colorScheme;
     final colors = VelomineColors.of(context);
+    final current = currentIndex.clamp(0, values.length - 1);
+    final peak = values.indexOf(values.reduce(math.max));
+    final ticks = niceTicks(0, values.reduce(math.max));
+    final top = ticks.last;
+    final interval = ticks.length > 1 ? ticks[1] - ticks[0] : top;
+    final axis = chartLabelStyle(context);
+
     return Semantics(
       label: semanticLabel,
       child: ExcludeSemantics(
         child: SizedBox(
           height: height,
-          child: CustomPaint(
+          child: LayoutBuilder(
             key: paintKey,
-            size: Size.infinite,
-            painter: _BarChartPainter(
-              values: values,
-              labels: labels,
-              format: format,
-              average: average,
-              averageText: averageText,
-              current: currentIndex ?? values.length - 1,
-              compact:
-                  MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth,
-              bar: colors.barMuted,
-              currentBar: colors.accentStrong,
-              grid: scheme.outlineVariant,
-              ink: scheme.onSurface,
-              muted: scheme.onSurfaceVariant,
-              labelStyle: chartLabelStyle(context),
-            ),
+            builder: (context, constraints) {
+              final plot = math.max(
+                constraints.maxWidth - AppChart.gutterLeft,
+                1,
+              );
+              final slot = plot / values.length;
+              final step = barLabelStep(
+                slot: slot,
+                compact:
+                    MediaQuery.sizeOf(context).width <
+                    AppBreakpoint.compactWidth,
+              );
+              return fl.BarChart(
+                fl.BarChartData(
+                  minY: 0,
+                  maxY: top,
+                  alignment: fl.BarChartAlignment.spaceAround,
+                  borderData: fl.FlBorderData(show: false),
+                  barTouchData: fl.BarTouchData(enabled: false),
+                  gridData: fl.FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: interval,
+                    getDrawingHorizontalLine: (_) =>
+                        fl.FlLine(color: scheme.outlineVariant, strokeWidth: 1),
+                  ),
+                  titlesData: fl.FlTitlesData(
+                    topTitles: const fl.AxisTitles(
+                      sideTitles: fl.SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const fl.AxisTitles(
+                      sideTitles: fl.SideTitles(showTitles: false),
+                    ),
+                    leftTitles: fl.AxisTitles(
+                      sideTitles: fl.SideTitles(
+                        showTitles: true,
+                        reservedSize: AppChart.gutterLeft,
+                        interval: interval,
+                        getTitlesWidget: (value, meta) => Text(
+                          _plain(value),
+                          style: axis,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ),
+                    bottomTitles: fl.AxisTitles(
+                      sideTitles: fl.SideTitles(
+                        showTitles: true,
+                        reservedSize: AppChart.dateLabelHeight,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.round();
+                          if (index < 0 || index >= values.length) {
+                            return const SizedBox.shrink();
+                          }
+                          // Fewer labels on a phone: the step keeps them from touching.
+                          if ((values.length - 1 - index) % step != 0) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.xs),
+                            child: Text(labels[index], style: axis),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  extraLinesData: fl.ExtraLinesData(
+                    horizontalLines: [
+                      if (average case final average? when average > 0)
+                        fl.HorizontalLine(
+                          y: math.min(average, top),
+                          color: scheme.onSurfaceVariant,
+                          strokeWidth: 1.2,
+                          dashArray: const [6, 4],
+                          // Above the start of the line, not its end: the last bar stands at the
+                          // right edge, and a label there sat on the bar and ran off the card.
+                          label: fl.HorizontalLineLabel(
+                            show: averageText != null,
+                            alignment: Alignment.topLeft,
+                            padding: const EdgeInsets.only(
+                              bottom: AppChart.valueLabelHeight,
+                              left: AppSpacing.sm,
+                            ),
+                            style: axis,
+                            labelResolver: (_) => averageText ?? '',
+                          ),
+                        ),
+                    ],
+                  ),
+                  barGroups: [
+                    for (var i = 0; i < values.length; i++)
+                      fl.BarChartGroupData(
+                        x: i,
+                        barRods: [
+                          fl.BarChartRodData(
+                            // The current period always says its value; the peak says its own
+                            // unless the two are one bar or their labels would run together.
+                            label: fl.BarChartRodLabel(
+                              show:
+                                  i == current ||
+                                  (i == peak &&
+                                      i != current - 1 &&
+                                      i != current + 1),
+                              text: format(values[i]),
+                              style: axis.copyWith(
+                                color: i == current
+                                    ? scheme.onSurface
+                                    : scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              offset: const Offset(0, AppSpacing.xs),
+                            ),
+                            // A bar too short to see still reads as a value on the axis.
+                            toY: values[i] <= 0
+                                ? 0
+                                : math.max(values[i], top * 0.01),
+                            width: slot * AppChart.barFraction,
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                i == current
+                                    ? colors.accentStrong
+                                    : colors.barMuted,
+                                (i == current
+                                        ? colors.accentStrong
+                                        : colors.barMuted)
+                                    .withValues(alpha: 0.55),
+                              ],
+                            ),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(AppRadius.small),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
-}
-
-class _BarChartPainter extends CustomPainter {
-  _BarChartPainter({
-    required this.values,
-    required this.labels,
-    required this.format,
-    required this.average,
-    required this.averageText,
-    required this.current,
-    required this.compact,
-    required this.bar,
-    required this.currentBar,
-    required this.grid,
-    required this.ink,
-    required this.muted,
-    required this.labelStyle,
-  });
-
-  final List<double> values;
-  final List<String> labels;
-  final String Function(double) format;
-  final double? average;
-  final String? averageText;
-  final int current;
-  final bool compact;
-  final Color bar;
-  final Color currentBar;
-  final Color grid;
-  final Color ink;
-  final Color muted;
-  final TextStyle labelStyle;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final plot = Rect.fromLTRB(
-      AppChart.gutterLeft,
-      AppChart.valueLabelHeight,
-      size.width,
-      size.height - AppChart.dateLabelHeight,
-    );
-    if (plot.width <= 0 || plot.height <= 0) return;
-    final max = values.reduce(math.max);
-    final ticks = niceTicks(0, max);
-    final top = ticks.last;
-    final slot = plot.width / values.length;
-    final barWidth = slot * AppChart.barFraction;
-    final step = barLabelStep(slot: slot, compact: compact);
-    final peak = values.lastIndexOf(max);
-
-    for (final tick in ticks) {
-      final y = plot.bottom - tick / top * plot.height;
-      canvas.drawLine(
-        Offset(plot.left, y),
-        Offset(plot.right, y),
-        Paint()
-          ..color = grid
-          ..strokeWidth = 1,
-      );
-      _text(canvas, _plain(tick), Offset(plot.left - 6, y - 8), right: true);
-    }
-
-    double barTop(int i) =>
-        plot.bottom - math.max(values[i] / top * plot.height, 2);
-
-    for (var i = 0; i < values.length; i++) {
-      final value = values[i];
-      if (value <= 0) continue;
-      final rect = Rect.fromLTWH(
-        plot.left + i * slot + (slot - barWidth) / 2,
-        barTop(i),
-        barWidth,
-        plot.bottom - barTop(i),
-      );
-      final color = i == current ? currentBar : bar;
-      canvas.drawPath(
-        Path()..addRRect(
-          RRect.fromRectAndCorners(
-            rect,
-            topLeft: const Radius.circular(AppRadius.small),
-            topRight: const Radius.circular(AppRadius.small),
-          ),
-        ),
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [color, color.withValues(alpha: 0.55)],
-          ).createShader(rect),
-      );
-      if ((values.length - 1 - i) % step == 0) {
-        _text(
-          canvas,
-          labels[i],
-          Offset(plot.left + i * slot + slot / 2, size.height - 14),
-          centre: true,
-        );
-      }
-    }
-
-    // The mean, dashed and muted so it never reads as a bar.
-    if (average case final average? when average > 0) {
-      final y = plot.bottom - math.min(average / top, 1) * plot.height;
-      _dashedLine(canvas, plot.left, plot.right, y, muted);
-      final text = averageText;
-      if (text != null) {
-        _text(
-          canvas,
-          text,
-          Offset(plot.right - AppSpacing.sm, y - AppChart.valueLabelHeight),
-          right: true,
-        );
-      }
-    }
-
-    // The current period always says its value; the peak says its own unless the two are one bar or
-    // the labels would run into each other.
-    final currentLabel = _label(format(values[current]));
-    Offset centred(TextPainter label, int index) => Offset(
-      // A label wider than its slot stays inside the plot instead of running off the edge.
-      (plot.left + index * slot + slot / 2 - label.width / 2).clamp(
-        plot.left,
-        math.max(plot.left, plot.right - label.width),
-      ),
-      barTop(index) - AppChart.valueLabelHeight,
-    );
-    final currentAt = centred(currentLabel, current);
-    currentLabel.paint(canvas, currentAt);
-    if (peak != current) {
-      final peakLabel = _label(format(values[peak]), color: muted);
-      final peakAt = centred(peakLabel, peak);
-      if (!(peakAt & peakLabel.size).overlaps(currentAt & currentLabel.size)) {
-        peakLabel.paint(canvas, peakAt);
-      }
-    }
-  }
-
-  /// A line drawn in dashes, so it reads as a reference and not as another series.
-  void _dashedLine(
-    Canvas canvas,
-    double from,
-    double to,
-    double y,
-    Color color,
-  ) {
-    const dash = 6.0, gap = 4.0;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.2;
-    var x = from;
-    while (x < to) {
-      final end = math.min(x + dash, to);
-      canvas.drawLine(Offset(x, y), Offset(end, y), paint);
-      x = end + gap;
-    }
-  }
-
-  TextPainter _label(String text, {Color? color}) => TextPainter(
-    text: TextSpan(
-      text: text,
-      style: labelStyle.copyWith(
-        color: color ?? ink,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-    textDirection: TextDirection.ltr,
-  )..layout();
 
   /// A tick as it reads: whole numbers where it can, so 40 is "40" and not "40.0".
-  String _plain(double value) =>
+  static String _plain(double value) =>
       value == value.roundToDouble() ? value.round().toString() : '$value';
-
-  void _text(
-    Canvas canvas,
-    String text,
-    Offset at, {
-    bool right = false,
-    bool centre = false,
-  }) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: labelStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    painter.paint(
-      canvas,
-      Offset(
-        right
-            ? at.dx - painter.width
-            : centre
-            ? at.dx - painter.width / 2
-            : at.dx,
-        at.dy,
-      ),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_BarChartPainter old) =>
-      old.values != values ||
-      old.average != average ||
-      old.averageText != averageText ||
-      old.labels != labels ||
-      old.current != current ||
-      old.compact != compact ||
-      old.bar != bar ||
-      old.currentBar != currentBar ||
-      old.grid != grid ||
-      old.ink != ink ||
-      old.labelStyle != labelStyle;
 }

@@ -11,6 +11,7 @@ import 'package:velomine/features/recording/recording_providers.dart';
 import 'package:velomine/features/recording/recording_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/core/widgets/loading_state.dart';
 
 final testAccountProvider = NotifierProvider<_TestAccount, String?>(
   _TestAccount.new,
@@ -39,6 +40,7 @@ class FakeRecorder implements Recorder {
   bool sensorPermission = true;
   bool sensorSupport = true;
   SensorInfo? pairedSensor;
+  Completer<void>? ridesGate;
   int sensorScans = 0;
   bool? lastAutoPause;
   String? lastRideType;
@@ -203,6 +205,8 @@ class FakeRecorder implements Recorder {
 
   @override
   Future<List<LocalRide>> listRides({String? accountId}) async {
+    // Held open by a test that wants to see the page before the phone has answered.
+    if (ridesGate case final gate?) await gate.future;
     final result = <LocalRide>[];
     for (var i = 0; i < rides.length; i++) {
       var ride = rides[i];
@@ -300,6 +304,7 @@ void main() {
     WidgetTester tester,
     FakeRecorder recorder, {
     RecorderSettingsStore? settings,
+    bool settle = true,
   }) async {
     tester.view.physicalSize = const Size(1000, 2200);
     tester.view.devicePixelRatio = 1;
@@ -323,7 +328,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    }
   }
 
   /// Opens the sheet behind the page's menu: the e-bike switch and the rest the card has no room for.
@@ -333,6 +340,57 @@ void main() {
     await tester.tap(find.byKey(const Key('open-recorder-settings')));
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'RecordingScreen_ShouldShowTheLoadingState_WhenThePhoneHasNotAnsweredYet',
+    (tester) async {
+      final recorder = FakeRecorder();
+      final gate = recorder.ridesGate = Completer<void>();
+      await pump(tester, recorder, settle: false);
+      await tester.pump();
+      await tester.pump();
+
+      // The rides on the phone are read before the page can say there are none.
+      expect(find.byType(LoadingState), findsOneWidget);
+      expect(find.byKey(const Key('no-local-rides')), findsNothing);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(LoadingState), findsNothing);
+      expect(find.byKey(const Key('no-local-rides')), findsOneWidget);
+    },
+  );
+
+  testWidgets('RecordingScreen_ShouldOfferOnlyTheDesignsRideTypes_WhenIdle', (
+    tester,
+  ) async {
+    await pump(tester, FakeRecorder());
+
+    // The design's five chips, and no track or virtual ride among them.
+    for (final id in ['road', 'gravel', 'mountain', 'indoor', 'commute']) {
+      expect(find.byKey(Key('record-type-$id')), findsOneWidget);
+    }
+    expect(find.byKey(const Key('record-type-track')), findsNothing);
+    expect(find.byKey(const Key('record-type-virtual')), findsNothing);
+  });
+
+  testWidgets('RecordingScreen_ShouldNameTheRideAndSayMoving_WhenRiding', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder();
+    await pump(tester, recorder);
+
+    await tester.tap(find.byKey(const Key('record-start')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<Text>(find.byKey(const Key('record-name'))).data,
+      'Road',
+    );
+    expect(find.byKey(const Key('record-moving')), findsOneWidget);
+    expect(find.text('Moving'), findsOneWidget);
+    expect(find.byKey(const Key('record-screen-off')), findsOneWidget);
+  });
 
   testWidgets('RecordingScreen_ShouldStartPauseResumeAndSave_WhenRiding', (
     tester,

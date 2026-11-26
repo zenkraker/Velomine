@@ -20,7 +20,6 @@ import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_card.dart';
-import '../club/club_view_model.dart';
 import 'route_widgets.dart';
 import 'routes_view_model.dart';
 
@@ -57,8 +56,6 @@ class RouteDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final s = ref.watch(routeDetailViewModelProvider(id));
     final notifier = ref.read(routeDetailViewModelProvider(id).notifier);
-    final isClubOwner =
-        ref.watch(clubViewModelProvider).club?.myRole == 'owner';
 
     listenUserMessages(
       ref,
@@ -79,19 +76,34 @@ class RouteDetailScreen extends ConsumerWidget {
       );
     }
     if (s.notFound) {
-      return EmptyState(
-        key: const Key('route-missing'),
-        message: l10n.failureMissing,
-        icon: Icons.route,
+      return PageScaffold(
+        title: l10n.clubRoutesTitle,
+        parent: l10n.clubRoutesCaption,
+        maxWidth: AppLayout.contentNarrow,
+        children: [
+          EmptyState(
+            key: const Key('route-missing'),
+            message: l10n.failureMissing,
+            icon: Icons.route,
+          ),
+        ],
       );
     }
     final route = s.detail;
     if (route == null) {
-      return ErrorState(
-        message: s.load.failure == null
-            ? l10n.couldNotLoadRide
-            : failureText(l10n, s.load.failure!),
-        actionKey: const Key('route-error'),
+      return PageScaffold(
+        title: l10n.clubRoutesTitle,
+        parent: l10n.clubRoutesCaption,
+        maxWidth: AppLayout.contentNarrow,
+        children: [
+          ErrorState(
+            message: s.load.failure == null
+                ? l10n.couldNotLoadRide
+                : failureText(l10n, s.load.failure!),
+            actionKey: const Key('route-error'),
+            onRetry: notifier.load,
+          ),
+        ],
       );
     }
 
@@ -133,6 +145,7 @@ class RouteDetailScreen extends ConsumerWidget {
           label: l10n.routeShare,
           onSelected: busy ? () {} : notifier.share,
         ),
+      // The member who added the route moderates it: nobody else gets an entry here, as the design draws it.
       if (route.isMine && route.isShared)
         PageMenuEntry(
           key: const Key('withdraw-route'),
@@ -147,27 +160,6 @@ class RouteDetailScreen extends ConsumerWidget {
                   action: l10n.routeWithdraw,
                   confirmKey: 'confirm-withdraw-route',
                   run: notifier.withdraw,
-                ),
-        ),
-      // The club's owner moderates the library without editing anybody's words.
-      if (!route.isMine && isClubOwner)
-        PageMenuEntry(
-          key: const Key('remove-route-as-owner'),
-          icon: Icons.link_off,
-          label: l10n.routeWithdraw,
-          destructive: true,
-          onSelected: busy
-              ? () {}
-              : () => confirmThen(
-                  title: l10n.routeWithdrawConfirmTitle,
-                  body: l10n.routeWithdrawConfirmBody,
-                  action: l10n.routeWithdraw,
-                  confirmKey: 'confirm-withdraw-route',
-                  run: () async {
-                    if (await notifier.withdraw() && context.mounted) {
-                      onDeleted();
-                    }
-                  },
                 ),
         ),
       if (route.isMine)
@@ -247,20 +239,27 @@ class RouteDetailScreen extends ConsumerWidget {
         if (route.description != null && route.description!.isNotEmpty)
           SectionCard(
             title: l10n.routeDescription,
-            children: [Text(route.description!)],
+            children: [
+              Text(
+                route.description!,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
           ),
         if (route.isMine && !route.isShared)
           AppCard(
-            padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               l10n.routeNotSharedBody,
               key: const Key('route-not-shared'),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-        if (!route.isMine && !isClubOwner)
+        if (!route.isMine)
           Text(
             l10n.routeOwnerOnly,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
       ],
     );

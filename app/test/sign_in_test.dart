@@ -223,23 +223,44 @@ void main() {
     },
   );
 
-  testWidgets('SignInScreen_ShouldShowTheTypedPassword_WhenTheEyeIsTapped', (
+  testWidgets('SignInScreen_ShouldRevealTheTypedPassword_WhenShowIsTapped', (
     tester,
   ) async {
     await startApp(tester, server.session(useCookies: false));
     TextField password() =>
         tester.widget<TextField>(find.byKey(const Key('password')));
 
+    // The design words the control, it does not draw an eye over it.
+    expect(find.text('Show password'), findsOneWidget);
     expect(password().obscureText, isTrue);
     await tester.enterText(find.byKey(const Key('password')), 'secret-1');
     await tester.tap(find.byKey(const Key('password-visibility')));
     await tester.pump();
     expect(password().obscureText, isFalse);
+    expect(find.text('Hide password'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('password-visibility')));
     await tester.pump();
     expect(password().obscureText, isTrue);
   });
+
+  testWidgets(
+    'SignInScreen_ShouldDrawForgotPasswordAcrossTheColumn_WhenTheFormOpens',
+    (tester) async {
+      await startApp(tester, server.session(useCookies: false));
+      await tester.ensureVisible(find.byKey(const Key('forgot-password')));
+      await tester.pump();
+
+      // A block text button under the fields, not a link pushed to the right edge.
+      expect(
+        tester.getSize(find.byKey(const Key('forgot-password'))).width,
+        moreOrLessEquals(
+          tester.getSize(find.byKey(const Key('email'))).width,
+          epsilon: 1,
+        ),
+      );
+    },
+  );
 
   testWidgets('SignInScreen_ShouldStayLoggedInByDefault_WhenTheFormOpens', (
     tester,

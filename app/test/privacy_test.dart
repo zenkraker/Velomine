@@ -85,6 +85,8 @@ void main() {
       await openPrivacy(tester, size: Size(width, 2400));
 
       expect(find.byKey(const Key('privacy-zone-zone-home')), findsOneWidget);
+      // The place says what the radius is, in the mock-up's words.
+      expect(find.text('Radius 500 m'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
@@ -137,6 +139,8 @@ void main() {
     await openPrivacy(tester);
 
     expect(find.byKey(const Key('privacy-zone-zone-home')), findsOneWidget);
+    // The place says what the radius is, in the mock-up's words.
+    expect(find.text('Radius 500 m'), findsOneWidget);
 
     await tester.ensureVisible(
       find.byKey(const Key('privacy-zone-actions-zone-home')),

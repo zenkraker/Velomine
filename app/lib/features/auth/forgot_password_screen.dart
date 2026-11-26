@@ -64,21 +64,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         if (s.sent) ...[
           const SizedBox(height: AppSpacing.lg),
           Text(l10n.forgotPasswordSent, key: const Key('forgot-sent')),
+        ] else if (s.problem != null) ...[
           const SizedBox(height: AppSpacing.md),
-          TextButton(
+          AuthFailure(
+            keyName: 'forgot-error',
+            message: forgotProblemText(l10n, s.problem!),
+          ),
+        ],
+        // The way back is on the page before and after the ask, as the design draws it.
+        SizedBox(
+          width: double.infinity,
+          child: TextButton(
             key: const Key('forgot-back'),
             onPressed: () => context.go('/sign-in'),
-            child: Text(l10n.goToSignIn),
+            child: Text(l10n.backToSignIn),
           ),
-        ] else ...[
-          if (s.problem != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            AuthFailure(
-              keyName: 'forgot-error',
-              message: forgotProblemText(l10n, s.problem!),
-            ),
-          ],
-        ],
+        ),
       ],
     );
   }

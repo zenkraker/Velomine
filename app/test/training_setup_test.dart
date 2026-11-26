@@ -97,6 +97,55 @@ void main() {
   );
 
   testWidgets(
+    'TrainingSetupScreen_ShouldPutTheIntroSentenceInTheHeader_WhenTheRiderOpensIt',
+    (tester) async {
+      await openSetup(tester);
+
+      // The sub-line carries the sentence the body used to hold, with no copy left under the title.
+      expect(
+        find.descendant(
+          of: find.byType(SliverPersistentHeader),
+          matching: find.textContaining(
+            'Velomine plans your week from your rides. It is new: tell us what feels wrong.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Velomine plans your week from your rides.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'TrainingSetupScreen_ShouldNotOfferAnAddEventAction_WhenTheRiderHasNoEvent',
+    (tester) async {
+      await openSetup(tester);
+      await reveal(tester, find.byKey(const Key('training-goal-event')));
+
+      // No picker exists to open, so the row states nothing rather than offering a button that does nothing.
+      expect(find.text('Add an event'), findsNothing);
+      // The goal itself is still one the rider can pick, and it saves.
+      await tester.tap(find.byKey(const Key('training-goal-event')));
+      await tester.pumpAndSettle();
+      await chooseDays(tester);
+      await reveal(tester, find.byKey(const Key('training-hours')));
+      await tester.enterText(find.byKey(const Key('training-hours')), '6');
+      await tester.enterText(
+        find.byKey(const Key('training-birth-year')),
+        '1988',
+      );
+      await tester.pumpAndSettle();
+      await reveal(tester, find.byKey(const Key('training-start')));
+      await tester.tap(find.byKey(const Key('training-start')));
+      await tester.pumpAndSettle();
+
+      expect(server.lastTrainingSave!['goal'], 'event');
+    },
+  );
+
+  testWidgets(
     'TrainingSetupScreen_ShouldKeepStartDisabled_WhenTheYearOfBirthIsMissing',
     (tester) async {
       await openSetup(tester);

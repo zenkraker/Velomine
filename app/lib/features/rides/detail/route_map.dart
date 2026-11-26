@@ -340,7 +340,7 @@ class _HeartRateLegend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Text('$min–$max bpm', style: text.labelSmall),
+        Text(context.l10n.mapHeartRateLegend(min, max), style: text.labelSmall),
       ],
     );
   }

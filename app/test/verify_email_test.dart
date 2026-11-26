@@ -1,6 +1,8 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'package:velomine/core/widgets/loading_state.dart';
 
 import 'fake_server.dart';
 
@@ -55,4 +57,50 @@ void main() {
     expect(find.byKey(const Key('verify-resent')), findsOneWidget);
     expect(server.verificationEmails, contains('new@example.com'));
   });
+
+  testWidgets(
+    'VerifyEmailScreen_ShouldShowTheLoadingState_WhenTheLinkIsBeingChecked',
+    (tester) async {
+      server.smtpConfigured = true;
+      server.add('new@example.com', approved: true);
+      await startApp(
+        tester,
+        server.session(useCookies: false),
+        onRouter: (created) => router = created,
+      );
+
+      final gate = server.delayNext('/api/v1/accounts/email/verify');
+      await open('/verify-email#token=good-token&email=new%40example.com');
+      await tester.pump();
+      await tester.pump();
+
+      // The screen's first state is the shared loading state, not an indicator of its own.
+      expect(find.byType(LoadingState), findsOneWidget);
+      expect(find.textContaining('Confirming'), findsOneWidget);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('verify-result')), findsOneWidget);
+      expect(find.byType(LoadingState), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'VerifyEmailScreen_ShouldOfferGoToSignInWithoutABackArrow_WhenTheLinkWorks',
+    (tester) async {
+      server.smtpConfigured = true;
+      server.add('new@example.com', approved: true);
+      await startApp(
+        tester,
+        server.session(useCookies: false),
+        onRouter: (created) => router = created,
+      );
+
+      await open('/verify-email#token=good-token&email=new%40example.com');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Go to sign in'), findsOneWidget);
+      expect(find.byType(BackButton), findsNothing);
+    },
+  );
 }

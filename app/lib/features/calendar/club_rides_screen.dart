@@ -6,8 +6,10 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
@@ -95,8 +97,10 @@ class ClubRidesScreen extends ConsumerWidget {
               key: const Key('club-rides-upcoming'),
               title: l10n.ridesUpcoming,
               children: [
-                for (final ride in s.upcoming)
+                for (final (i, ride) in s.upcoming.indexed) ...[
+                  if (i > 0) const Divider(),
                   _RideRow(ride: ride, onOpen: onOpen),
+                ],
               ],
             ),
           if (s.past.isNotEmpty)
@@ -104,8 +108,10 @@ class ClubRidesScreen extends ConsumerWidget {
               key: const Key('club-rides-past'),
               title: l10n.ridesPast,
               children: [
-                for (final ride in s.past)
-                  _RideRow(ride: ride, onOpen: onOpen, dimmed: true),
+                for (final (i, ride) in s.past.indexed) ...[
+                  if (i > 0) const Divider(),
+                  _RideRow(ride: ride, onOpen: onOpen),
+                ],
               ],
             ),
         ],
@@ -114,60 +120,85 @@ class ClubRidesScreen extends ConsumerWidget {
   }
 }
 
-/// One ride in its list's card: its date block leads, then the title, the states and the details.
+/// One ride in its list's card: its date block leads, then the name, the states and the details.
 class _RideRow extends StatelessWidget {
-  const _RideRow({
-    required this.ride,
-    required this.onOpen,
-    this.dimmed = false,
-  });
+  const _RideRow({required this.ride, required this.onOpen});
 
   final ClubRideSummaryResponse ride;
   final void Function(String id) onOpen;
-  final bool dimmed;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final title = Text(
-      ride.title,
-      style: text.titleMedium?.copyWith(
-        decoration: ride.isCancelled ? TextDecoration.lineThrough : null,
-        color: dimmed ? Theme.of(context).disabledColor : null,
-      ),
-    );
-    return ListTile(
+    // The mock-up draws the states as badges after the fact and keeps pace and place in the line.
+    final badges = [
+      if (ride.isCancelled)
+        AppBadge(l10n.rideCancelled, tone: AppBadgeTone.bad)
+      else ...[
+        if (ride.noDrop) AppBadge(l10n.rideNoDrop),
+        if (ride.isSignedUp)
+          AppBadge(l10n.rideSignedUp, tone: AppBadgeTone.good)
+        else if (ride.isFull)
+          AppBadge(l10n.rideFull, tone: AppBadgeTone.care)
+        else
+          AppBadge(ridePlaces(l10n, ride)),
+      ],
+    ];
+    return InkWell(
       key: Key('club-ride-${ride.id}'),
-      contentPadding: EdgeInsets.zero,
       onTap: () => onOpen(ride.id),
-      leading: _RideDateBlock(ride: ride),
-      title: Row(
-        spacing: AppSpacing.sm,
-        children: [
-          Flexible(child: title),
-          if (ride.isCancelled)
-            Chip(
-              key: const Key('ride-cancelled'),
-              label: Text(l10n.rideCancelled),
-              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Row(
+          spacing: AppSpacing.md,
+          children: [
+            _RideDateBlock(ride: ride),
+            Expanded(
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        ride.title,
+                        style: text.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        [
+                          rideRowTime(
+                            context,
+                            ride.startsAt,
+                            ride.utcOffsetMinutes,
+                          ),
+                          rideSubtitle(l10n, ride),
+                          if (ride.createdByName != null)
+                            l10n.ridePlannedBy(ride.createdByName!),
+                        ].join(' · '),
+                        style: text.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: badges,
+                  ),
+                ],
+              ),
             ),
-          if (ride.isFull && !ride.isCancelled)
-            Chip(label: Text(l10n.rideFull)),
-          if (ride.isSignedUp && !ride.isCancelled)
-            Chip(label: Text(l10n.rideSignedUp)),
-        ],
+          ],
+        ),
       ),
-      subtitle: Text(
-        [
-          rideRowTime(context, ride.startsAt, ride.utcOffsetMinutes),
-          rideSubtitle(l10n, ride),
-          if (ride.createdByName != null)
-            l10n.ridePlannedBy(ride.createdByName!),
-        ].join('\n'),
-      ),
-      isThreeLine: true,
-      trailing: const Icon(Icons.chevron_right),
     );
   }
 }
@@ -181,19 +212,31 @@ class _RideDateBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final date = rideDateBlock(ride.startsAt, ride.utcOffsetMinutes);
-    return Column(
+    final date = rideDateBlock(
+      ride.startsAt,
+      ride.utcOffsetMinutes,
+      locale: Localizations.localeOf(context).toLanguageTag(),
+    );
+    return Container(
       key: Key('club-ride-date-${ride.id}'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(date.day, style: text.titleMedium),
-        Text(
-          date.month,
-          style: text.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+      width: AppTraining.dateWidth,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: VelomineColors.of(context).cardRaised,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(date.day, style: VelomineText.of(context).stat),
+          Text(
+            date.month,
+            style: text.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

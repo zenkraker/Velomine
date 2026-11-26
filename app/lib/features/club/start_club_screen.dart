@@ -9,7 +9,6 @@ import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
-import '../../core/widgets/error_state.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
@@ -159,9 +158,9 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
           ],
         ),
         if (failure != null)
-          ErrorState(
-            message: failureText(l10n, failure),
-            actionKey: const Key('start-club-error'),
+          InlineError(
+            failureText(l10n, failure),
+            key: const Key('start-club-error'),
           ),
       ],
     );

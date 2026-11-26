@@ -17,7 +17,6 @@ import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../profile/profile_screen.dart' show weekDayName;
-import 'auto_training_note.dart';
 import 'training_goals.dart';
 import 'training_setup_state.dart';
 import 'training_setup_view_model.dart';
@@ -116,6 +115,8 @@ class _TrainingSetupScreenState extends ConsumerState<TrainingSetupScreen> {
     return PageScaffold(
       parent: l10n.navTraining,
       title: l10n.trainingSetupTitle,
+      // The design puts the intro sentence in the header's sub-line, not in the body.
+      subtitle: '${l10n.autoTrainingSentence} ${l10n.autoTrainingFeedback}.',
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
         buttonKey: const Key('training-start'),
@@ -125,7 +126,6 @@ class _TrainingSetupScreenState extends ConsumerState<TrainingSetupScreen> {
         maxWidth: AppLayout.contentNarrow,
       ),
       children: [
-        const AutoTrainingNote(),
         if (state.loading)
           const LoadingState.rows()
         else if (loadFailure != null)
@@ -200,19 +200,22 @@ class _GoalCard extends ConsumerWidget {
     );
   }
 
-  /// The one line under a goal: the suggested goal's reason, or what the goal itself means.
+  /// The one line under a goal: the suggested goal's reason, what a goal means, or the rider's next event. The event
+  /// row opens nothing, because there is no event picker and the plan carries no event of its own: the server always
+  /// plans toward the next one, so the row states which event that is and asks for nothing.
   String? _line(AppLocalizations l10n, String goal) {
     if (goal == state.suggestedGoal) {
       return trainingSuggestionReason(l10n, state.suggestionReason ?? '');
     }
     if (goal == 'faster') return l10n.goalFasterLine;
     if (goal == 'event') {
-      return state.nextEventName == null
-          ? l10n.goalAddEvent
-          : l10n.goalNextEvent(
-              state.nextEventName!,
-              DateFormat.MMMd(l10n.localeName).format(state.nextEventDate!),
-            );
+      if (state.nextEventName case final name?
+          when state.nextEventDate != null) {
+        return l10n.goalNextEvent(
+          name,
+          DateFormat.MMMd(l10n.localeName).format(state.nextEventDate!),
+        );
+      }
     }
     return null;
   }

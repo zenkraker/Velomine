@@ -13,15 +13,17 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/confirm.dart';
+import '../../core/device_time_zone.dart';
 import '../../core/format.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
 import '../../core/language_choice.dart';
-import '../../core/rider_mode.dart';
 import '../../core/units.dart';
 import '../../core/providers.dart';
+import '../../core/rider_mode.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
+import 'rider_mode_sheet.dart';
 import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
@@ -41,7 +43,6 @@ import '../training/training_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
-import 'rider_mode_sheet.dart';
 import 'solo_trial_badge.dart';
 import 'zones_card.dart';
 import '../../core/tokens.dart';
@@ -116,7 +117,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _birthYear = TextEditingController();
   final _maxHr = TextEditingController();
   final _thresholdHr = TextEditingController();
-  final _zone = TextEditingController();
   String _firstDay = 'monday';
   bool _email = true;
   bool _emailAccount = true;
@@ -127,9 +127,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   /// athlete fields it never touched.
   bool _preferenceSave = false;
 
-  /// The time zone's field, watched so leaving it saves what was typed, and the zone the account holds.
-  final _zoneFocus = FocusNode();
-  String? _filledZone;
+  /// The time zone the account holds, as the picker's value.
+  String? _zone;
+
+  /// What the time zone picker offers: the zone the account holds, the device's own (a browser names it),
+  /// and UTC. The server stores an IANA name, which a hand-typed value almost never matched.
+  List<String> get _zoneChoices => {?_zone, ?deviceTimeZone(), 'UTC'}.toList();
 
   /// When the ride a test FTP came from started: the day of the effort, which the ride itself knows.
   DateTime? _ftpSourceRideStart;
@@ -142,11 +145,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _zoneFocus.addListener(() {
-      if (!_zoneFocus.hasFocus && _zone.text.trim() != _filledZone) {
-        _savePreference(timeZone: _zone.text.trim());
-      }
-    });
     _profileSub = ref.listenManual(profileViewModelProvider, (_, next) {
       final profile = next.profile;
       if (profile == null) return;
@@ -229,8 +227,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           heartRateIsSet(p.thresholdHeartRateSource.orElse(null))
           ? p.thresholdHeartRate.orElse(null)?.toString() ?? ''
           : '';
-      _zone.text = p.timeZone ?? '';
-      _filledZone = p.timeZone ?? '';
+      _zone = p.timeZone;
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
       _emailAccount = p.emailAccountNotifications;
@@ -244,17 +241,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
-    _zoneFocus.dispose();
     _profileSub.close();
-    for (final c in [
-      _name,
-      _ftp,
-      _weight,
-      _birthYear,
-      _maxHr,
-      _thresholdHr,
-      _zone,
-    ]) {
+    for (final c in [_name, _ftp, _weight, _birthYear, _maxHr, _thresholdHr]) {
       c.dispose();
     }
     super.dispose();
@@ -443,6 +431,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ],
   );
 
+  /// A number field and, under it, the line that says where the number came from: one cell of a pair.
+  Widget _cell(Widget field, [Widget? note]) => note == null
+      ? field
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [field, note],
+        );
+
   Widget _number(
     String key,
     TextEditingController c,
@@ -486,8 +483,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final s = ref.watch(profileViewModelProvider);
     final language = ref.watch(languageChoiceViewModelProvider);
-    final situation = ref.watch(riderModeSituationProvider);
-    final me = ref.watch(sessionViewModelProvider).me;
     final telemetry = s.telemetry;
     final telemetryAvailable =
         ref.watch(sessionViewModelProvider).serverInfo?.telemetryEnabled ??
@@ -511,105 +506,127 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     };
     final failure = s.load.failure;
     final bikes = ref.watch(bikesSummaryProvider);
+    // Where the athlete's numbers came from, each a line under its own field.
+    final athlete = s.profile;
+    final ftpNote = athlete == null
+        ? null
+        : profileFtpSourceText(
+            l10n,
+            athlete,
+            testRideStart: _ftpSourceRideStart,
+          );
+    final maxHrNote = athlete == null
+        ? null
+        : heartRateSourceText(
+            l10n,
+            athlete.maxHeartRateSource.orElse(null),
+            athlete.maxHeartRateSetAt.orElse(null),
+            rideId: athlete.maxHeartRateRideId.orElse(null),
+            rideDate: _maxHrRideDate,
+          );
+    final thresholdHrNote = athlete == null
+        ? null
+        : heartRateSourceText(
+            l10n,
+            athlete.thresholdHeartRateSource.orElse(null),
+            athlete.thresholdHeartRateSetAt.orElse(null),
+            threshold: true,
+            rideId: athlete.thresholdHeartRateRideId.orElse(null),
+            rideDate: _thresholdHrRideDate,
+          );
     final sections = <Widget>[
+      // The mock-up's three pairs, in its order: name and year, FTP and weight, then the two heart rates,
+      // each number with the line that says where it came from.
       SectionCard(
         title: l10n.profileAthlete,
         children: [
-          AppTextField(
-            fieldKey: const Key('profile-name'),
-            controller: _name,
-            label: l10n.name,
-          ),
-          _number(
-            'profile-birth-year',
-            _birthYear,
-            l10n.birthYear,
-            '',
-            helper: l10n.birthYearHelper,
-          ),
-          _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
-          // Where the FTP came from, read from the newest row of its history.
-          if (s.profile case final profile?)
-            if (profileFtpSourceText(
-                  l10n,
-                  profile,
-                  testRideStart: _ftpSourceRideStart,
-                )
-                case final note?)
-              SourceNote(note, key: const Key('profile-ftp-source')),
-          _number(
-            'profile-weight',
-            _weight,
-            l10n.weight,
-            _units == Units.imperial ? 'lb' : 'kg',
-            decimals: true,
-            // Without a weight, a ride with no power meter has nothing to estimate watts from.
-            helper:
-                s.profile?.weightKg == null &&
-                    (s.profile?.hasRidesWithoutPower.orElse(false) ?? false)
-                ? l10n.profileWeightEstimateHint
-                : null,
-          ),
-          // The maximum in use and where it came from; the same for the threshold below it, with one line of help.
-          _number(
-            'profile-max-hr',
-            _maxHr,
-            l10n.maxHeartRateField,
-            'bpm',
-            helper: l10n.heartRateLeaveEmpty,
-            hint: _estimate(
-              s.profile?.maxHeartRate,
-              s.profile?.maxHeartRateSource.orElse(null),
+          _FieldPair(
+            AppTextField(
+              fieldKey: const Key('profile-name'),
+              controller: _name,
+              label: l10n.name,
             ),
-            onDone: (text) => _saveHeartRate('max', text, 120, 230),
-          ),
-          if (s.profile case final profile?)
-            if (heartRateSourceText(
-                  l10n,
-                  profile.maxHeartRateSource.orElse(null),
-                  profile.maxHeartRateSetAt.orElse(null),
-                  rideId: profile.maxHeartRateRideId.orElse(null),
-                  rideDate: _maxHrRideDate,
-                )
-                case final note?)
-              SourceNote(
-                note,
-                key: const Key('profile-max-hr-source'),
-                onTap: _rideLink(
-                  profile.maxHeartRateSource.orElse(null),
-                  profile.maxHeartRateRideId.orElse(null),
-                ),
-              ),
-          _number(
-            'profile-threshold-hr',
-            _thresholdHr,
-            l10n.thresholdHeartRateField,
-            'bpm',
-            helper: l10n.thresholdHeartRateHelp,
-            hint: _estimate(
-              s.profile?.thresholdHeartRate.orElse(null),
-              s.profile?.thresholdHeartRateSource.orElse(null),
+            _number(
+              'profile-birth-year',
+              _birthYear,
+              l10n.birthYear,
+              '',
+              helper: l10n.birthYearHelper,
             ),
-            onDone: (text) => _saveHeartRate('threshold', text, 90, 220),
           ),
-          if (s.profile case final profile?)
-            if (heartRateSourceText(
-                  l10n,
-                  profile.thresholdHeartRateSource.orElse(null),
-                  profile.thresholdHeartRateSetAt.orElse(null),
-                  threshold: true,
-                  rideId: profile.thresholdHeartRateRideId.orElse(null),
-                  rideDate: _thresholdHrRideDate,
-                )
-                case final note?)
-              SourceNote(
-                note,
-                key: const Key('profile-threshold-hr-source'),
-                onTap: _rideLink(
-                  profile.thresholdHeartRateSource.orElse(null),
-                  profile.thresholdHeartRateRideId.orElse(null),
-                ),
+          _FieldPair(
+            _cell(
+              _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
+              ftpNote == null
+                  ? null
+                  : SourceNote(ftpNote, key: const Key('profile-ftp-source')),
+            ),
+            _cell(
+              _number(
+                'profile-weight',
+                _weight,
+                l10n.weight,
+                _units == Units.imperial ? 'lb' : 'kg',
+                decimals: true,
+                // Without a weight, a ride with no power meter has nothing to estimate watts from.
+                helper:
+                    s.profile?.weightKg == null &&
+                        (s.profile?.hasRidesWithoutPower.orElse(false) ?? false)
+                    ? l10n.profileWeightEstimateHint
+                    : null,
               ),
+            ),
+          ),
+          _FieldPair(
+            _cell(
+              _number(
+                'profile-max-hr',
+                _maxHr,
+                l10n.maxHeartRateField,
+                'bpm',
+                helper: l10n.heartRateLeaveEmpty,
+                hint: _estimate(
+                  s.profile?.maxHeartRate,
+                  s.profile?.maxHeartRateSource.orElse(null),
+                ),
+                onDone: (text) => _saveHeartRate('max', text, 120, 230),
+              ),
+              maxHrNote == null
+                  ? null
+                  : SourceNote(
+                      maxHrNote,
+                      key: const Key('profile-max-hr-source'),
+                      onTap: _rideLink(
+                        athlete?.maxHeartRateSource.orElse(null),
+                        athlete?.maxHeartRateRideId.orElse(null),
+                      ),
+                    ),
+            ),
+            _cell(
+              _number(
+                'profile-threshold-hr',
+                _thresholdHr,
+                l10n.thresholdHeartRateField,
+                'bpm',
+                helper: l10n.thresholdHeartRateHelp,
+                hint: _estimate(
+                  s.profile?.thresholdHeartRate.orElse(null),
+                  s.profile?.thresholdHeartRateSource.orElse(null),
+                ),
+                onDone: (text) => _saveHeartRate('threshold', text, 90, 220),
+              ),
+              thresholdHrNote == null
+                  ? null
+                  : SourceNote(
+                      thresholdHrNote,
+                      key: const Key('profile-threshold-hr-source'),
+                      onTap: _rideLink(
+                        athlete?.thresholdHeartRateSource.orElse(null),
+                        athlete?.thresholdHeartRateRideId.orElse(null),
+                      ),
+                    ),
+            ),
+          ),
           // A maximum lowered below a set threshold afterwards is allowed, so the profile says which number zones use.
           if (s.profile?.maxHeartRate case final max?)
             if (s.profile?.thresholdHeartRate.orElse(null) case final threshold?
@@ -643,82 +660,97 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       SectionCard(
         title: l10n.preferences,
         children: [
-          AppTextField(
-            fieldKey: const Key('profile-zone'),
-            controller: _zone,
-            label: l10n.timeZone,
-            hint: 'Europe/Rome',
-            helper: l10n.timeZoneHelper,
-            focusNode: _zoneFocus,
-            onDone: (text) => _savePreference(timeZone: text),
-          ),
-          DropdownButtonFormField<String>(
-            key: const Key('profile-first-day'),
-            initialValue: _firstDay,
-            // Twice the text needs to ellipsize inside the field, not spill out.
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l10n.firstDayOfWeek),
-            items: [
-              for (final day in weekDayIds)
-                DropdownMenuItem(
-                  value: day,
-                  child: Text(weekDayName(l10n, day)),
-                ),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() => _firstDay = value);
-              _savePreference(firstDayOfWeek: value);
-            },
-          ),
-          _choice(
-            l10n.language,
-            Builder(
-              builder: (context) {
-                final device = Localizations.localeOf(context).languageCode;
-                return SegmentedControl<String>(
-                  buttonKey: const Key('profile-language'),
-                  segments: [
-                    for (final code in supportedLanguages)
-                      ButtonSegment(
-                        value: code,
-                        label: Text(switch (code) {
-                          'it' => l10n.languageItalian,
-                          _ => l10n.languageEnglish,
-                        }),
-                      ),
-                  ],
-                  selected:
-                      language ??
-                      (supportedLanguages.contains(device) ? device : 'en'),
-                  onChanged: (code) => ref
-                      .read(languageChoiceViewModelProvider.notifier)
-                      .choose(code),
-                );
+          // Each choice in a pair, as the mock-up draws them: a picker saves itself the moment it changes.
+          _FieldPair(
+            DropdownButtonFormField<String>(
+              key: const Key('profile-zone'),
+              initialValue: _zone ?? _zoneChoices.first,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: l10n.timeZone,
+                helperText: l10n.timeZoneHelper,
+                helperMaxLines: 3,
+              ),
+              items: [
+                for (final zone in _zoneChoices)
+                  DropdownMenuItem(value: zone, child: Text(zone)),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _zone = value);
+                _savePreference(timeZone: value);
+              },
+            ),
+            DropdownButtonFormField<String>(
+              key: const Key('profile-first-day'),
+              initialValue: _firstDay,
+              // Twice the text needs to ellipsize inside the field, not spill out.
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l10n.firstDayOfWeek),
+              items: [
+                for (final day in weekDayIds)
+                  DropdownMenuItem(
+                    value: day,
+                    child: Text(weekDayName(l10n, day)),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _firstDay = value);
+                _savePreference(firstDayOfWeek: value);
               },
             ),
           ),
-          _choice(
-            l10n.units,
-            SegmentedControl<Units>(
-              buttonKey: const Key('profile-units'),
-              segments: [
-                ButtonSegment(
-                  value: Units.metric,
-                  label: Text(l10n.unitsMetric),
-                ),
-                ButtonSegment(
-                  value: Units.imperial,
-                  label: Text(l10n.unitsImperial),
-                ),
-              ],
-              selected: ref.watch(unitsChoiceViewModelProvider),
-              onChanged: (value) {
-                ref.read(unitsChoiceViewModelProvider.notifier).choose(value);
-                // The weight is now shown in the other unit.
-                final profile = ref.read(profileViewModelProvider).profile;
-                if (profile != null) _fill(profile);
-              },
+          _FieldPair(
+            _choice(
+              l10n.language,
+              Builder(
+                builder: (context) {
+                  final device = Localizations.localeOf(context).languageCode;
+                  return SegmentedControl<String>(
+                    buttonKey: const Key('profile-language'),
+                    segments: [
+                      for (final code in supportedLanguages)
+                        ButtonSegment(
+                          value: code,
+                          label: Text(switch (code) {
+                            'it' => l10n.languageItalian,
+                            _ => l10n.languageEnglish,
+                          }),
+                        ),
+                    ],
+                    selected:
+                        language ??
+                        (supportedLanguages.contains(device) ? device : 'en'),
+                    onChanged: (code) => ref
+                        .read(languageChoiceViewModelProvider.notifier)
+                        .choose(code),
+                  );
+                },
+              ),
+            ),
+            _choice(
+              l10n.units,
+              SegmentedControl<Units>(
+                buttonKey: const Key('profile-units'),
+                segments: [
+                  ButtonSegment(
+                    value: Units.metric,
+                    label: Text(l10n.unitsMetric),
+                  ),
+                  ButtonSegment(
+                    value: Units.imperial,
+                    label: Text(l10n.unitsImperial),
+                  ),
+                ],
+                selected: ref.watch(unitsChoiceViewModelProvider),
+                onChanged: (value) {
+                  ref.read(unitsChoiceViewModelProvider.notifier).choose(value);
+                  // The weight is now shown in the other unit.
+                  final profile = ref.read(profileViewModelProvider).profile;
+                  if (profile != null) _fill(profile);
+                },
+              ),
             ),
           ),
           if (_preferenceSave)
@@ -727,21 +759,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 failureText(l10n, preferenceFailure),
                 key: const Key('preferences-error'),
               ),
-          if (situation.settings)
-            ListTile(
-              key: const Key('profile-rider-mode'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.riderModeTitle),
-              // Before the member chooses, the account has no mode: it shows the one the app is using. A mode
-              // this build does not know is not named, so nobody reads a wrong one.
-              subtitle: Text(
-                me?.riderMode != null && situation.mode == null
-                    ? l10n.riderModeElsewhere
-                    : riderModeName(l10n, situation.mode ?? defaultRiderMode),
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => showRiderModeSheet(context, firstTime: false),
-            ),
         ],
       ),
       SectionCard(
@@ -755,6 +772,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             subtitle: l10n.privacyRidePrivacyHelp,
             onTap: widget.onOpenPrivacy,
           ),
+          // The rider mode is the member's own setting, and `RiderModeSituation.settings` exists to
+          // say whether this row shows at all: an older server has no modes, so it does not.
+          if (ref.watch(riderModeSituationProvider).settings)
+            _SettingsRow(
+              rowKey: const Key('profile-rider-mode'),
+              icon: Icons.directions_bike_outlined,
+              title: l10n.riderModeTitle,
+              // Before choosing, the account has no mode; a mode this build does not know is not named.
+              subtitle:
+                  ref.watch(sessionViewModelProvider).me?.riderMode != null &&
+                      ref.watch(riderModeSituationProvider).mode == null
+                  ? l10n.riderModeElsewhere
+                  : riderModeName(
+                      l10n,
+                      ref.watch(riderModeSituationProvider).mode ??
+                          defaultRiderMode,
+                    ),
+              onTap: () => showRiderModeSheet(context, firstTime: false),
+            ),
           // The operator's switch decides whether the setting exists at all; the member's plan is the value.
           if (ref
                   .watch(sessionViewModelProvider)
@@ -917,7 +953,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return PageScaffold(
       title: l10n.profileTitle,
       parent: l10n.accountMenu,
-      maxWidth: AppLayout.contentMax,
+      // The mock-up draws Profile as a narrow page (`vm-page narrow`): one column of cards, no grid to square.
+      maxWidth: AppLayout.contentNarrow,
       // Deleting the account is rare and final: in the menu, last and red.
       menu: PageMenu(
         buttonKey: const Key('profile-actions'),
@@ -944,10 +981,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? null
                 : ref.read(profileViewModelProvider.notifier).load,
           ),
-        CardGrid(children: sections),
+        CardGrid(columns: 1, tabletColumns: 1, children: sections),
       ],
     );
   }
+}
+
+/// Two fields side by side from the tablet width, one under the other on a phone, as the mock-up's
+/// `vm-fields2` does.
+class _FieldPair extends StatelessWidget {
+  const _FieldPair(this.first, this.second);
+
+  final Widget first;
+  final Widget second;
+
+  @override
+  Widget build(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth
+      ? Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.lg,
+          children: [
+            Expanded(child: first),
+            Expanded(child: second),
+          ],
+        )
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpacing.md,
+          children: [first, second],
+        );
 }
 
 /// Asks for the current password and the new one. On success the app signs out, because the security stamp moved.

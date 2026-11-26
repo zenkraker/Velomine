@@ -7,79 +7,26 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
-import '../../core/theme.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/loading_state.dart';
 import 'supporter_view_model.dart';
 
-/// The Velomine mark drawn inline, so no font or image asset is needed: the
-/// outer chevron and the lime inner one, on a 120-unit artboard.
+/// The supporter badge: the licence ("Supporter no. 128 · 3 Oct 2026") in the shared good badge, on the
+/// profile and on the celebration screen.
 ///
-/// The colours are the celebration's own, so the mark is the same on any
-/// background.
-abstract final class Chevron {
-  static const _artboard = 120;
-
-  static Path _path(Size box, double from, double to) => Path()
-    ..moveTo(box.width * from / _artboard, box.height * 20 / _artboard)
-    ..lineTo(box.width * 60 / _artboard, box.height * 100 / _artboard)
-    ..lineTo(box.width * to / _artboard, box.height * 20 / _artboard);
-
-  static void _draw(Canvas canvas, Size box, Path path, Color color) =>
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 10 * box.width / _artboard
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
-
-  /// The whole mark: the pale outer chevron, then the lime inner one.
-  static void paint(Canvas canvas, Size box) {
-    _draw(canvas, box, _path(box, 12, 108), cloudDancer);
-    _draw(canvas, box, _path(box, 36, 84), volt);
-  }
-
-  /// The mark as a widget, for a badge's small icon.
-  static Widget widget(double side) =>
-      CustomPaint(size: Size.square(side), painter: const _ChevronPainter());
-}
-
-class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) => Chevron.paint(canvas, size);
-
-  @override
-  bool shouldRepaint(_ChevronPainter old) => false;
-}
-
-/// The supporter badge: the chevron and "Supporter" on the lime-tinted pill, the
-/// same mark on the profile and on the celebration screen.
-///
-/// Three taps within half a second call [onReplay], which opens the celebration
-/// again; [hint] says so to a screen reader.
+/// Three taps within half a second call [onReplay], which opens the celebration again; [hint] says so to a
+/// screen reader.
 class SupporterBadge extends StatefulWidget {
   const SupporterBadge({
     super.key,
     required this.label,
     this.hint,
     this.onReplay,
-    this.style,
-    this.background,
   });
 
   final String label;
   final String? hint;
   final VoidCallback? onReplay;
-
-  /// The text's style; the celebration's pill sets its own.
-  final TextStyle? style;
-
-  /// The pill's fill, when it stands on a background of its own.
-  final Color? background;
 
   @override
   State<SupporterBadge> createState() => _SupporterBadgeState();
@@ -100,46 +47,24 @@ class _SupporterBadgeState extends State<SupporterBadge> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Semantics(
-      button: widget.onReplay != null,
-      label: widget.label,
-      hint: widget.hint,
-      excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onReplay == null ? null : _tap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: widget.background ?? volt.withValues(alpha: 0.12),
-            border: Border.all(color: volt.withValues(alpha: 0.4)),
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: AppSpacing.sm,
-            children: [
-              Chevron.widget(16),
-              Flexible(
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: widget.style ?? text.labelLarge,
-                ),
-              ),
-            ],
-          ),
+  Widget build(BuildContext context) => Semantics(
+    button: widget.onReplay != null,
+    label: widget.label,
+    hint: widget.hint,
+    excludeSemantics: true,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onReplay == null ? null : _tap,
+      // The badge is one line by design; the tap area is the comfortable 48 dp around it.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: AppSpacing.xxxl),
+        child: Center(
+          widthFactor: 1,
+          child: AppBadge(widget.label, tone: AppBadgeTone.good),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// The profile's supporter section: "become a supporter" while there is no

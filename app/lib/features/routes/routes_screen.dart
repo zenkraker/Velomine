@@ -49,24 +49,22 @@ class RoutesScreen extends ConsumerWidget {
       ref.read(routesViewModelProvider.notifier).messageShown,
     );
 
+    // The surface and the order are each one choice, so each is the app's segmented control.
     final sortAndFilters = [
-      for (final surface in [null, ...routeSurfaceIds])
-        ChoiceChip(
-          key: Key(
-            surface == null ? 'route-surface-all' : 'route-surface-$surface',
-          ),
-          label: Text(
-            surface == null
-                ? l10n.routesFilterAll
-                : routeSurfaceName(l10n, surface),
-          ),
-          selected: s.surface == surface,
-          onSelected: (_) => ref
-              .read(routesViewModelProvider.notifier)
-              .setSurface(
-                surface != null && s.surface == surface ? null : surface,
-              ),
-        ),
+      SegmentedControl<String?>(
+        buttonKey: const Key('route-surface'),
+        segments: [
+          ButtonSegment(value: null, label: Text(l10n.routesFilterAll)),
+          for (final surface in routeSurfaceIds)
+            ButtonSegment(
+              value: surface,
+              label: Text(routeSurfaceName(l10n, surface)),
+            ),
+        ],
+        selected: s.surface,
+        onChanged: (surface) =>
+            ref.read(routesViewModelProvider.notifier).setSurface(surface),
+      ),
       SegmentedControl<String>(
         buttonKey: const Key('routes-sort'),
         segments: [
@@ -81,6 +79,7 @@ class RoutesScreen extends ConsumerWidget {
 
     final page = PageScaffold(
       title: l10n.clubRoutesTitle,
+      parent: l10n.clubRoutesCaption,
       subtitle: l10n.routesSubtitle,
       primaryAction: FilledButton.icon(
         key: const Key('add-route'),
@@ -148,21 +147,18 @@ class _RouteCard extends ConsumerWidget {
     final units = ref.watch(unitsChoiceViewModelProvider);
     return AppCard(
       key: Key('route-${route.id}'),
-      padding: EdgeInsets.zero,
       onTap: () => onOpen(route.id),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpacing.md,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
         children: [
-          // The line on the dimmed map is what tells one route from another.
+          // The name leads, as the mock-up draws the card; the line under it tells one route from another.
+          Text(route.name, style: text.titleMedium),
           if (route.latitude.length > 1)
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppRadius.large),
-                topRight: Radius.circular(AppRadius.large),
-              ),
-              // The card's own tap opens the route: the line in it does not pan or zoom.
-              child: IgnorePointer(
+            // The card's own tap opens the route: the line in it does not pan or zoom.
+            IgnorePointer(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 child: RoutePreview(
                   key: Key('route-line-${route.id}'),
                   latitude: route.latitude,
@@ -173,37 +169,14 @@ class _RouteCard extends ConsumerWidget {
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              0,
-              AppSpacing.xl,
-              AppSpacing.xl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: AppSpacing.sm,
-              children: [
-                Text(route.name, style: text.titleMedium),
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    AppBadge(routeSurfaceName(l10n, route.surface)),
-                    if (route.isMine && !route.isShared)
-                      AppBadge(l10n.routeNotShared, tone: AppBadgeTone.warn),
-                  ],
-                ),
-                Text(
-                  [
-                    routeLineOf(units, route.distanceM, route.climbingM),
-                    l10n.routeAddedBy(route.ownerName),
-                  ].join(' · '),
-                  style: text.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+          AppBadge(routeSurfaceName(l10n, route.surface)),
+          Text(
+            [
+              routeLineOf(units, route.distanceM, route.climbingM),
+              l10n.routeAddedBy(route.ownerName),
+            ].join(' · '),
+            style: text.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

@@ -14,14 +14,14 @@ class ClubAthletesCard extends StatelessWidget {
     final l10n = context.l10n;
     return AppCard(
       padding: EdgeInsets.zero,
+      // The design says each card links to its full page, so the row itself opens it: a labelled
+      // button in the trailing took the whole tile at half width.
       child: ListTile(
+        key: const Key('open-athletes'),
         leading: const Icon(Icons.people_outline),
         title: Text(l10n.athletesTitle),
-        trailing: TextButton(
-          key: const Key('open-athletes'),
-          onPressed: onOpen,
-          child: Text(l10n.coachViewAthletes),
-        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onOpen,
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/app_card.dart';
 import 'package:velomine/features/rides/rides_screen.dart';
 import 'package:velomine/features/rides/rides_view_model.dart';
 
@@ -104,23 +105,68 @@ void main() {
     expect(find.byKey(const Key('rides-actions')), findsOneWidget);
   });
 
-  testWidgets('RidesScreen_ShouldOfferEveryImport_WhenAPhoneHasNoRides', (
+  testWidgets(
+    'RidesScreen_ShouldLeaveTheEmptyStateToThePage_WhenAPhoneHasNoRides',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      final empty = find.byKey(const Key('no-rides'));
+      expect(empty, findsOneWidget);
+      // No wall of import buttons inside the empty state: the ways in are the page's own.
+      expect(find.byKey(const Key('empty-upload')), findsNothing);
+      expect(find.byKey(const Key('empty-import-strava')), findsNothing);
+      expect(find.byKey(const Key('empty-bulk-folder')), findsNothing);
+      expect(find.byKey(const Key('upload')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('import-strava')), findsOneWidget);
+    },
+  );
+
+  testWidgets('RidesScreen_ShouldPutTheDateBesideTheTitle_WhenTheRideHasOne', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(390, 844);
+    tester.view.physicalSize = const Size(1300, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
+    server.rides.add(
+      rideJson(
+        'r1',
+        'ready',
+        fileName: 'sunday.gpx',
+        title: 'Sunday morning ride',
+        distanceM: 42000,
+        movingS: 5400,
+      ),
+    );
     await startApp(tester, server.session(useCookies: true));
 
-    final empty = find.byKey(const Key('no-rides'));
-    expect(empty, findsOneWidget);
-    for (final key in ['empty-upload', 'empty-import-strava']) {
-      expect(
-        find.descendant(of: empty, matching: find.byKey(Key(key))),
-        findsOneWidget,
-        reason: key,
-      );
-    }
+    final card = find.byKey(const Key('ride-r1'));
+    // The shared card, not a hand-built one.
+    expect(tester.widget(card), isA<AppCard>());
+    final title = find.descendant(
+      of: card,
+      matching: find.byKey(const Key('ride-title')),
+    );
+    // The moment is a caption on the title's own line, right of it, not a line under it.
+    final date = find.descendant(
+      of: card,
+      matching: find.byKey(const Key('ride-date')),
+    );
+    expect(date, findsOneWidget);
+    expect(
+      tester.getTopLeft(date).dy,
+      closeTo(tester.getTopLeft(title).dy, 2),
+      reason: 'the date sits on the title line',
+    );
+    expect(
+      tester.getTopLeft(date).dx,
+      greaterThan(tester.getTopLeft(title).dx),
+    );
   });
 
   testWidgets('RidesScreen_ShouldPutTheImportsInAMenu_WhenAPhoneHasRides', (

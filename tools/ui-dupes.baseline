@@ -1,0 +1,11 @@
+private widgets        70
+Card(                  8
+TextField(             70
+showSnackBar           13
+SegmentedButton        2
+TextStyle(             20
+Color(0x               52
+EdgeInsets.all(n)      0
+SizedBox(height: n)    0
+SizedBox(width: n)     0
+spacing: n             1

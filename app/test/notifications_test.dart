@@ -1,8 +1,27 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/result.dart';
+import 'package:velomine/core/session.dart';
+import 'package:velomine/core/tokens.dart';
 import 'package:velomine/core/widgets/app_card.dart';
+import 'package:velomine/core/widgets/loading_state.dart';
+import 'package:velomine/core/widgets/page_scaffold.dart';
+import 'package:velomine/core/widgets/section_heading.dart';
+import 'package:velomine/features/notifications/notifications_data.dart';
+import 'package:velomine_api/api.dart';
 
 import 'fake_server.dart';
+
+/// A data source whose first read never finishes, so the screen's first load can be seen.
+class _HeldNotificationsData extends NotificationsData {
+  _HeldNotificationsData(Session session) : super(session.notifications);
+
+  @override
+  Future<Result<ListNotificationsResponse?>> list() =>
+      Completer<Result<ListNotificationsResponse?>>().future;
+}
 
 void main() {
   late FakeServer server;
@@ -111,7 +130,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.notifications.every((n) => n['isRead'] == true), isTrue);
-    expect(find.byKey(const Key('notifications-read-all')), findsNothing);
+    // The page's one action keeps its place, with nothing left to do.
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('notifications-read-all')))
+          .onPressed,
+      isNull,
+    );
     expect(
       find.descendant(
         of: find.byKey(const Key('open-notifications')),
@@ -136,7 +161,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(server.notifications.every((n) => n['isRead'] == true), isTrue);
-      expect(find.byKey(const Key('notifications-read-all')), findsNothing);
+      expect(find.byKey(const Key('notifications-read-all')), findsOneWidget);
     },
   );
 
@@ -290,6 +315,84 @@ void main() {
     expect(find.byKey(const Key('bike-title')), findsOneWidget);
     expect(server.requests, contains('POST /api/v1/notifications/n-3/read'));
   });
+
+  testWidgets('NotificationsScreen_ShouldShowALoadingState_WhenFirstOpened', (
+    tester,
+  ) async {
+    final session = server.session(useCookies: true);
+    final data = _HeldNotificationsData(session);
+    tester.view.physicalSize = const Size(1000, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(
+      tester,
+      session,
+      overrides: [notificationsDataProvider.overrideWithValue(data)],
+    );
+
+    await tester.tap(find.byKey(const Key('open-notifications')));
+    await tester.pump();
+    await tester.pump(AppMotion.standard);
+
+    // The first frame is a loading state, not a blank page and not "nothing here".
+    expect(find.byType(LoadingState), findsOneWidget);
+    expect(find.byKey(const Key('no-notifications')), findsNothing);
+  });
+
+  testWidgets('NotificationsScreen_ShouldUseTheSectionHeading_WhenGrouping', (
+    tester,
+  ) async {
+    await openNotifications(tester);
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('notification-group-rides')),
+        matching: find.byType(SectionHeading),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('NotificationsScreen_ShouldKeepTheNarrowMeasure_WhenOpened', (
+    tester,
+  ) async {
+    await openNotifications(tester);
+
+    expect(
+      tester.widget<PageScaffold>(find.byType(PageScaffold)).maxWidth,
+      AppLayout.contentNarrow,
+    );
+  });
+
+  testWidgets(
+    'CalendarFeedScreen_ShouldPutCreateInTheHeader_WhenThereIsNoAddress',
+    (tester) async {
+      server.clubRoles['rider@example.com'] = 'owner';
+      tester.view.physicalSize = const Size(1000, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      await goTo(tester, '/club/calendar');
+
+      final create = find.byKey(const Key('create-calendar-address'));
+      expect(create, findsOneWidget);
+      // In the title row, above the card it acts on, never inside it.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('calendar-address-card')),
+          matching: create,
+        ),
+        findsNothing,
+      );
+      expect(
+        tester.getTopLeft(create).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('calendar-address-card'))).dy,
+        ),
+      );
+    },
+  );
 
   for (final width in [390.0, 600.0, 1300.0]) {
     testWidgets(

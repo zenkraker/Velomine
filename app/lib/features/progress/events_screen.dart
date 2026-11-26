@@ -12,6 +12,7 @@ import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -129,7 +130,7 @@ class EventsScreen extends ConsumerWidget {
             onRetry: s.load.running ? null : notifier.load,
           )
         else if (s.load.running && s.events.isEmpty)
-          const LinearProgressIndicator(key: Key('events-loading'))
+          const LoadingState.rows(key: Key('events-loading'))
         else if (s.events.isEmpty)
           EmptyState(
             key: const Key('no-events'),

@@ -6,6 +6,7 @@ import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/rider_mode.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
+import 'package:velomine/core/widgets/badge.dart';
 import 'package:velomine/core/widgets/stat_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -110,7 +111,7 @@ void main() {
     (tester) async {
       await open(tester);
 
-      expect(find.text('sunday.gpx'), findsOneWidget);
+      expect(find.byKey(const Key('route-map')), findsOneWidget);
       for (final text in [
         '42.3 km',
         '1 h 30 min',
@@ -123,7 +124,6 @@ void main() {
       ]) {
         expect(find.text(text), findsOneWidget, reason: text);
       }
-      expect(find.byKey(const Key('route-map')), findsOneWidget);
       for (final chart in ['elevation', 'speed', 'power', 'heartrate']) {
         expect(find.byKey(Key('chart-$chart')), findsOneWidget, reason: chart);
       }
@@ -132,6 +132,168 @@ void main() {
         findsNothing,
       ); // this ride has no cadence samples
       expect(server.requests, contains('GET /api/v1/rides/r1/streams'));
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheDateAndSurfaceInTheHeader_WhenTheRideIsOpened',
+    (tester) async {
+      server.rides[0]['discipline'] = 'road';
+      await open(tester);
+
+      // The one line under the title carries when it was and what it was; the body does not repeat it.
+      expect(find.textContaining(' · Road'), findsOneWidget);
+      // Neither the file, the device, nor a placeholder for words the rider never wrote.
+      expect(find.text('sunday.gpx'), findsNothing);
+      expect(find.byKey(const Key('add-ride-description')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheEventAsABadge_WhenTheRideWasAnEvent',
+    (tester) async {
+      server.events.add({
+        'id': 'event-1',
+        'name': 'Gran Fondo delle Colline',
+        'date': '2026-11-01',
+        'kind': 'race',
+        'distanceM': 120000,
+        'elevationGainM': 1800,
+        'notes': null,
+        'rideId': 'r1',
+        'createdAt': '2026-11-02T09:00:00Z',
+      });
+      await open(tester);
+
+      final badge = find.byKey(const Key('ride-event'));
+      expect(badge, findsOneWidget);
+      expect(tester.widget(badge), isA<AppBadge>());
+      expect(find.text('Your event: Gran Fondo delle Colline'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldPutEveryChartInOneCard_WhenTheRideHasSeries',
+    (tester) async {
+      await open(tester);
+
+      final card = find.byKey(const Key('ride-charts'));
+      expect(card, findsOneWidget);
+      for (final chart in ['elevation', 'speed', 'power', 'heartrate']) {
+        expect(
+          find.descendant(of: card, matching: find.byKey(Key('chart-$chart'))),
+          findsOneWidget,
+          reason: chart,
+        );
+      }
+      // The sentence about the cursor is the card's own, above the charts.
+      expect(
+        find.descendant(of: card, matching: find.byKey(const Key('moment'))),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldNameTheZoneAndShowTheTotalOnce_WhenTheZonesCardIsShown',
+    (tester) async {
+      await open(tester);
+
+      final zones = find.byKey(const Key('zones'));
+      await tester.scrollUntilVisible(
+        zones,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      // The design names each zone in words beside its number.
+      expect(
+        find.descendant(of: zones, matching: find.text('Z2 Endurance')),
+        findsOneWidget,
+      );
+      // 600 + 1200 + 900 + 300 + 60 seconds: once, under the rows it is the sum of.
+      expect(
+        find.descendant(of: zones, matching: find.text('51 min')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'LapTable_ShouldListDistanceMovingTimeAndPower_WhenTheRideHasLaps',
+    (tester) async {
+      await open(tester);
+
+      final laps = find.byKey(const Key('laps'));
+      await tester.scrollUntilVisible(
+        laps,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      double x(String label) => tester
+          .getTopLeft(find.descendant(of: laps, matching: find.text(label)))
+          .dx;
+      // The mock-up's column order: the lap, then distance, moving time and average power.
+      expect(x('Distance'), lessThan(x('Moving time')));
+      expect(x('Moving time'), lessThan(x('Average power')));
+      expect(
+        find.descendant(of: laps, matching: find.text('Average speed')),
+        findsNothing,
+      );
+
+      // The caption row is a size under the numbers it names.
+      final theme = Theme.of(tester.element(laps));
+      final head = tester.widget<Text>(
+        find.descendant(of: laps, matching: find.text('Distance')),
+      );
+      expect(head.style?.fontSize, theme.textTheme.bodySmall?.fontSize);
+      final cell = tester.widget<Text>(
+        find.descendant(of: laps, matching: find.text('21.0 km')),
+      );
+      expect(cell.style?.fontSize, theme.textTheme.bodyMedium?.fontSize);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheBikeAsACardAndChangeIt_WhenTheRideHasOne',
+    (tester) async {
+      server.bikes.add({
+        'id': 'bike-1',
+        'name': 'Canyon Endurace',
+        'kind': 'road',
+        'wheelCircumferenceMm': 2105,
+        'initialDistanceM': 4812000.0,
+        'isDefault': true,
+      });
+      server.rides[0]['bikeId'] = 'bike-1';
+      await open(tester);
+
+      final card = find.byKey(const Key('ride-bike'));
+      await tester.scrollUntilVisible(
+        card,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: card, matching: find.text('Canyon Endurace')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Default · 4812 km')),
+        findsOneWidget,
+      );
+
+      // The one way out of the card: a sheet that lists the bikes.
+      await tester.tap(find.byKey(const Key('ride-bike-change')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('ride-bike-option-none')));
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('PUT /api/v1/rides/r1/bike'));
     },
   );
 
@@ -200,7 +362,7 @@ void main() {
     },
   );
 
-  for (final width in [390.0, 1300.0]) {
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
     testWidgets(
       'RideDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
       (tester) async {

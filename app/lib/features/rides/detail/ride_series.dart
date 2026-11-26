@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:velomine_api/api.dart';
 
+import '../../../core/format.dart';
 import '../../../core/units.dart';
 import 'geo.dart';
 
@@ -33,8 +34,7 @@ class Series {
 
   double get average => present.reduce((a, b) => a + b) / present.length;
 
-  String format(double? v) =>
-      v == null ? '–' : '${v.toStringAsFixed(decimals)} $unit';
+  String format(double? v) => v == null ? '–' : '${decimal(v, decimals)} $unit';
 }
 
 /// A ride's samples in the shapes the screen draws: a route, and one [Series] per signal the ride has.

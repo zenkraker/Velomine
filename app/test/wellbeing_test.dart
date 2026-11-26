@@ -125,7 +125,7 @@ void main() {
   });
 
   testWidgets(
-    'WellbeingScreen_ShouldListTwoWeeksOfCheckIns_WhenHistoryIsLong',
+    'WellbeingCard_ShouldDrawTheTrendAndNoRowPerDay_WhenHistoryIsLong',
     (tester) async {
       server.wellbeingConsent = true;
       server.wellbeingToday = consented;
@@ -143,10 +143,29 @@ void main() {
       await openWellbeing(tester);
 
       await reveal(tester, find.byKey(const Key('wellbeing-card')));
-      // One line over the last two weeks, and fourteen rows under it, and no more.
+      // One line over the last two weeks, and no list of the same fourteen days under it.
       expect(find.byKey(const Key('wellbeing-history-chart')), findsOneWidget);
-      final rows = find.textContaining('Fat 2');
-      expect(rows, findsNWidgets(14));
+      expect(find.textContaining('Fat 2'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'WellbeingCard_ShouldSayThereAreNoCheckIns_WhenNoneWasEverSaved',
+    (tester) async {
+      server.wellbeingConsent = true;
+      await openWellbeing(tester);
+
+      await reveal(tester, find.byKey(const Key('wellbeing-empty')));
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wellbeing-empty')),
+          matching: find.text(
+            'No check-in today. Your readiness is measured from your rides alone.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wellbeing-history-chart')), findsNothing);
     },
   );
 

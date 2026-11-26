@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine/core/theme.dart';
+import 'package:velomine/core/tokens.dart';
 import 'package:velomine/core/widgets/page_scaffold.dart';
 
 Future<void> pumpPage(
@@ -148,4 +149,37 @@ void main() {
     expect(find.text('your bikes'), findsOneWidget);
     expect(find.text('YOUR BIKES'), findsNothing);
   });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'PageScaffold_ShouldPinTheMenuToTheTitleRowsEnd_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        await pumpPage(
+          tester,
+          width: width,
+          showOnPhone: width < 600,
+          primaryAction: const FilledButton(
+            onPressed: null,
+            child: Text('Add'),
+          ),
+          menu: IconButton(
+            key: const Key('menu'),
+            tooltip: 'More actions',
+            onPressed: () {},
+            icon: const Icon(Icons.more_vert),
+          ),
+        );
+
+        // The page's action and its menu belong in the corner of the title row,
+        // never halfway across the page: the trailing edge of the menu stays
+        // within one gutter of the window's edge.
+        final menu = tester.getRect(find.byKey(const Key('menu')));
+        expect(
+          menu.right,
+          greaterThan(width - 3 * AppSpacing.xxl),
+          reason: 'the menu sits at ${menu.right} in a $width window',
+        );
+      },
+    );
+  }
 }

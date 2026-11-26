@@ -171,18 +171,17 @@ class _PillItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   selected ? item.selectedIcon : item.icon,
-                  // The pill's height is fixed, so its label grows only a little with the text size.
+                  // The pill's height is fixed, so its label grows only a little with the text size;
+                  // it is never squeezed, because `nav-label` is a size the design fixes at 15.
                   MediaQuery.withClampedTextScaling(
                     maxScaleFactor: AppNav.maxLabelScale,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: color,
-                          fontWeight: selected ? FontWeight.w600 : null,
-                        ),
+                    child: Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.visible,
+                      style: VelomineText.of(context).navLabel.copyWith(
+                        color: color,
+                        fontWeight: selected ? FontWeight.w600 : null,
                       ),
                     ),
                   ),

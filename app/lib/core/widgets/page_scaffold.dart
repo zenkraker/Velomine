@@ -322,29 +322,36 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
           // title would be squeezed to nothing and the buttons would run off the edge. A narrow window
           // where a labelled main action, the notifications, the account and the menu do not fit scales
           // that cluster down rather than running past the edge.
+          // The cluster is pinned to the end of the row: a loose Flexible sizes
+          // to its content and would otherwise sit where its half of the free
+          // space begins, which draws the page's one action and the ⋯ halfway
+          // across the page instead of in the title row's corner.
           Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
+            child: Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: Row(
-                spacing: AppSpacing.sm,
-                children: [
-                  for (final button in trailingButtons)
-                    MediaQuery.withClampedTextScaling(
-                      maxScaleFactor: AppHeader.maxToolbarTextScale,
-                      child: button,
-                    ),
-                  if (primaryAction case final primaryAction?)
-                    MediaQuery.withClampedTextScaling(
-                      maxScaleFactor: AppHeader.maxToolbarTextScale,
-                      child: primaryAction,
-                    ),
-                  if (menu case final menu?)
-                    MediaQuery.withClampedTextScaling(
-                      maxScaleFactor: AppHeader.maxToolbarTextScale,
-                      child: menu,
-                    ),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerEnd,
+                child: Row(
+                  spacing: AppSpacing.sm,
+                  children: [
+                    for (final button in trailingButtons)
+                      MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: AppHeader.maxToolbarTextScale,
+                        child: button,
+                      ),
+                    if (primaryAction case final primaryAction?)
+                      MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: AppHeader.maxToolbarTextScale,
+                        child: primaryAction,
+                      ),
+                    if (menu case final menu?)
+                      MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: AppHeader.maxToolbarTextScale,
+                        child: menu,
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

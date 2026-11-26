@@ -1,3 +1,4 @@
+import '../../core/format.dart' show decimal;
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/inline_error.dart';
 
@@ -13,6 +14,7 @@ import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -46,12 +48,9 @@ String reminderProgressText(
   MaintenanceReminderResponse r,
 ) => [
   if (r.intervalDistanceM != null)
-    '${l10n.wearDistance(units == Units.imperial ? (r.usedDistanceM / 1609.344).toStringAsFixed(0) : (r.usedDistanceM / 1000).toStringAsFixed(0), units == Units.imperial ? (r.intervalDistanceM! / 1609.344).toStringAsFixed(0) : (r.intervalDistanceM! / 1000).toStringAsFixed(0))} ${distanceUnit(units)}',
+    '${l10n.wearDistance(units == Units.imperial ? decimal((r.usedDistanceM / 1609.344), 0) : decimal((r.usedDistanceM / 1000), 0), units == Units.imperial ? decimal((r.intervalDistanceM! / 1609.344), 0) : decimal((r.intervalDistanceM! / 1000), 0))} ${distanceUnit(units)}',
   if (r.intervalHours != null)
-    l10n.wearHours(
-      r.usedHours.toStringAsFixed(0),
-      r.intervalHours!.toStringAsFixed(0),
-    ),
+    l10n.wearHours(decimal(r.usedHours, 0), decimal(r.intervalHours!, 0)),
   if (r.intervalMonths != null)
     l10n.wearMonths(
       NumberFormat('0.0').format(r.usedMonths),
@@ -307,6 +306,7 @@ class ServiceSection extends ConsumerWidget {
                   : EmptyState(
                       key: const Key('no-entries'),
                       message: l10n.logFilterEmpty,
+                      framed: false,
                     ),
             for (final entry in s.log)
               _EntryRow(
@@ -366,17 +366,36 @@ class _ReminderRow extends ConsumerWidget {
       spacing: AppSpacing.xs,
       children: [
         Row(
+          spacing: AppSpacing.sm,
           children: [
-            Expanded(child: Text(reminder.name, style: text.titleMedium)),
+            Expanded(child: Text(reminder.name, style: text.bodyLarge)),
             Text(
               reminderStatusLabel(l10n, reminder.status),
               key: Key('reminder-status-${reminder.id}'),
-              style: TextStyle(color: color, fontWeight: FontWeight.w600),
+              style: text.labelLarge?.copyWith(color: color),
             ),
-            RowRemoveMenu(
+            RowActionMenu(
               menuKey: Key('reminder-actions-${reminder.id}'),
               removeKey: Key('reminder-remove-${reminder.id}'),
               onRemove: onRemove,
+              actions: [
+                PageMenuEntry(
+                  key: Key('reminder-edit-${reminder.id}'),
+                  icon: Icons.edit_outlined,
+                  label: l10n.edit,
+                  onSelected: onEdit,
+                ),
+                PageMenuEntry(
+                  key: Key('reminder-pause-${reminder.id}'),
+                  icon: reminder.isPaused
+                      ? Icons.play_arrow_outlined
+                      : Icons.pause_outlined,
+                  label: reminder.isPaused
+                      ? l10n.reminderResume
+                      : l10n.reminderPause,
+                  onSelected: onPause,
+                ),
+              ],
             ),
           ],
         ),
@@ -387,8 +406,8 @@ class _ReminderRow extends ConsumerWidget {
               key: Key('reminder-bar-${reminder.id}'),
               value: (reminder.percent! / 100).clamp(0.0, 1.0),
               color: color,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
+              minHeight: AppSpacing.sm,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
           ),
         Text(
@@ -403,27 +422,14 @@ class _ReminderRow extends ConsumerWidget {
           l10n.reminderLastDone(isoDate(reminder.lastDoneOn)),
           style: text.bodySmall,
         ),
-        Wrap(
-          spacing: AppSpacing.sm,
-          children: [
-            FilledButton.tonal(
-              key: Key('reminder-done-${reminder.id}'),
-              onPressed: onDone,
-              child: Text(l10n.reminderDone),
-            ),
-            TextButton(
-              key: Key('reminder-edit-${reminder.id}'),
-              onPressed: onEdit,
-              child: Text(l10n.edit),
-            ),
-            TextButton(
-              key: Key('reminder-pause-${reminder.id}'),
-              onPressed: onPause,
-              child: Text(
-                reminder.isPaused ? l10n.reminderResume : l10n.reminderPause,
-              ),
-            ),
-          ],
+        // The mock-up's one button: Done. Edit, Pause and Remove are the row's `⋯`.
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: FilledButton.tonal(
+            key: Key('reminder-done-${reminder.id}'),
+            onPressed: onDone,
+            child: Text(l10n.reminderDone),
+          ),
         ),
       ],
     );
@@ -471,11 +477,19 @@ class _EntryRow extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text(entry.title, style: text.titleMedium)),
-            RowRemoveMenu(
+            Expanded(child: Text(entry.title, style: text.bodyLarge)),
+            RowActionMenu(
               menuKey: Key('entry-actions-${entry.id}'),
               removeKey: Key('entry-remove-${entry.id}'),
               onRemove: onRemove,
+              actions: [
+                PageMenuEntry(
+                  key: Key('entry-edit-${entry.id}'),
+                  icon: Icons.edit_outlined,
+                  label: l10n.edit,
+                  onSelected: onEdit,
+                ),
+              ],
             ),
           ],
         ),
@@ -490,16 +504,6 @@ class _EntryRow extends ConsumerWidget {
           style: text.bodySmall,
         ),
         if (entry.notes != null) Text(entry.notes!),
-        Wrap(
-          spacing: AppSpacing.sm,
-          children: [
-            TextButton(
-              key: Key('entry-edit-${entry.id}'),
-              onPressed: onEdit,
-              child: Text(l10n.edit),
-            ),
-          ],
-        ),
       ],
     );
   }

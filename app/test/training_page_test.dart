@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/widgets/loading_state.dart';
+import 'package:velomine/core/widgets/week_day_row.dart';
 
 import 'fake_server.dart';
 
@@ -249,6 +250,87 @@ void main() {
 
       expect(find.byKey(const Key('training-next-week')), findsOneWidget);
       expect(find.text('Next week (preview)'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TrainingScreen_ShouldShowTheReasonsGoalOnly_WhenTheGoalInForceIsTheSuggestedOne',
+    (tester) async {
+      server.trainingPlan = {...server.trainingPlan!, 'goal': 'fitter'};
+      server.suggestedTrainingGoal = 'fitter';
+      server.trainingSuggestionReason = 'regular_rider';
+      await openTraining(tester, sessions: [session()]);
+
+      expect(find.text('Get fitter'), findsWidgets);
+      expect(find.byKey(const Key('training-goal-reason')), findsOneWidget);
+      expect(
+        find.text(
+          'You ride regularly. We build both your base and a little speed.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'TrainingScreen_ShouldSayNothingAboutTheSuggestion_WhenTheGoalChosenIsAnother',
+    (tester) async {
+      // The rider picked faster riding; the reason the server sends belongs to the goal it suggested.
+      server.trainingPlan = {...server.trainingPlan!, 'goal': 'faster'};
+      server.suggestedTrainingGoal = 'fitter';
+      server.trainingSuggestionReason = 'regular_riding';
+      await openTraining(tester, sessions: [session()]);
+
+      expect(find.text('Get faster'), findsOneWidget);
+      expect(find.byKey(const Key('training-goal-reason')), findsNothing);
+      expect(find.textContaining('Regular riding comes before'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'TrainingScreen_ShouldDrawTheNextWeekRowsPlain_WhenTheServerSendsThePreview',
+    (tester) async {
+      final next = DateUtils.addDaysToDate(monday, 7);
+      server.trainingWeeks = [
+        trainingWeekJson(start: monday, sessions: [session()]),
+        trainingWeekJson(
+          start: next,
+          sessions: [
+            trainingSessionJson(
+              id: 'next-1',
+              date: DateUtils.addDaysToDate(next, 1),
+              minutes: 60,
+              englishName: 'Easy ride',
+              italianName: 'Giro tranquillo',
+            ),
+          ],
+        ),
+      ];
+      tester.view.physicalSize = const Size(700, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/training');
+
+      final previewRow = tester
+          .widgetList<WeekDayRow>(
+            find.descendant(
+              of: find.byKey(const Key('training-next-week')),
+              matching: find.byType(WeekDayRow),
+            ),
+          )
+          .singleWhere((row) => row.title == 'Easy ride');
+      expect(previewRow.onTap, isNull);
+      // This week's own rows still open their session: only the preview is plain.
+      final weekRow = tester
+          .widgetList<WeekDayRow>(
+            find.descendant(
+              of: find.byKey(const Key('training-this-week')),
+              matching: find.byType(WeekDayRow),
+            ),
+          )
+          .singleWhere((row) => row.title == 'Strong and steady 3×10');
+      expect(weekRow.onTap, isNotNull);
     },
   );
 

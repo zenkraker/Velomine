@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine/core/l10n.dart';
 import 'package:velomine/core/theme.dart';
@@ -226,30 +227,23 @@ void main() {
   testWidgets(
     'GoalGauge_ShouldDrawAFullArcAndNoMore_WhenTheGoalIsReachedAndOver',
     (tester) async {
-      late GoalGaugePainter painter;
       await tester.pumpWidget(
         MaterialApp(
           theme: nightTheme(),
           localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: Builder(
-              builder: (context) {
-                return GoalGauge(progress: 1.7);
-              },
-            ),
-          ),
+          home: Scaffold(body: GoalGauge(progress: 1.7)),
         ),
       );
       await tester.pump();
 
-      painter =
-          tester
-                  .widget<CustomPaint>(find.byKey(const Key('goal-gauge')))
-                  .painter!
-              as GoalGaugePainter;
-      // Past the target the arc stops at the end instead of wrapping round.
-      expect(painter.sweepFraction, 1.0);
+      // Past the target the arc stops at the end instead of wrapping round: the gauge is clamped at
+      // its own maximum, and the sentence beside it says by how much the goal is passed.
+      final gauge = tester.widget<GaugeChart>(
+        find.byKey(const Key('goal-gauge')),
+      );
+      final ring = gauge.data.rings.single as GaugeProgressRing;
+      expect(ring.value, 1.0);
       expect(find.text('170 %'), findsOneWidget);
     },
   );

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
@@ -91,6 +92,11 @@ void main() {
   testWidgets('SignInScreen_ShouldGoBackToThePassword_WhenTheMemberAsks', (
     tester,
   ) async {
+    // A phone, the screen the signed-out pages are drawn for: the two-factor step must fit there
+    // without a scroll, so its way back is reachable with one tap.
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final account = server.add('rider@example.com');
     account.twoFactorEnabled = true;
     await startApp(tester, server.session(useCookies: false));
@@ -118,6 +124,9 @@ void main() {
       expect(find.text('Android app'), findsOneWidget);
       expect(find.text('Web app'), findsOneWidget);
       expect(find.text('This device'), findsOneWidget);
+      // The mock-up puts a glyph before the device and says when it was last used in words.
+      expect(find.byIcon(Icons.smartphone), findsOneWidget);
+      expect(find.textContaining('Last used'), findsNWidgets(2));
 
       await tester.tap(find.byKey(const Key('revoke-s-other')));
       await tester.pumpAndSettle();
@@ -166,7 +175,44 @@ void main() {
 
     expect(find.text('JBSWY3DPEHPK3PXP'), findsOneWidget);
     expect(find.byKey(const Key('two-factor-enable')), findsOneWidget);
+    // The key has the copy the mock-up draws at its end, so it need not be selected by hand.
+    final copied = <String>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    await tester.tap(find.byKey(const Key('two-factor-key-copy')));
+    await tester.pumpAndSettle();
+    expect(copied, ['JBSWY3DPEHPK3PXP']);
+    expect(find.text('Copied'), findsOneWidget);
   });
+
+  testWidgets(
+    'TwoFactorScreen_ShouldShowNoSetup_WhenTheAccountSignsInWithSingleSignOn',
+    (tester) async {
+      final account = server.add('rider@example.com');
+      // No password: the account signs in with single sign-on, which is already a second step.
+      account.password = '';
+      server.signInBrowser(account);
+      await pumpScreen(tester, const TwoFactorScreen(), server: server);
+
+      expect(
+        find.text(
+          'This account signs in with single sign-on, so it already has a second step.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Set up an authenticator'), findsNothing);
+      expect(find.byKey(const Key('two-factor-start')), findsNothing);
+    },
+  );
 
   testWidgets(
     'TwoFactorScreen_ShouldShowTheRecoveryCodesInTheirOwnCard_WhenTurnedOn',

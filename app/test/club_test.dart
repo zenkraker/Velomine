@@ -1,9 +1,12 @@
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine_api/api.dart';
 
+import 'package:velomine/core/widgets/avatar.dart';
 import 'package:velomine/core/widgets/bottom_action_bar.dart';
+import 'package:velomine/core/widgets/page_scaffold.dart';
 import 'package:velomine/features/club/widgets/club_hero_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -49,8 +52,9 @@ void main() {
 
     await tester.tap(find.text('Club'));
     await tester.pumpAndSettle();
-    // The club's name names the page; a rider sees no roster, only the owner and coaches do.
-    expect(find.text('Test Club'), findsOneWidget);
+    // The club's name names the page and heads its hero card; a rider sees no roster, only the owner and
+    // coaches do.
+    expect(find.text('Test Club'), findsNWidgets(2));
     expect(find.byKey(const Key('club-members-card')), findsNothing);
     expect(find.byKey(const Key('join-code-value')), findsNothing);
 
@@ -153,8 +157,11 @@ void main() {
     await tester.tap(find.text('Club'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('club-actions')), findsNothing);
+    // A new join code is the owner's rare action: in the menu, never a button, and never Leave club.
     expect(find.byKey(const Key('leave-club')), findsNothing);
+    await tester.tap(find.byKey(const Key('club-actions')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('new-join-code')), findsOneWidget);
     expect(find.textContaining('cannot leave'), findsOneWidget);
   });
 
@@ -179,8 +186,8 @@ void main() {
         home: Scaffold(body: ClubHeroCard(club: club)),
       ),
     );
-    // The club's name is the page's title now, so the card carries the club's state alone.
-    expect(find.text('Hero Club'), findsNothing);
+    // The club's name heads the card, and the club's state sits under it.
+    expect(find.text('Hero Club'), findsOneWidget);
     expect(find.byKey(const Key('club-role')), findsOneWidget);
     expect(find.text('Coach'), findsOneWidget);
   });
@@ -220,6 +227,145 @@ void main() {
     expect(find.byKey(const Key('club-members-card')), findsOneWidget);
     expect(find.text('Rider Luca'), findsOneWidget);
   });
+
+  testWidgets(
+    'ClubMembersCard_ShouldShowInitialsAndRoleBadges_WhenACoachOpensIt',
+    (tester) async {
+      final coach = server.add(
+        'coach@example.com',
+        name: 'Coach Marco',
+        clubRole: 'coach',
+      );
+      for (final name in [
+        'Rider Luca',
+        'Giulia Ferri',
+        'Anna Greco',
+        'Luca Conti',
+        'Sara Bianchi',
+      ]) {
+        server.add(
+          '${name.split(' ').last.toLowerCase()}@example.com',
+          name: name,
+        );
+      }
+      server.signInBrowser(coach);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      // Each row leads with the member's initial in a circle, and the role is a badge beside the name.
+      expect(find.byType(Avatar), findsNWidgets(4));
+      final row = find.byKey(Key('member-${coach.id}'));
+      expect(
+        find.descendant(of: row, matching: find.byType(Avatar)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('Coach')),
+        findsOneWidget,
+      );
+
+      // Six in the club, four drawn: the rest open from the card's own button.
+      await tester.ensureVisible(find.byKey(const Key('show-all-members')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('show-all-members')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Avatar), findsNWidgets(6));
+      expect(find.byKey(const Key('show-all-members')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ClubScreen_ShouldLeadAnUpcomingRideWithItsDay_WhenTheClubHasRides',
+    (tester) async {
+      final rider = server.add('rider@example.com');
+      server.clubRides.add({
+        'id': 'plan-1',
+        'title': 'Saturday hills',
+        'startsAt': DateTime.now()
+            .add(const Duration(days: 3))
+            .toUtc()
+            .toIso8601String(),
+        'utcOffsetMinutes': 60,
+        'meetingName': 'Piazza Duomo',
+        'latitude': 46.0,
+        'longitude': 11.0,
+        'routeId': null,
+        'pace': 'steady',
+        'noDrop': true,
+        'notes': null,
+        'maxRiders': 12,
+        'createdByName': 'Test Rider',
+        'cancelledAt': null,
+      });
+      server.signInBrowser(rider);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      final row = find.byKey(const Key('club-ride-plan-1'));
+      expect(row, findsOneWidget);
+      // A date block leads the row, not an icon and a date string.
+      final date = DateFormat('d')
+          .format(DateTime.now().add(const Duration(days: 3)));
+      expect(
+        find.descendant(of: row, matching: find.text(date)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.byIcon(Icons.event)),
+        findsNothing,
+      );
+      // The pace, the meeting point and the room left are on the row.
+      expect(
+        find.descendant(of: row, matching: find.textContaining('Steady')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.textContaining('Piazza Duomo')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('12 of 12 places left')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'ClubLocationCard_ShouldDrawTheMapAboveTheSwitchAndButton_WhenSet',
+    (tester) async {
+      final owner = server.add('owner@example.com', clubRole: 'owner');
+      server.clubLatitude = 45.4642;
+      server.clubLongitude = 9.19;
+      server.signInBrowser(owner);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('club-location-map')), findsOneWidget);
+      // The switch comes before the button, under the map.
+      final switchY = tester
+          .getTopLeft(find.byKey(const Key('club-discoverable')))
+          .dy;
+      final buttonY = tester
+          .getTopLeft(find.byKey(const Key('set-club-location')))
+          .dy;
+      expect(switchY, lessThan(buttonY));
+      expect(
+        tester.getTopLeft(find.byKey(const Key('club-location-map'))).dy,
+        lessThan(switchY),
+      );
+    },
+  );
 
   testWidgets('JoinClubScreen_ShouldPrefillCode_WhenInvited', (tester) async {
     final rider = server.add('rider@example.com', clubRole: null);
@@ -372,8 +518,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Picks an audience in one of the sharing choices, as a rider would.
-  Future<void> choose(WidgetTester tester, String key, String audience) async {
+  /// Turns one sharing switch on or off, as a rider would.
+  Future<void> toggle(WidgetTester tester, String key) async {
     await tester.scrollUntilVisible(
       find.byKey(Key(key)),
       300,
@@ -381,15 +527,13 @@ void main() {
     );
     await tester.tap(find.byKey(Key(key)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(audience).last);
-    await tester.pumpAndSettle();
   }
 
   testWidgets('ClubSharingCard_ShouldAskFirst_WhenRidesAreSharedWithCoaches', (
     tester,
   ) async {
     await openClub(tester);
-    await choose(tester, 'share-rides', 'My coaches');
+    await toggle(tester, 'share-rides');
 
     // Nothing is shared until the rider agrees, and the prompt says what a coach then reads.
     expect(find.text('Share with your coaches?'), findsOneWidget);
@@ -409,12 +553,12 @@ void main() {
       // There is no separate training choice: it follows the rides.
       expect(find.byKey(const Key('share-analytics')), findsNothing);
 
-      await choose(tester, 'share-rides', 'My coaches');
+      await toggle(tester, 'share-rides');
       await tester.tap(find.byKey(const Key('share-rides-confirm')));
       await tester.pumpAndSettle();
       expect(server.sharingChoices['analytics'], 'coaches');
 
-      await choose(tester, 'share-rides', 'Nobody');
+      await toggle(tester, 'share-rides');
       expect(server.sharingChoices['rides'], 'none');
       expect(server.sharingChoices['analytics'], 'none');
     },
@@ -424,7 +568,7 @@ void main() {
     'ClubSharingCard_ShouldAskForConsent_WhenWellbeingIsSharedWithCoaches',
     (tester) async {
       await openClub(tester);
-      await choose(tester, 'share-wellbeing', 'My coaches');
+      await toggle(tester, 'share-wellbeing');
 
       // Wellbeing is health data, so the prompt asks for consent in its own words.
       expect(
@@ -444,7 +588,7 @@ void main() {
     'ClubSharingCard_ShouldAskForConsentInItalian_WhenWellbeingIsSharedWithCoaches',
     (tester) async {
       await openClub(tester, language: 'it');
-      await choose(tester, 'share-wellbeing', 'I miei allenatori');
+      await toggle(tester, 'share-wellbeing');
 
       expect(
         find.text('Condividere il tuo benessere con i tuoi allenatori?'),
@@ -461,7 +605,7 @@ void main() {
     tester,
   ) async {
     await openClub(tester);
-    await choose(tester, 'share-wellbeing', 'My coaches');
+    await toggle(tester, 'share-wellbeing');
 
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
@@ -473,7 +617,7 @@ void main() {
     server.sharingChoices['rides'] = 'coaches';
     await openClub(tester);
 
-    await choose(tester, 'share-rides', 'Nobody');
+    await toggle(tester, 'share-rides');
 
     // Turning sharing off never asks: it takes nothing away.
     expect(find.text('Share with your coaches?'), findsNothing);
@@ -486,7 +630,7 @@ void main() {
     server.sharingChoices['rides'] = 'coaches';
     await openClub(tester);
 
-    await choose(tester, 'share-routes', 'My coaches');
+    await toggle(tester, 'share-routes');
 
     // Routes borrow the map to rides the rider already shares, and their own row says what it shows.
     expect(find.text('Share with your coaches?'), findsNothing);
@@ -573,7 +717,7 @@ void main() {
       await startApp(tester, server.session(useCookies: true));
       await goTo(tester, '/club');
 
-      // Three ways forward, each its own card with its own button.
+      // Three ways forward, each its own card with a button of the same style: they are peers.
       expect(find.byKey(const Key('club-way-nearby')), findsOneWidget);
       expect(find.byKey(const Key('club-way-join')), findsOneWidget);
       expect(find.byKey(const Key('club-way-start')), findsOneWidget);
@@ -583,6 +727,14 @@ void main() {
           matching: find.byKey(const Key('go-nearby-clubs')),
         ),
         findsOneWidget,
+      );
+      for (final key in ['go-nearby-clubs', 'go-join-club', 'go-start-club']) {
+        expect(tester.widget(find.byKey(Key(key))), isA<OutlinedButton>());
+      }
+      expect(find.text('Your club'), findsNothing);
+      expect(
+        tester.widget<PageScaffold>(find.byType(PageScaffold).first).title,
+        'Club',
       );
     },
   );

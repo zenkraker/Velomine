@@ -59,7 +59,8 @@ void main() {
     expect(hint('profile-max-hr'), '183');
     expect(field('profile-threshold-hr'), '');
     expect(hint('profile-threshold-hr'), '163');
-    expect(field('profile-zone'), 'Europe/Rome');
+    // The zone is a picker of the zones the app knows, not a free-text field.
+    expect(find.text('Europe/Rome'), findsOneWidget);
     expect(find.text('Sunday'), findsOneWidget);
   });
 
@@ -511,10 +512,10 @@ void main() {
     await tester.enterText(find.byKey(const Key('profile-ftp')), '265');
     await tester.enterText(find.byKey(const Key('profile-weight')), '68,5');
     await tester.enterText(find.byKey(const Key('profile-birth-year')), '1985');
-    await tester.enterText(
-      find.byKey(const Key('profile-zone')),
-      'Europe/Rome',
-    );
+    await tester.tap(find.byKey(const Key('profile-zone')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('UTC').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-first-day')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Saturday').last);
@@ -527,7 +528,7 @@ void main() {
       'ftpW': 265,
       'weightKg': 68.5,
       'birthYear': 1985,
-      'timeZone': 'Europe/Rome',
+      'timeZone': 'UTC',
       'firstDayOfWeek': 'saturday',
       'emailNotifications': true,
       'emailAccountNotifications': true,
@@ -916,6 +917,29 @@ void main() {
       expect(cardTitleOf(tester, 'profile-units'), 'Preferences');
     },
   );
+
+  testWidgets('ProfileScreen_ShouldOfferTheZoneAsAPicker_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    // The zone is chosen from a list, never typed: the server stores an IANA name.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('profile-zone')),
+        matching: find.byType(TextField),
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('profile-zone')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('UTC').last);
+    await tester.pumpAndSettle();
+
+    // A preference saves the moment it is chosen.
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    expect(server.profiles['rider@example.com']!['timeZone'], 'UTC');
+  });
 
   testWidgets('ProfileScreen_ShouldSaveTheFirstDay_WhenItIsChosen', (
     tester,

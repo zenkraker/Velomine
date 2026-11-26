@@ -10,11 +10,12 @@ import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'coach_athletes_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/avatar.dart';
 import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/app_card.dart';
 
 /// The athletes in this club who share rides or training.
 class CoachAthletesScreen extends ConsumerWidget {
@@ -56,15 +57,30 @@ class CoachAthletesScreen extends ConsumerWidget {
           // One list card: every athlete is a row, with what they share beside their name.
           AppCard(
             key: const Key('athletes-card'),
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.sm,
+            ),
             child: Column(
               children: [
-                for (final athlete in s.athletes)
+                for (final (i, athlete) in s.athletes.indexed) ...[
+                  if (i > 0) const Divider(),
                   ListTile(
                     key: Key('athlete-${athlete.userId}'),
-                    leading: const Icon(Icons.person_outline),
-                    title: Text(athlete.displayName),
-                    subtitle: Text(_loadLine(l10n, athlete)),
+                    contentPadding: EdgeInsets.zero,
+                    leading: Avatar(athlete.displayName),
+                    // The row's lines are the design's body and caption, not the tile's own defaults.
+                    title: Text(
+                      athlete.displayName,
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      _loadLine(l10n, athlete),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                     trailing: Wrap(
                       spacing: AppSpacing.xs,
                       runSpacing: AppSpacing.xs,
@@ -78,6 +94,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                     ),
                     onTap: () => onOpen(athlete.userId),
                   ),
+                ],
               ],
             ),
           ),

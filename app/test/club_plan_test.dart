@@ -203,13 +203,14 @@ void main() {
 
     expect(server.clubRoles[rider.email], 'owner');
     expect(server.clubName, 'Friday Riders');
-    expect(find.text('Friday Riders'), findsOneWidget);
+    // The page's title and the hero card both name it.
+    expect(find.text('Friday Riders'), findsNWidgets(2));
     expect(find.byKey(const Key('club-plan-card')), findsOneWidget);
     expect(find.text('1 of 25 members'), findsOneWidget);
     expect(find.byKey(const Key('go-start-club')), findsNothing);
   });
 
-  testWidgets('ClubScreen_ShouldNotOfferStartAClub_WhenTheSettingIsOff', (
+  testWidgets('NoClubPage_ShouldKeepAllThreeWays_WhenTheSettingIsOff', (
     tester,
   ) async {
     widen(tester);
@@ -218,8 +219,16 @@ void main() {
 
     await openClub(tester);
 
+    // Club creation being off turns the third button off; it never removes the third way and never
+    // leaves a third of the row empty.
     expect(find.byKey(const Key('go-join-club')), findsOneWidget);
-    expect(find.byKey(const Key('go-start-club')), findsNothing);
+    expect(find.byKey(const Key('club-way-start')), findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.byKey(const Key('go-start-club')))
+          .onPressed,
+      isNull,
+    );
   });
 
   testWidgets('ClubsTab_ShouldRecordTheBand_WhenTheOperatorSavesAPlan', (

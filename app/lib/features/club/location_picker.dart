@@ -1,3 +1,5 @@
+import '../../core/format.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/loading_state.dart';
 
 import 'package:flutter/gestures.dart';
@@ -214,17 +216,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 Positioned(
                   left: AppSpacing.sm,
                   bottom: AppSpacing.sm,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.xs,
-                      ),
-                      child: Text(
-                        '${latitude.toStringAsFixed(5)}, '
-                        '${longitude.toStringAsFixed(5)}',
-                        key: const Key('location-readout'),
-                      ),
+                  child: AppCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: Text(
+                      '${decimal(latitude, 5)}, '
+                      '${decimal(longitude, 5)}',
+                      key: const Key('location-readout'),
                     ),
                   ),
                 ),

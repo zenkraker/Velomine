@@ -5,9 +5,11 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -44,7 +46,7 @@ class _TotalsScreenState extends ConsumerState<TotalsScreen> {
 
     return PageScaffold(
       title: l10n.navTotals,
-      parent: wide ? l10n.navProgress : null,
+      parent: l10n.navProgress,
       menu: PageMenu(
         buttonKey: const Key('totals-actions'),
         badge: filters.discipline != null,
@@ -208,7 +210,13 @@ class _TotalsTable extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final rows = totals.totals.reversed.toList();
     final shown = showEarlier ? rows : rows.take(_totalsShown).toList();
-    final current = Theme.of(context).colorScheme.primaryContainer;
+    final colors = VelomineColors.of(context);
+    // The current period is on the accent's soft ground, in the ink that sits on it, like every other
+    // accent surface in the app.
+    final currentStyle = text.bodySmall?.copyWith(
+      color: colors.onAccentSoft,
+      fontWeight: FontWeight.w600,
+    );
 
     Widget cell(String value, double width, {TextStyle? style}) => SizedBox(
       width: width,
@@ -218,6 +226,14 @@ class _TotalsTable extends ConsumerWidget {
         style: style ?? text.bodySmall,
       ),
     );
+
+    // A period with no rides has no rows to draw: the table says so instead of drawing its heading alone.
+    if (rows.isEmpty) {
+      return AppCard(
+        key: const Key('totals-table'),
+        child: EmptyState(message: l10n.totalsEmpty, framed: false),
+      );
+    }
 
     return AppCard(
       key: const Key('totals-table'),
@@ -239,9 +255,10 @@ class _TotalsTable extends ConsumerWidget {
                     SizedBox(
                       width: _periodWidth,
                       child: Text(switch (totals.period) {
-                        'week' => l10n.periodWeeks,
-                        'month' => l10n.periodMonths,
-                        _ => l10n.periodYears,
+                        // The design's column heading is the period in the singular.
+                        'week' => l10n.totalsColumnWeek,
+                        'month' => l10n.totalsColumnMonth,
+                        _ => l10n.totalsColumnYear,
                       }, style: text.labelSmall),
                     ),
                     cell(l10n.navRides, _ridesWidth),
@@ -261,7 +278,7 @@ class _TotalsTable extends ConsumerWidget {
               for (final (i, t) in shown.indexed)
                 Container(
                   key: Key('total-$i'),
-                  color: i == 0 ? current : null,
+                  color: i == 0 ? colors.accentSoft : null,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xl,
                     vertical: AppSpacing.sm,
@@ -278,13 +295,29 @@ class _TotalsTable extends ConsumerWidget {
                                   _ => l10n.thisYear,
                                 }
                               : periodTitle(totals.period, t.start, t.end),
-                          style: text.bodySmall,
+                          style: i == 0 ? currentStyle : text.bodySmall,
                         ),
                       ),
-                      cell('${t.rides}', _ridesWidth),
-                      cell(km(units, t.distanceM), _numberWidth),
-                      cell(duration(t.movingS), _numberWidth),
-                      cell(elevation(units, t.elevationGainM), _numberWidth),
+                      cell(
+                        '${t.rides}',
+                        _ridesWidth,
+                        style: i == 0 ? currentStyle : null,
+                      ),
+                      cell(
+                        km(units, t.distanceM),
+                        _numberWidth,
+                        style: i == 0 ? currentStyle : null,
+                      ),
+                      cell(
+                        duration(t.movingS),
+                        _numberWidth,
+                        style: i == 0 ? currentStyle : null,
+                      ),
+                      cell(
+                        elevation(units, t.elevationGainM),
+                        _numberWidth,
+                        style: i == 0 ? currentStyle : null,
+                      ),
                     ],
                   ),
                 ),

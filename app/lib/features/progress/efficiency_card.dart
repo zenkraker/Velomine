@@ -35,12 +35,12 @@ class EfficiencyCard extends StatelessWidget {
               paintKey: const Key('efficiency-chart'),
               values: [for (final week in weeks) week.efficiencyFactor],
               labels: [for (final week in weeks) dateOnly(week.weekStart)],
-              format: (value) => value.toStringAsFixed(2),
+              format: (value) => decimal(value, 2),
               semanticLabel: weeks
                   .map(
                     (week) => l10n.efficiencyWeekSemantics(
                       dateOnly(week.weekStart),
-                      week.efficiencyFactor.toStringAsFixed(2),
+                      decimal(week.efficiencyFactor, 2),
                       week.rides,
                     ),
                   )

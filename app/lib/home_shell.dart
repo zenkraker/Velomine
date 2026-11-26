@@ -8,6 +8,7 @@ import 'core/l10n.dart';
 import 'core/motion.dart';
 import 'core/providers.dart';
 import 'core/rider_mode.dart';
+import 'core/theme.dart';
 import 'core/theme_choice.dart';
 import 'core/tokens.dart';
 import 'core/widgets/floating_nav_pill.dart';
@@ -832,7 +833,6 @@ class _SidebarSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
       expanded: open,
@@ -857,7 +857,7 @@ class _SidebarSection extends StatelessWidget {
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: text.labelLarge?.copyWith(
+                    style: VelomineText.of(context).navLabel.copyWith(
                       color: selected ? scheme.onPrimaryContainer : null,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     ),
@@ -903,7 +903,6 @@ class _SidebarLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Semantics(
@@ -937,7 +936,7 @@ class _SidebarLink extends StatelessWidget {
                         label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: text.labelLarge?.copyWith(
+                        style: VelomineText.of(context).navLabel.copyWith(
                           color: selected ? scheme.onPrimaryContainer : null,
                           fontWeight: selected
                               ? FontWeight.w600
@@ -1034,7 +1033,6 @@ class _RailDestination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Semantics(
@@ -1071,16 +1069,19 @@ class _RailDestination extends StatelessWidget {
                     child: icon,
                   ),
                 ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: text.labelMedium?.copyWith(
-                    color: selected
-                        ? scheme.onPrimaryContainer
-                        : scheme.onSurface,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: AppNav.maxLabelScale,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: VelomineText.of(context).navLabel.copyWith(
+                      color: selected
+                          ? scheme.onPrimaryContainer
+                          : scheme.onSurface,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ],

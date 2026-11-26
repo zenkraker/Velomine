@@ -2,9 +2,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/widgets/area_chart.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/segmented_control.dart';
@@ -100,13 +102,6 @@ class WellbeingCard extends StatelessWidget {
       checkIns.checkIns.reversed.take(14).toList().reversed.toList();
 
   /// How the rider felt on a day, as one number out of five.
-  static double _feelScore(CheckInResponse checkIn) =>
-      (checkIn.fatigue +
-          checkIn.soreness +
-          checkIn.mood +
-          checkIn.stress +
-          checkIn.motivation) /
-      5;
 
   @override
   Widget build(BuildContext context) {
@@ -193,14 +188,31 @@ class WellbeingCard extends StatelessWidget {
               ),
             ],
           ),
-        ] else
+        ] else if (days.isNotEmpty)
           Text(l10n.wellbeingNoToday, style: text.bodySmall),
-        if (checkIns case final checkIns?
-            when checkIns.checkIns.isNotEmpty) ...[
+        if (days.isEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          // Consented, but nothing said yet: the history says there is nothing rather than vanishing,
+          // and it is the one place that says it.
+          if (checkIns != null && today == null)
+            EmptyState(
+              key: const Key('wellbeing-empty'),
+              message: l10n.wellbeingNoToday,
+              framed: false,
+            ),
+        ] else ...[
           const SizedBox(height: AppSpacing.lg),
           Text(l10n.wellbeingHistory14, style: text.labelLarge),
+          // What the line says in words, as the design puts it above the trend.
+          if (_feelSentence(today, days) case (final todayScore, final usual))
+            Text(
+              l10n.wellbeingFeelSentence(todayScore, usual),
+              key: const Key('wellbeing-feel-sentence'),
+              style: text.bodySmall,
+            ),
           const SizedBox(height: AppSpacing.xs),
-          // Two weeks of how the rider felt, as a line: the latest point carries today's score.
+          // Two weeks of how the rider felt, as a line: the latest point carries today's score. The design
+          // draws the trend, not a row per day.
           AreaChart(
             key: const Key('wellbeing-history-chart'),
             values: [for (final checkIn in days.reversed) _feelScore(checkIn)],
@@ -208,18 +220,18 @@ class WellbeingCard extends StatelessWidget {
               for (final checkIn in days.reversed)
                 DateFormat.MMMd(locale).format(checkIn.date),
             ],
-            format: (value) => value.toStringAsFixed(1),
+            format: (value) => decimal(value, 1),
             semanticLabel: l10n.wellbeingHistory14,
             emptyMessage: l10n.wellbeingNoToday,
             height: AppProgress.fitnessChartHeight,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          // The numbers behind the line, newest first: the page answers "how do I feel", not "what did
-          // I ever say".
-          for (final checkIn in days.reversed) _HistoryRow(checkIn: checkIn),
         ],
         const SizedBox(height: AppSpacing.md),
-        Text(l10n.wellbeingPrivate, style: text.bodySmall),
+        Text(
+          l10n.wellbeingPrivateNotes,
+          key: const Key('wellbeing-private-notes'),
+          style: text.bodySmall,
+        ),
       ],
     );
   }
@@ -274,43 +286,25 @@ class _ScoreRow extends StatelessWidget {
   );
 }
 
-class _HistoryRow extends StatelessWidget {
-  const _HistoryRow({required this.checkIn});
-
-  final CheckInResponse checkIn;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppProgress.dateWidth,
-            child: Text(
-              DateFormat.MMMd(locale).format(checkIn.date),
-              style: text.bodySmall,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              [
-                '${l10n.wellbeingShortFatigue} ${checkIn.fatigue}',
-                '${l10n.wellbeingShortSoreness} ${checkIn.soreness}',
-                '${l10n.wellbeingShortMood} ${checkIn.mood}',
-                '${l10n.wellbeingShortStress} ${checkIn.stress}',
-                '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
-                if (checkIn.sleep.orElse(null) case final sleep?)
-                  '${l10n.wellbeingShortSleep} $sleep',
-              ].join(' · '),
-              style: text.bodySmall,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+/// Today's feel and the rider's usual one, one decimal each, as the card's sentence reads them.
+/// The usual one is the mean of every saved day that has a score; a missing side is a dash.
+(String, String) _feelSentence(
+  CheckInResponse? today,
+  List<CheckInResponse> days,
+) {
+  final todayScore = today == null ? '–' : _oneDecimal(_feelScore(today));
+  if (days.isEmpty) return (todayScore, '–');
+  final mean = days.map(_feelScore).reduce((a, b) => a + b) / days.length;
+  return (todayScore, _oneDecimal(mean));
 }
+
+String _oneDecimal(double value) => value.toStringAsFixed(1);
+
+/// How the rider felt that day: the mean of the five scores, which is what the trend draws.
+double _feelScore(CheckInResponse checkIn) =>
+    (checkIn.fatigue +
+        checkIn.soreness +
+        checkIn.mood +
+        checkIn.stress +
+        checkIn.motivation) /
+    5;

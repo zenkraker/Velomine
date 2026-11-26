@@ -17,7 +17,6 @@ import '../../core/units.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/card_link.dart';
 import '../../core/widgets/error_state.dart';
-import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/segmented_control.dart';
 import '../../core/widgets/stat_card.dart';
@@ -89,10 +88,19 @@ class ProgressScreen extends ConsumerWidget {
               earlier.length;
 
     final readinessCard = switch (readiness.load.value) {
+      // No score yet is a fact the card carries: a dash and what makes one appear, not a hole in the row.
+      final r? when r.score == null => StatCard(
+        key: const Key('metric-readiness'),
+        title: l10n.readiness,
+        value: '–',
+        sentence: l10n.readinessNoData,
+        link: l10n.wellbeing,
+        onLink: () => context.go('/progress/wellbeing'),
+      ),
       final r? => StatCard(
         key: const Key('metric-readiness'),
         title: l10n.readiness,
-        value: r.score == null ? '–' : '${r.score}',
+        value: '${r.score}',
         state: switch (r.band) {
           'hard' => l10n.readinessHard,
           'easy' => l10n.readinessEasy,
@@ -116,6 +124,8 @@ class ProgressScreen extends ConsumerWidget {
         key: const Key('metric-form'),
         title: l10n.form,
         value: t.days.last.form.round().toString(),
+        // The design's state word for a form under load.
+        state: l10n.formStateBuilding,
         sentence: l10n.formFitnessFatigue(
           t.days.last.fitness.round(),
           t.days.last.fatigue.round(),
@@ -126,7 +136,18 @@ class ProgressScreen extends ConsumerWidget {
         link: wide ? l10n.fitness : null,
         onLink: wide ? () => context.go('/progress/fitness') : null,
       ),
-      _ => null,
+      // A rider with no load in the range gets the card's empty state, not a hole in the row.
+      _? => StatCard(
+        key: const Key('metric-form'),
+        title: l10n.form,
+        value: '–',
+        sentence: l10n.dailyLoadEmpty,
+        compact: !wide,
+        onTap: wide ? null : () => context.go('/progress/fitness'),
+        link: wide ? l10n.fitness : null,
+        onLink: wide ? () => context.go('/progress/fitness') : null,
+      ),
+      null => null,
     };
     // The week's distance against the recent average; two across on a phone it keeps its size down
     // and hands the tap to the whole card.
@@ -136,20 +157,32 @@ class ProgressScreen extends ConsumerWidget {
         title: thisPeriod,
         value: distanceParts(units, week.distanceM).value,
         unit: distanceParts(units, week.distanceM).unit,
+        // The sentence keeps the rides and the time the week took: the average alone does not say how
+        // much riding it stands for.
         sentence: averageM == null
             ? l10n.periodTotals(
                 week.rides,
                 duration(week.movingS),
                 elevation(units, week.elevationGainM),
               )
-            : l10n.weekAgainstAverage(
-                week.distanceM > averageM
-                    ? 'above'
-                    : week.distanceM < averageM
-                    ? 'below'
-                    : 'other',
-                km(units, averageM),
-              ),
+            : '${l10n.goalRideCount(week.rides)}, ${duration(week.movingS)}. '
+                  '${l10n.weekAgainstAverage(week.distanceM > averageM
+                      ? 'above'
+                      : week.distanceM < averageM
+                      ? 'below'
+                      : 'other', km(units, averageM))}',
+        compact: compact,
+        onTap: compact ? () => context.go('/progress/totals') : null,
+        link: compact ? null : l10n.navTotals,
+        onLink: compact ? null : () => context.go('/progress/totals'),
+      ),
+      // Nothing ridden yet is a fact too: the card says so instead of leaving a hole. While the totals
+      // are still on their way the page waits rather than claiming there are none.
+      null when !totals.load.running => StatCard(
+        key: const Key('metric-period'),
+        title: thisPeriod,
+        value: '–',
+        sentence: l10n.totalsEmpty,
         compact: compact,
         onTap: compact ? () => context.go('/progress/totals') : null,
         link: compact ? null : l10n.navTotals,
@@ -177,23 +210,11 @@ class ProgressScreen extends ConsumerWidget {
           ref.read(progressFiltersViewModelProvider.notifier).setPeriod(period),
     );
 
-    final menu = PageMenu(
-      buttonKey: const Key('progress-actions'),
-      badge: filters.discipline != null,
-      entries: [
-        PageMenuEntry(
-          key: const Key('progress-filter'),
-          icon: Icons.filter_list,
-          label: l10n.progressFilterTitle,
-          onSelected: () => showProgressFilterSheet(context),
-        ),
-      ],
-    );
-
     return PageScaffold(
       title: l10n.navProgress,
       subtitle: l10n.progressSubtitle,
-      menu: menu,
+      // No `⋯` menu: its one entry was the sport filter, which the chips below and the phone's title
+      // chip already draw.
       // A phone chooses the sport from one chip in the title row; a wide window has the chips below.
       primaryAction: wide
           ? null
@@ -234,7 +255,7 @@ class ProgressScreen extends ConsumerWidget {
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.xs,
             children: [
-              ChoiceChip(
+              FilterChip(
                 key: const Key('progress-filter-all'),
                 label: Text(l10n.rideFilterAll),
                 selected: filters.discipline == null,
@@ -243,7 +264,7 @@ class ProgressScreen extends ConsumerWidget {
                     .setDiscipline(null),
               ),
               for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-                ChoiceChip(
+                FilterChip(
                   key: Key('progress-filter-$discipline'),
                   label: Text(disciplineName(l10n, discipline)),
                   selected: filters.discipline == discipline,
@@ -286,8 +307,8 @@ class ProgressScreen extends ConsumerWidget {
             label: l10n.loading,
             child: const PlaceholderBlock(
               key: Key('totals-loading'),
-              height: 180,
-              radius: 16,
+              height: AppChart.height,
+              radius: AppRadius.large,
             ),
           ),
         if (totals.load.value case final data?)

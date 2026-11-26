@@ -170,10 +170,22 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
       t < 0.5 || other == null ? this : other;
 }
 
-/// The two number styles the text theme has no slot for: a stat card's one big number, and a secondary number.
+/// The `fontFeatures` that make a number sit in its column: a table cell, a stat, a clock. Every style the
+/// theme builds carries them, and a style built by hand adds them with `copyWith(fontFeatures: tabularFigures)`.
+const tabularFigures = <FontFeature>[FontFeature.tabularFigures()];
+
+/// The styles the text theme has no slot for: a stat card's one big number, a secondary number, the
+/// navigation label, which is not Material's `labelLarge` 14 (`docs/design/tokens.json`, *nav-label*), the
+/// auth wordmark, and the code of a join code or a setup key.
 @immutable
 class VelomineText extends ThemeExtension<VelomineText> {
-  const VelomineText({required this.kpi, required this.stat});
+  const VelomineText({
+    required this.kpi,
+    required this.stat,
+    required this.navLabel,
+    required this.wordmark,
+    required this.code,
+  });
 
   /// The one big number of a stat card: regular weight, size makes it stand out.
   final TextStyle kpi;
@@ -181,17 +193,55 @@ class VelomineText extends ThemeExtension<VelomineText> {
   /// A secondary number: a gauge's centre, a value in a list row.
   final TextStyle stat;
 
+  /// A nav pill and sidebar label: 15, medium, never squeezed.
+  final TextStyle navLabel;
+
+  /// The wordmark above an auth form: display 28/32 in ink, never the accent.
+  final TextStyle wordmark;
+
+  /// A join code or a setup key: 22, semibold, its characters spaced apart the way the mock-up's
+  /// monospace code face does it.
+  final TextStyle code;
+
   static VelomineText of(BuildContext context) =>
       Theme.of(context).extension<VelomineText>() ?? _fallback;
 
   static const _fallback = VelomineText(
     kpi: TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w400),
     stat: TextStyle(fontSize: 24, height: 28 / 24, fontWeight: FontWeight.w500),
+    navLabel: TextStyle(
+      fontSize: 15,
+      height: 20 / 15,
+      fontWeight: FontWeight.w500,
+    ),
+    wordmark: TextStyle(
+      fontSize: 28,
+      height: 32 / 28,
+      fontWeight: FontWeight.w400,
+    ),
+    code: TextStyle(
+      fontSize: 22,
+      height: 28 / 22,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 22 * 0.08,
+      fontFeatures: tabularFigures,
+    ),
   );
 
   @override
-  VelomineText copyWith({TextStyle? kpi, TextStyle? stat}) =>
-      VelomineText(kpi: kpi ?? this.kpi, stat: stat ?? this.stat);
+  VelomineText copyWith({
+    TextStyle? kpi,
+    TextStyle? stat,
+    TextStyle? navLabel,
+    TextStyle? wordmark,
+    TextStyle? code,
+  }) => VelomineText(
+    kpi: kpi ?? this.kpi,
+    stat: stat ?? this.stat,
+    navLabel: navLabel ?? this.navLabel,
+    wordmark: wordmark ?? this.wordmark,
+    code: code ?? this.code,
+  );
 
   @override
   VelomineText lerp(VelomineText? other, double t) =>
@@ -255,7 +305,6 @@ ThemeData nightTheme() {
 ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
   const sans = 'Geist';
   const display = 'Instrument Serif';
-  const figures = [FontFeature.tabularFigures()];
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
@@ -263,7 +312,7 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
   );
   final baseText = base.textTheme.apply(fontFamily: sans);
   TextStyle? tabular(TextStyle? style) =>
-      style?.copyWith(fontFeatures: figures);
+      style?.copyWith(fontFeatures: tabularFigures);
   // Numbers line up in columns in every stat, table and clock. Sizes follow the type scale in tokens.json:
   // card-title 17, body 15, caption 13, axis 12.
   final text = baseText.copyWith(
@@ -279,7 +328,8 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     titleSmall: tabular(baseText.titleSmall),
     bodyLarge: tabular(baseText.bodyLarge)
         ?.copyWith(fontSize: 15, height: 22 / 15),
-    bodyMedium: tabular(baseText.bodyMedium),
+    bodyMedium: tabular(baseText.bodyMedium)
+        ?.copyWith(fontSize: 15, height: 22 / 15),
     bodySmall: tabular(baseText.bodySmall)
         ?.copyWith(fontSize: 13, height: 18 / 13),
     labelLarge: tabular(baseText.labelLarge),
@@ -297,7 +347,7 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
       fontWeight: FontWeight.w400,
       letterSpacing: -0.8,
       color: scheme.onSurface,
-      fontFeatures: figures,
+      fontFeatures: tabularFigures,
     ),
     stat: TextStyle(
       fontFamily: sans,
@@ -306,7 +356,32 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
       fontWeight: FontWeight.w500,
       letterSpacing: -0.24,
       color: scheme.onSurface,
-      fontFeatures: figures,
+      fontFeatures: tabularFigures,
+    ),
+    navLabel: TextStyle(
+      fontFamily: sans,
+      fontSize: 15,
+      height: 20 / 15,
+      fontWeight: FontWeight.w500,
+      color: scheme.onSurface,
+    ),
+    wordmark: TextStyle(
+      fontFamily: display,
+      fontSize: 28,
+      height: 32 / 28,
+      fontWeight: FontWeight.w400,
+      color: scheme.onSurface,
+    ),
+    // 0.08em apart, as `vm-code` draws it, and tabular so two codes line up under each other.
+    // shortcut: no monospace family is bundled, so a code keeps the sans face; add one with the font.
+    code: TextStyle(
+      fontFamily: sans,
+      fontSize: 22,
+      height: 28 / 22,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 22 * 0.08,
+      color: scheme.onSurface,
+      fontFeatures: tabularFigures,
     ),
   );
   final buttonShape = WidgetStatePropertyAll<OutlinedBorder>(
@@ -324,6 +399,9 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     useMaterial3: true,
     colorScheme: scheme,
     fontFamily: sans,
+    // Without this, Flutter resolves the tap target to `shrinkWrap` on linux/macOS/windows, which is what
+    // the web build reports, and a 32 dp chip has a 32 dp tap area under the design's 48 dp minimum.
+    materialTapTargetSize: MaterialTapTargetSize.padded,
     scaffoldBackgroundColor: scheme.surface,
     // The web has no snapshotting, so the platform's zoom keeps the old page on screen; fade instead.
     pageTransitionsTheme: kIsWeb ? webPageTransitions : null,

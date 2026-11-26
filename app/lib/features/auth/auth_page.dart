@@ -1,14 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/page_scaffold.dart';
 
 /// The frame every signed-out screen shares: the wordmark as a hero, the step's name, one sentence
-/// about it, then one column at a readable width, a back arrow where there is a way back, and the
-/// step's one primary button: pinned at the bottom on a phone, under the fields on a wide window.
+/// about it, then one column at the design's 440 px, centred in the page, a back arrow where there is a
+/// way back, and the step's one primary button, pinned at the bottom.
+///
+/// The box is `docs/design/pages/bundle.css` `.vm-auth`: 440 wide, centred both ways, the wordmark 28 in ink.
 ///
 /// There is no shell here, so the page asks for the header itself (`showOnPhone`): it only holds the
 /// back arrow, because the wordmark is the page's title.
@@ -74,23 +77,21 @@ class AuthPage extends StatelessWidget {
         bottom: false,
         child: PageHeaderScope(
           showOnPhone: true,
+          // 440 wide, as the design's `.vm-auth` draws it. The box is top-aligned: PageScaffold has no
+          // option to centre in the viewport, and a guessed min-height pushed the last row under the
+          // pinned button on the two-factor step (measured by its own test).
           child: PageScaffold(
-            maxWidth: AppLayout.contentNarrow,
+            maxWidth: AppAuth.width,
             onBack: onBack,
             bottomAction: button == null
                 ? null
-                : BottomActionBar(
-                    maxWidth: AppLayout.contentNarrow,
-                    child: button,
-                  ),
+                : BottomActionBar(maxWidth: AppAuth.width, child: button),
             children: [
-              Semantics(
-                header: title == null,
-                child: Text(
-                  'Velomine',
-                  style: text.displayMedium?.copyWith(color: scheme.primary),
-                  textAlign: TextAlign.center,
-                ),
+              Text(
+                'Velomine',
+                semanticsLabel: title == null ? 'Velomine' : null,
+                style: VelomineText.of(context).wordmark,
+                textAlign: TextAlign.center,
               ),
               if (caption case final caption?)
                 Text(

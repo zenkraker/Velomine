@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:material_ui/material_ui.dart';
 
 import '../theme.dart';
@@ -9,6 +10,10 @@ import 'empty_state.dart';
 import 'nice_ticks.dart';
 
 /// One value over time: a line with a fading area under it, its latest point marked with its value.
+///
+/// Drawn by `fl_chart` (see `docs/dependencies/fl_chart.md`): the line, its area, the grid, the axis
+/// labels and the dot are its own, and every colour and style the design fixes is passed in here,
+/// because fl_chart's theme is Flutter-Material's fallback and not Velomine's.
 class AreaChart extends StatelessWidget {
   const AreaChart({
     super.key,
@@ -47,197 +52,176 @@ class AreaChart extends StatelessWidget {
     if (values.isEmpty) return EmptyState(framed: false, message: emptyMessage);
     final scheme = Theme.of(context).colorScheme;
     final line = color ?? VelomineColors.of(context).accentStrong;
+    final axis = chartLabelStyle(context);
+    final compact =
+        MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth;
+
+    // A flat run fills the middle of the box instead of sitting on the bottom edge.
+    var low = values.reduce(math.min);
+    var high = values.reduce(math.max);
+    if (high - low < 1e-9) {
+      final pad = math.max(high.abs() * 0.1, 0.1);
+      low -= pad;
+      high += pad;
+    }
+    final ticks = niceTicks(low, high);
+    final bottom = ticks.first;
+    final top = ticks.last;
+    final interval = ticks.length > 1 ? ticks[1] - ticks[0] : top - bottom;
+    final last = values.length - 1;
+    // One value is a dot in the middle rather than a line along the edge.
+    final maxX = math.max(last, 1).toDouble();
+
     return Semantics(
       label: semanticLabel,
       child: ExcludeSemantics(
         child: SizedBox(
           height: height,
-          child: CustomPaint(
+          child: LayoutBuilder(
             key: paintKey,
-            size: Size.infinite,
-            painter: _AreaChartPainter(
-              values: values,
-              labels: labels,
-              format: format,
-              compact:
-                  MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth,
-              line: line,
-              grid: scheme.outlineVariant,
-              ink: scheme.onSurface,
-              card: scheme.surfaceContainer,
-              muted: scheme.onSurfaceVariant,
-              labelStyle: chartLabelStyle(context),
-            ),
+            builder: (context, constraints) {
+              final plot = math.max(
+                constraints.maxWidth - AppChart.gutterLeft,
+                1.0,
+              );
+              final plotHeight = math.max(
+                constraints.maxHeight - AppChart.dateLabelHeight,
+                1.0,
+              );
+              final step = barLabelStep(
+                slot: plot / values.length,
+                compact: compact,
+              );
+              final latestY =
+                  plotHeight -
+                  (values.last - bottom) / (top - bottom) * plotHeight;
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: fl.LineChart(
+                      fl.LineChartData(
+                        minX: 0,
+                        maxX: maxX,
+                        minY: bottom,
+                        maxY: top,
+                        borderData: fl.FlBorderData(show: false),
+                        gridData: fl.FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: interval,
+                          getDrawingHorizontalLine: (_) => fl.FlLine(
+                            color: scheme.outlineVariant,
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        titlesData: fl.FlTitlesData(
+                          topTitles: const fl.AxisTitles(
+                            sideTitles: fl.SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const fl.AxisTitles(
+                            sideTitles: fl.SideTitles(showTitles: false),
+                          ),
+                          leftTitles: fl.AxisTitles(
+                            sideTitles: fl.SideTitles(
+                              showTitles: true,
+                              reservedSize: AppChart.gutterLeft,
+                              interval: interval,
+                              getTitlesWidget: (value, meta) => Text(
+                                format(value),
+                                style: axis,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ),
+                          bottomTitles: fl.AxisTitles(
+                            sideTitles: fl.SideTitles(
+                              showTitles: true,
+                              reservedSize: AppChart.dateLabelHeight,
+                              interval: 1,
+                              getTitlesWidget: (value, meta) {
+                                final index = value.round();
+                                if (index < 0 || index >= labels.length) {
+                                  return const SizedBox.shrink();
+                                }
+                                // Fewer dates when the points crowd together.
+                                if ((last - index) % step != 0) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: AppSpacing.xs,
+                                  ),
+                                  child: Text(labels[index], style: axis),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        lineTouchData: fl.LineTouchData(enabled: false),
+                        lineBarsData: [
+                          fl.LineChartBarData(
+                            spots: [
+                              for (var i = 0; i < values.length; i++)
+                                fl.FlSpot(
+                                  last == 0 ? 0.5 : i.toDouble(),
+                                  values[i],
+                                ),
+                            ],
+                            color: line,
+                            barWidth: AppChart.lineWidth,
+                            isStrokeCapRound: true,
+                            isStrokeJoinRound: true,
+                            dotData: fl.FlDotData(
+                              checkToShowDot: (spot, bar) =>
+                                  spot.x == bar.spots.last.x,
+                              getDotPainter: (spot, x, bar, index) =>
+                                  fl.FlDotCirclePainter(
+                                    radius: AppChart.dotRadius,
+                                    color: line,
+                                    strokeWidth: 3,
+                                    strokeColor: scheme.surfaceContainer,
+                                  ),
+                            ),
+                            belowBarData: fl.BarAreaData(
+                              show: true,
+                              // The design's fill: 35 % at the line, gone at the base.
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  line.withValues(alpha: 0.35),
+                                  line.withValues(alpha: 0),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // The latest value, beside its dot: fl_chart labels a bar, not a line.
+                  Positioned(
+                    left: AppChart.gutterLeft,
+                    right: AppSpacing.sm,
+                    top: math.max(
+                      latestY - AppChart.valueLabelHeight - AppSpacing.xs,
+                      0,
+                    ),
+                    child: Text(
+                      format(values.last),
+                      textAlign: TextAlign.end,
+                      style: axis.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
-}
-
-class _AreaChartPainter extends CustomPainter {
-  _AreaChartPainter({
-    required this.values,
-    required this.labels,
-    required this.format,
-    required this.compact,
-    required this.line,
-    required this.grid,
-    required this.ink,
-    required this.card,
-    required this.muted,
-    required this.labelStyle,
-  });
-
-  final List<double> values;
-  final List<String> labels;
-  final String Function(double) format;
-  final bool compact;
-  final Color line;
-  final Color grid;
-  final Color ink;
-  final Color card;
-  final Color muted;
-  final TextStyle labelStyle;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final plot = Rect.fromLTRB(
-      AppChart.gutterLeft,
-      AppChart.valueLabelHeight,
-      size.width,
-      size.height - AppChart.dateLabelHeight,
-    );
-    if (plot.width <= 0 || plot.height <= 0) return;
-
-    // A flat run fills the middle of the box instead of sitting on the bottom edge.
-    var min = values.reduce(math.min);
-    var max = values.reduce(math.max);
-    if (max - min < 1e-9) {
-      final pad = math.max(max.abs() * 0.1, 0.1);
-      min -= pad;
-      max += pad;
-    }
-    final ticks = niceTicks(min, max);
-    final low = ticks.first;
-    final high = ticks.last;
-    double y(double value) =>
-        plot.bottom - (value - low) / (high - low) * plot.height;
-    double x(int index) => values.length == 1
-        ? plot.center.dx
-        : plot.left + index / (values.length - 1) * plot.width;
-
-    for (final tick in ticks) {
-      final at = y(tick);
-      canvas.drawLine(
-        Offset(plot.left, at),
-        Offset(plot.right, at),
-        Paint()
-          ..color = grid
-          ..strokeWidth = 1,
-      );
-      _text(canvas, format(tick), Offset(plot.left - 6, at - 8), right: true);
-    }
-
-    final points = [
-      for (var i = 0; i < values.length; i++) Offset(x(i), y(values[i])),
-    ];
-    if (points.length > 1) {
-      final area = Path()..moveTo(points.first.dx, plot.bottom);
-      for (final point in points) {
-        area.lineTo(point.dx, point.dy);
-      }
-      area
-        ..lineTo(points.last.dx, plot.bottom)
-        ..close();
-      canvas.drawPath(
-        area,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [line.withValues(alpha: 0.35), line.withValues(alpha: 0)],
-          ).createShader(plot),
-      );
-      canvas.drawPath(
-        Path()..addPolygon(points, false),
-        Paint()
-          ..color = line
-          ..strokeWidth = AppChart.lineWidth
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round
-          ..style = PaintingStyle.stroke,
-      );
-    }
-
-    // Fewer dates when the points crowd together; the newest one always has one.
-    final step = barLabelStep(
-      slot: plot.width / values.length,
-      compact: compact,
-    );
-    for (var i = 0; i < values.length; i++) {
-      if ((values.length - 1 - i) % step == 0) {
-        _text(canvas, labels[i], Offset(x(i), size.height - 14), centre: true);
-      }
-    }
-
-    final last = points.last;
-    canvas.drawCircle(last, AppChart.dotRadius, Paint()..color = line);
-    canvas.drawCircle(
-      last,
-      AppChart.dotRadius,
-      Paint()
-        ..color = card
-        ..strokeWidth = 3
-        ..style = PaintingStyle.stroke,
-    );
-    _text(
-      canvas,
-      format(values.last),
-      Offset(last.dx - 2, math.max(last.dy - AppChart.valueLabelHeight - 4, 0)),
-      right: true,
-      color: ink,
-    );
-  }
-
-  void _text(
-    Canvas canvas,
-    String text,
-    Offset at, {
-    bool right = false,
-    bool centre = false,
-    Color? color,
-  }) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: color == null
-            ? labelStyle
-            : labelStyle.copyWith(color: color, fontWeight: FontWeight.w600),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    painter.paint(
-      canvas,
-      Offset(
-        right
-            ? at.dx - painter.width
-            : centre
-            ? at.dx - painter.width / 2
-            : at.dx,
-        at.dy,
-      ),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_AreaChartPainter old) =>
-      old.values != values ||
-      old.labels != labels ||
-      old.compact != compact ||
-      old.line != line ||
-      old.grid != grid ||
-      old.ink != ink ||
-      old.card != card ||
-      old.labelStyle != labelStyle;
 }

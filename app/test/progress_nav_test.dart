@@ -106,6 +106,32 @@ void main() {
     expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
   });
 
+  testWidgets(
+    'FitnessScreen_ShouldOpenTheSportFilter_WhenItsMenuEntryIsChosen',
+    (tester) async {
+      await start(tester);
+      await goTo(tester, '/progress/fitness');
+      await tester.pumpAndSettle();
+
+      // The guideline gives Fitness a `⋯` menu; the sport filter is its one entry.
+      await tester.tap(find.byKey(const Key('fitness-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('fitness-filter')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byKey(const Key('progress-filter-gravel')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
   testWidgets('ProgressPages_ShouldShowTheProgressCaption_WhenWide', (
     tester,
   ) async {
@@ -118,14 +144,16 @@ void main() {
     expect(page.title, 'Power');
   });
 
-  testWidgets('ProgressPages_ShouldShowNoCaption_WhenOnAPhone', (tester) async {
+  testWidgets('ProgressPages_ShouldShowTheCaption_WhenOnAPhone', (
+    tester,
+  ) async {
     await start(tester, size: const Size(390, 844));
     await goTo(tester, '/progress/fitness');
     await tester.pumpAndSettle();
 
-    // On a phone the tabs say where the rider is; the caption would only repeat them.
+    // The design gives every sub-page its parent's name as a caption, at every width.
     final page = tester.widget<PageScaffold>(find.byType(PageScaffold));
-    expect(page.parent, isNull);
+    expect(page.parent, 'Progress');
     expect(page.title, 'Fitness');
   });
 

@@ -6,11 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import '../rides/detail/lap_table.dart';
 import '../rides/detail/ride_selection.dart';
 import '../rides/detail/route_map.dart';
-import '../rides/detail/series_chart.dart';
-import '../rides/ride_type_chips.dart';
 import 'coach_athlete_view_model.dart';
 import 'coach_ride_view_model.dart';
 import '../../core/tokens.dart';
@@ -71,7 +68,6 @@ class CoachRideScreen extends ConsumerWidget {
         else if (c.load.running && ride == null)
           const LoadingState()
         else if (ride != null) ...[
-          if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
           // The map sits right under the header, before the numbers it belongs to.
           if (c.data != null && c.data!.hasRoute)
             RouteMap(
@@ -88,6 +84,7 @@ class CoachRideScreen extends ConsumerWidget {
               key: const Key('route-not-shared'),
               style: text.bodySmall,
             ),
+          // The mock-up's Numbers card: the four the coach leads with, then the four that follow them.
           SectionCard(
             key: const Key('coach-ride-numbers'),
             title: l10n.rideNumbers,
@@ -104,15 +101,26 @@ class CoachRideScreen extends ConsumerWidget {
                     label: l10n.statMovingTime,
                     value: duration(ride.movingS),
                   ),
-                  StatFigure(
-                    label: l10n.statAverageSpeed,
-                    value: kmh(units, ride.avgSpeedMs),
-                  ),
                   if (ride.avgPowerW != null)
                     StatFigure(
                       label: l10n.statAveragePower,
                       value: '${ride.avgPowerW} W',
                     ),
+                  if (ride.tss != null)
+                    StatFigure(
+                      label: l10n.statTss,
+                      value: ride.tss!.round().toString(),
+                    ),
+                ],
+              ),
+              Wrap(
+                spacing: AppSpacing.xl,
+                runSpacing: AppSpacing.md,
+                children: [
+                  StatFigure(
+                    label: l10n.statAverageSpeed,
+                    value: kmh(units, ride.avgSpeedMs),
+                  ),
                   if (ride.normalizedPowerW != null)
                     StatFigure(
                       label: l10n.statNormalizedPower,
@@ -122,11 +130,6 @@ class CoachRideScreen extends ConsumerWidget {
                     StatFigure(
                       label: l10n.statAverageHeartRate,
                       value: '${ride.avgHeartRate} bpm',
-                    ),
-                  if (ride.tss != null)
-                    StatFigure(
-                      label: l10n.statTss,
-                      value: ride.tss!.round().toString(),
                     ),
                   if (ride.trimp != null)
                     StatFigure(
@@ -142,17 +145,6 @@ class CoachRideScreen extends ConsumerWidget {
               message: failureText(l10n, failure),
               actionKey: const Key('coach-ride-error'),
             ),
-          if (c.laps.isNotEmpty)
-            LapTable(laps: c.laps, selectedLap: selection.selectedLap),
-          if (c.data != null && c.data!.series.isNotEmpty)
-            for (final series in c.data!.series)
-              SeriesChart(
-                series: series,
-                time: c.data!.time,
-                selected: selection.selected,
-                selectedLap: selection.selectedLap,
-                color: Theme.of(context).colorScheme.primary,
-              ),
         ],
       ],
     );

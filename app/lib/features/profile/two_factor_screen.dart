@@ -1,6 +1,7 @@
 import '../../core/widgets/loading_state.dart';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
@@ -8,10 +9,13 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'two_factor_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
+import '../auth/password_field.dart';
 
 class TwoFactorScreen extends ConsumerStatefulWidget {
   const TwoFactorScreen({super.key});
@@ -81,9 +85,10 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
             onRetry: notifier.load,
           )
         else if (!(info?.hasPassword ?? false))
-          SectionCard(
-            title: l10n.twoFactorSetupTitle,
-            children: [Text(l10n.twoFactorNoPassword)],
+          // Single sign-on already has its second step, so the setup card does not appear at all.
+          AppCard(
+            key: const Key('two-factor-sso'),
+            child: Text(l10n.twoFactorNoPassword),
           )
         else ...[
           SectionCard(
@@ -94,13 +99,11 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
             children: [
               if (info?.enabled ?? false) ...[
                 Text(l10n.twoFactorStateOn),
-                TextField(
-                  key: const Key('two-factor-password'),
+                PasswordField(
+                  fieldKey: const Key('two-factor-password'),
+                  visibilityKey: const Key('two-factor-password-visibility'),
                   controller: _password,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.twoFactorPassword,
-                  ),
+                  label: l10n.twoFactorPassword,
                 ),
                 OutlinedButton(
                   key: const Key('two-factor-regenerate'),
@@ -116,6 +119,7 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                   child: Text(l10n.twoFactorStartSetup),
                 )
               else ...[
+                // The key the member types into the app, with the copy the mock-up draws at its end.
                 Row(
                   children: [
                     Text(
@@ -128,23 +132,33 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                         key: const Key('two-factor-key'),
                       ),
                     ),
+                    IconButton(
+                      key: const Key('two-factor-key-copy'),
+                      tooltip: l10n.clubCopy,
+                      onPressed: () async {
+                        await Clipboard.setData(ClipboardData(text: setup.key));
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.clubCopied)),
+                        );
+                      },
+                      icon: const Icon(Icons.copy_outlined),
+                    ),
                   ],
                 ),
-                TextField(
-                  key: const Key('two-factor-password'),
+                PasswordField(
+                  fieldKey: const Key('two-factor-password'),
+                  visibilityKey: const Key('two-factor-password-visibility'),
                   controller: _password,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.twoFactorPassword,
-                  ),
+                  label: l10n.twoFactorPassword,
                 ),
-                TextField(
-                  key: const Key('two-factor-code'),
+                AppTextField(
+                  fieldKey: const Key('two-factor-code'),
                   controller: _code,
+                  label: l10n.twoFactorCodeLabel,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.twoFactorCodeLabel,
-                  ),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: 6,
                 ),
               ],
             ],

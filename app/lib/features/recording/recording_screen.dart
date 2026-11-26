@@ -21,6 +21,7 @@ import '../../core/units.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -84,6 +85,7 @@ class RecordingScreen extends ConsumerWidget {
         if (s.live)
           _LiveCard(
             state: s.snapshot,
+            rideType: _rideTypeName(context.l10n, s.rideType),
             sensorsSupported: recorder?.sensorsSupported ?? false,
             busy: s.command.running,
             onPause: () =>
@@ -108,7 +110,9 @@ class RecordingScreen extends ConsumerWidget {
             key: const Key('record-error'),
           ),
         SectionHeading(title: context.l10n.onThisPhone),
-        if (s.recordedRides.isEmpty && !s.loading)
+        if (s.loading)
+          const LoadingState.rows(key: Key('local-rides-loading'), count: 2)
+        else if (s.recordedRides.isEmpty)
           EmptyState(
             key: const Key('no-local-rides'),
             icon: Icons.directions_bike_outlined,
@@ -253,16 +257,9 @@ class _StartCardState extends ConsumerState<_StartCard> {
   }
 }
 
-/// The ride types a ride can be recorded as, the order the chips are drawn in.
-const _rideTypeIds = [
-  'road',
-  'gravel',
-  'mountain',
-  'track',
-  'indoor',
-  'virtual',
-  'commute',
-];
+/// The ride types a ride can be recorded as, the order the chips are drawn in: exactly the design's set
+/// (`docs/design/pages/rides/RecordPhone.html`), which has no track and no virtual ride.
+const _rideTypeIds = ['road', 'gravel', 'mountain', 'indoor', 'commute'];
 
 /// The settings the card has no room for: the menu opens them in a sheet, and the sheet watches the
 /// recorder itself, so a switch shows at once.
@@ -357,6 +354,7 @@ String sensorStatusText(AppLocalizations l10n, String status) =>
 class _LiveCard extends ConsumerWidget {
   const _LiveCard({
     required this.state,
+    required this.rideType,
     required this.sensorsSupported,
     required this.busy,
     required this.onPause,
@@ -365,6 +363,10 @@ class _LiveCard extends ConsumerWidget {
   });
 
   final RecorderSnapshot state;
+
+  /// The name the card carries while the ride runs: the ride type the member chose, the only name a ride
+  /// has on the phone before it is saved.
+  final String rideType;
   final bool sensorsSupported;
   final bool busy;
   final Future<void> Function() onPause;
@@ -379,143 +381,173 @@ class _LiveCard extends ConsumerWidget {
     final autoPaused = paused && state.autoPaused;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(color: scheme.onSurface),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.lg,
+      children: [
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: DefaultTextStyle.merge(
+            style: TextStyle(color: scheme.onSurface),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    autoPaused
-                        ? Icons.motion_photos_paused
-                        : paused
-                        ? Icons.pause_circle_outline
-                        : Icons.fiber_manual_record,
-                    color: paused
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
                   Text(
-                    autoPaused
-                        ? l10n.autoPaused
-                        : paused
-                        ? l10n.paused
-                        : l10n.recording,
-                    key: const Key('record-state'),
+                    rideType,
+                    key: const Key('record-name'),
                     style: theme.textTheme.titleMedium,
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  stopwatch(state.movingS),
-                  key: const Key('record-clock'),
-                  style: theme.textTheme.displayLarge?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Icon(
+                        autoPaused
+                            ? Icons.motion_photos_paused
+                            : paused
+                            ? Icons.pause_circle_outline
+                            : Icons.fiber_manual_record,
+                        color: paused
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        autoPaused
+                            ? l10n.autoPaused
+                            : paused
+                            ? l10n.paused
+                            : l10n.recording,
+                        key: const Key('record-state'),
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.xl,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  if (state.elapsedS != state.movingS)
-                    StatFigure(
-                      label: l10n.statElapsedTime,
-                      value: stopwatch(state.elapsedS),
+                  const SizedBox(height: AppSpacing.md),
+                  Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        stopwatch(state.movingS),
+                        key: const Key('record-clock'),
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
                     ),
-                  StatFigure(
-                    label: l10n.statDistance,
-                    value: km(units, state.distanceM),
                   ),
-                  StatFigure(
-                    label: l10n.statAverageSpeed,
-                    value: kmh(units, state.speedMs),
+                  // The clock counts moving time, and the design says so under it.
+                  Text(
+                    l10n.moving,
+                    key: const Key('record-moving'),
+                    textAlign: TextAlign.center,
+                    style: muted,
                   ),
-                  StatFigure(
-                    label: l10n.gps,
-                    value: state.accuracyM == null
-                        ? '–'
-                        : '±${state.accuracyM!.round()} m',
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    spacing: AppSpacing.xl,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      if (state.elapsedS != state.movingS)
+                        StatFigure(
+                          label: l10n.statElapsedTime,
+                          value: stopwatch(state.elapsedS),
+                        ),
+                      StatFigure(
+                        label: l10n.statDistance,
+                        value: km(units, state.distanceM),
+                      ),
+                      StatFigure(
+                        label: l10n.statAverageSpeed,
+                        value: kmh(units, state.speedMs),
+                      ),
+                      StatFigure(
+                        label: l10n.gps,
+                        value: state.accuracyM == null
+                            ? '–'
+                            : '±${state.accuracyM!.round()} m',
+                      ),
+                      if (state.sensorName != null)
+                        StatFigure(
+                          label: l10n.heartRate,
+                          value: state.heartRateBpm == null
+                              ? '–'
+                              : '${state.heartRateBpm} bpm',
+                          valueKey: const Key('readout-heartrate'),
+                        ),
+                    ],
                   ),
-                  if (state.sensorName != null)
-                    StatFigure(
-                      label: l10n.heartRate,
-                      value: state.heartRateBpm == null
-                          ? '–'
-                          : '${state.heartRateBpm} bpm',
-                      valueKey: const Key('readout-heartrate'),
-                    ),
-                ],
-              ),
-              if (sensorsSupported && state.sensorName != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Icon(
-                      state.sensorConnected
-                          ? Icons.favorite
-                          : Icons.monitor_heart_outlined,
-                      size: 16,
-                      color: state.sensorConnected
-                          ? Theme.of(context).colorScheme.error
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      state.sensorName!,
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      sensorStatusText(l10n, state.sensorStatus),
-                      key: const Key('sensor-status'),
-                      style: Theme.of(context).textTheme.labelMedium,
+                  if (sensorsSupported && state.sensorName != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        Icon(
+                          state.sensorConnected
+                              ? Icons.favorite
+                              : Icons.monitor_heart_outlined,
+                          size: 16,
+                          color: state.sensorConnected
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          state.sensorName!,
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          sensorStatusText(l10n, state.sensorStatus),
+                          key: const Key('sensor-status'),
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-              const SizedBox(height: AppSpacing.xl),
-              // Two full-width controls one above the other: they never overflow at a narrow width or a
-              // large text size, and each stays a big target.
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: AppSpacing.md,
-                children: [
-                  OutlinedButton.icon(
-                    key: Key(paused ? 'record-resume' : 'record-pause'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(_bigControl),
-                    ),
-                    onPressed: busy ? null : (paused ? onResume : onPause),
-                    icon: Icon(paused ? Icons.play_arrow : Icons.pause),
-                    label: Text(paused ? l10n.resume : l10n.pause),
-                  ),
-                  FilledButton.icon(
-                    key: const Key('record-stop'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(_bigControl),
-                    ),
-                    onPressed: busy ? null : onStop,
-                    icon: const Icon(Icons.stop),
-                    label: Text(l10n.stopAndSave),
+                  const SizedBox(height: AppSpacing.xl),
+                  // Two full-width controls one above the other: they never overflow at a narrow width or a
+                  // large text size, and each stays a big target.
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: AppSpacing.md,
+                    children: [
+                      OutlinedButton.icon(
+                        key: Key(paused ? 'record-resume' : 'record-pause'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(_bigControl),
+                        ),
+                        onPressed: busy ? null : (paused ? onResume : onPause),
+                        icon: Icon(paused ? Icons.play_arrow : Icons.pause),
+                        label: Text(paused ? l10n.resume : l10n.pause),
+                      ),
+                      FilledButton.icon(
+                        key: const Key('record-stop'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(_bigControl),
+                        ),
+                        onPressed: busy ? null : onStop,
+                        icon: const Icon(Icons.stop),
+                        label: Text(l10n.stopAndSave),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        // Said under the card, as the design draws it (docs/design/pages/rides/RecordingLivePhone.html).
+        Text(
+          l10n.recordPermissionHelp,
+          key: const Key('record-screen-off'),
+          textAlign: TextAlign.center,
+          style: muted,
+        ),
+      ],
     );
   }
 }
@@ -758,7 +790,9 @@ class _SensorSheetState extends State<_SensorSheet> {
             leading: const Icon(Icons.favorite),
             title: Text(sensor.name),
             subtitle: Text(sensor.address),
-            trailing: sensor.rssi == null ? null : Text('${sensor.rssi} dBm'),
+            trailing: sensor.rssi == null
+                ? null
+                : Text(l10n.sensorSignalStrength(sensor.rssi!)),
             onTap: () => Navigator.of(context).pop(sensor),
           ),
         if (!_scanning)

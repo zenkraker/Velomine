@@ -109,6 +109,37 @@ jobs:
       - name: Format
         run: dart format --set-exit-if-changed lib test
 
+      # The duplicate budget in `tools/ui-dupes.baseline`: a count may fall, never rise. It needs `just`,
+      # which the runner image does not carry, so the recipe's body runs here as a script.
+      - name: Shared widgets instead of duplicates
+        working-directory: app/lib
+        run: |
+          set -euo pipefail
+          baseline=../../tools/ui-dupes.baseline
+          [ -f "$baseline" ] || { echo "::error::missing $baseline"; exit 1; }
+          fail=0
+          count() {
+            now=$(grep -rn "$2" features core --include=*.dart | wc -l || true)
+            was=$(awk -v n="$1" '{ line=$0; value=$NF; sub(/[ \t]+[0-9]+$/, "", line); sub(/[ \t]+$/, "", line); if (line == n) print value }' "$baseline")
+            [ -n "$was" ] || { echo "::error::$1 is not in the baseline"; fail=1; return; }
+            if [ "$now" -gt "$was" ]; then
+              echo "::error::$1: $was -> $now (raised). Use the shared widget."
+              fail=1
+            fi
+          }
+          count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
+          count "Card(" '\(^\|[^A-Za-z_]\)Card('
+          count "TextField(" 'TextField(\|TextFormField('
+          count "showSnackBar" 'showSnackBar'
+          count "SegmentedButton" 'SegmentedButton'
+          count "TextStyle(" 'TextStyle('
+          count "Color(0x" 'Color(0x'
+          count "EdgeInsets.all(n)" 'EdgeInsets.all([0-9]'
+          count "SizedBox(height: n)" 'SizedBox(height: [0-9]'
+          count "SizedBox(width: n)" 'SizedBox(width: [0-9]'
+          count "spacing: n" 'spacing: [0-9]'
+          exit "$fail"
+
       - name: Analyze
         run: flutter analyze
 

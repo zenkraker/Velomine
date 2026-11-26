@@ -36,6 +36,10 @@ DateTime _today() {
   return DateTime(now.year, now.month, now.day);
 }
 
+/// The wear column at the end of a part row: the percentage over the bar, 180 px as the mock-up draws it.
+/// No token carries it, so it is named here rather than spelled twice.
+const _wearColumnWidth = 180.0;
+
 class BikeDetailScreen extends ConsumerWidget {
   const BikeDetailScreen({
     super.key,
@@ -302,9 +306,6 @@ class BikeDetailScreen extends ConsumerWidget {
     final current = detail.components
         .where((p) => p.removedOn == null)
         .toList();
-    final retired = detail.components
-        .where((p) => p.removedOn != null)
-        .toList();
     return [
       if (bike.isDefault || !bike.isActive)
         Wrap(
@@ -356,12 +357,15 @@ class BikeDetailScreen extends ConsumerWidget {
           ),
         )
       else
-        // One card per group the component types make: drivetrain, wheels, brakes, and so on.
+        // One card per group the component types make: drivetrain, wheels, brakes, and so on. A part that
+        // was replaced stays in its group, marked "Replaced", so nothing it holds is lost from the page.
         CardGrid(
           columns: 2,
-          tabletColumns: 2,
+          // One card a row under the desktop width: the wear column is 180 px, and in a half-width card of a
+          // tablet it has no room beside the part's own words.
+          tabletColumns: 1,
           children: [
-            for (final group in groupParts(l10n, current, s.types))
+            for (final group in groupParts(l10n, detail.components, s.types))
               SectionCard(
                 key: Key('group-${group.name}'),
                 title: group.name,
@@ -370,7 +374,9 @@ class BikeDetailScreen extends ConsumerWidget {
                     _PartRow(
                       part: part,
                       onEdit: () => _editPart(context, ref, part),
-                      onReplace: () => _replacePart(context, ref, part),
+                      onReplace: part.removedOn == null
+                          ? () => _replacePart(context, ref, part)
+                          : null,
                       onRemove: () => _removePart(context, ref, part),
                     ),
                 ],
@@ -378,18 +384,6 @@ class BikeDetailScreen extends ConsumerWidget {
           ],
         ),
       ServiceSection(id: id),
-      if (retired.isNotEmpty)
-        SectionCard(
-          title: l10n.replacedParts,
-          children: [
-            for (final part in retired)
-              _PartRow(
-                part: part,
-                onEdit: () => _editPart(context, ref, part),
-                onRemove: () => _removePart(context, ref, part),
-              ),
-          ],
-        ),
     ];
   }
 }
@@ -426,18 +420,15 @@ String wearLabel(AppLocalizations l10n, String status) => switch (status) {
 
 /// A wear distance in whole kilometres or whole miles, whichever the member reads.
 String _wearNumber(Units units, double metres) => units == Units.imperial
-    ? (metres / 1609.344).toStringAsFixed(0)
-    : (metres / 1000).toStringAsFixed(0);
+    ? decimal((metres / 1609.344), 0)
+    : decimal((metres / 1000), 0);
 
 /// "820 of 4000 km · 31 of 100 h · 5.2 of 12 months", only the limits the part has.
 String wearText(AppLocalizations l10n, Units units, ComponentResponse p) => [
   if (p.expectedDistanceM != null)
     '${l10n.wearDistance(_wearNumber(units, p.usedDistanceM), _wearNumber(units, p.expectedDistanceM!))} ${distanceUnit(units)}',
   if (p.expectedHours != null)
-    l10n.wearHours(
-      p.usedHours.toStringAsFixed(0),
-      p.expectedHours!.toStringAsFixed(0),
-    ),
+    l10n.wearHours(decimal(p.usedHours, 0), decimal(p.expectedHours!, 0)),
   if (p.expectedMonths != null)
     l10n.wearMonths(
       NumberFormat('0.0').format(p.usedMonths),
@@ -446,14 +437,11 @@ String wearText(AppLocalizations l10n, Units units, ComponentResponse p) => [
   if (p.expectedDistanceM == null &&
       p.expectedHours == null &&
       p.expectedMonths == null)
-    l10n.wearNoLimit(
-      km(units, p.usedDistanceM),
-      p.usedHours.toStringAsFixed(0),
-    ),
+    l10n.wearNoLimit(km(units, p.usedDistanceM), decimal(p.usedHours, 0)),
 ].join(' · ');
 
-/// One part as a row of its group's card: what it is, how far it has gone and how worn it is, with
-/// the wear as a bar and the percentage in words above it.
+/// One part as a row of its group's card: what it is and how far it has gone on the left, the wear as the
+/// mock-up's 180 px column on the right — the percentage in words over the bar — and the row's `⋯`.
 class _PartRow extends ConsumerWidget {
   const _PartRow({
     required this.part,
@@ -475,75 +463,91 @@ class _PartRow extends ConsumerWidget {
     final color = wearColor(context, part.status);
     final make = [part.brand, part.model].whereType<String>().join(' ');
     final typeName = componentTypeName(l10n, part.type, part.typeName);
-    return Column(
+    return Row(
       key: Key('part-${part.id}'),
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.xs,
+      spacing: AppSpacing.md,
       children: [
-        Row(
-          spacing: AppSpacing.sm,
-          children: [
-            Expanded(child: Text(typeName, style: text.bodyLarge)),
-            Text(
-              wearLabel(l10n, part.status),
-              style: TextStyle(color: color, fontWeight: FontWeight.w600),
-            ),
-            RowRemoveMenu(
-              menuKey: Key('part-actions-${part.id}'),
-              removeKey: Key('remove-${part.id}'),
-              onRemove: onRemove,
-            ),
-          ],
-        ),
-        if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
-        Text(
-          [
-            if (make.isNotEmpty) make,
-            wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
-          ].join(' · '),
-          key: Key('wear-text-${part.id}'),
-          style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-        ),
-        if (part.wearPercent != null) ...[
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text(
-              l10n.wearPercent(part.wearPercent!),
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          LinearProgressIndicator(
-            key: Key('wear-${part.id}'),
-            value: (part.wearPercent! / 100).clamp(0.0, 1.0),
-            color: color,
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ],
-        Text(
-          part.removedOn == null
-              ? l10n.installedOn(isoDate(part.installedOn))
-              : l10n.installedAndRemoved(
-                  isoDate(part.installedOn),
-                  isoDate(part.removedOn!),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.xs,
+            children: [
+              Text(typeName, style: text.bodyLarge),
+              // The wear colour never stands alone: the state is a word beside it.
+              Text(
+                wearLabel(l10n, part.status),
+                style: text.labelLarge?.copyWith(color: color),
+              ),
+              if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
+              Text(
+                [
+                  if (make.isNotEmpty) make,
+                  wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
+                ].join(' · '),
+                key: Key('wear-text-${part.id}'),
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              Text(
+                part.removedOn == null
+                    ? l10n.installedOn(isoDate(part.installedOn))
+                    : l10n.installedAndRemoved(
+                        isoDate(part.installedOn),
+                        isoDate(part.removedOn!),
+                      ),
+                style: text.bodySmall,
+              ),
+              if (part.mpn != null)
+                Text(
+                  part.mpn!,
+                  key: Key('mpn-${part.id}'),
+                  style: text.bodySmall,
                 ),
-          style: text.bodySmall,
+            ],
+          ),
         ),
-        if (part.mpn != null)
-          Text(part.mpn!, key: Key('mpn-${part.id}'), style: text.bodySmall),
-        Wrap(
-          spacing: AppSpacing.sm,
-          children: [
-            TextButton(
-              key: Key('edit-${part.id}'),
-              onPressed: onEdit,
-              child: Text(l10n.edit),
+        if (part.wearPercent != null)
+          SizedBox(
+            width: _wearColumnWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              spacing: AppSpacing.xs,
+              children: [
+                Text(
+                  l10n.wearPercent(part.wearPercent!),
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.end,
+                ),
+                LinearProgressIndicator(
+                  key: Key('wear-${part.id}'),
+                  value: (part.wearPercent! / 100).clamp(0.0, 1.0),
+                  color: color,
+                  minHeight: AppSpacing.sm,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  semanticsLabel: l10n.wearPercent(part.wearPercent!),
+                ),
+              ],
             ),
-            if (onReplace != null)
-              TextButton(
+          ),
+        RowActionMenu(
+          menuKey: Key('part-actions-${part.id}'),
+          removeKey: Key('remove-${part.id}'),
+          onRemove: onRemove,
+          actions: [
+            PageMenuEntry(
+              key: Key('edit-${part.id}'),
+              icon: Icons.edit_outlined,
+              label: l10n.edit,
+              onSelected: onEdit,
+            ),
+            if (onReplace case final onReplace?)
+              PageMenuEntry(
                 key: Key('replace-${part.id}'),
-                onPressed: onReplace,
-                child: Text(l10n.replace),
+                icon: Icons.swap_horiz,
+                label: l10n.replace,
+                onSelected: onReplace,
               ),
           ],
         ),

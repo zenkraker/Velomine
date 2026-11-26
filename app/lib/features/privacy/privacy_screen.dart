@@ -14,6 +14,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -247,10 +248,8 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                             leading: const Icon(Icons.place_outlined),
                             title: Text(zone.name),
                             subtitle: Text(
-                              length(
-                                ref.watch(unitsChoiceViewModelProvider),
-                                zone.radiusM.toDouble(),
-                              ),
+                              '${l10n.privacyZoneRadius} '
+                              '${length(ref.watch(unitsChoiceViewModelProvider), zone.radiusM.toDouble())}',
                             ),
                             trailing: PageMenu(
                               buttonKey: Key('privacy-zone-actions-${zone.id}'),
@@ -294,15 +293,13 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     String key,
     TextEditingController controller,
     String label,
-  ) => TextField(
-    key: Key(key),
+  ) => AppTextField(
+    fieldKey: Key(key),
     controller: controller,
+    label: label,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-    decoration: InputDecoration(
-      labelText: label,
-      suffixText: _units == Units.imperial ? 'mi' : 'm',
-    ),
+    suffix: _units == Units.imperial ? 'mi' : 'm',
   );
 }
 
@@ -378,23 +375,21 @@ class _ZoneSheetState extends State<_ZoneSheet> {
       onSave: _save,
       error: _problem,
       children: [
-        TextField(
-          key: const Key('privacy-zone-name'),
+        AppTextField(
+          fieldKey: const Key('privacy-zone-name'),
           controller: _name,
-          decoration: InputDecoration(labelText: l10n.privacyZoneName),
+          label: l10n.privacyZoneName,
         ),
-        TextField(
-          key: const Key('privacy-zone-radius'),
+        AppTextField(
+          fieldKey: const Key('privacy-zone-radius'),
           controller: _radius,
+          label: l10n.privacyZoneRadius,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
           ],
-          decoration: InputDecoration(
-            labelText: l10n.privacyZoneRadius,
-            suffixText: widget.units == Units.imperial ? 'mi' : 'm',
-            helperText: l10n.privacyZoneRadiusHelp,
-          ),
+          suffix: widget.units == Units.imperial ? 'mi' : 'm',
+          helper: l10n.privacyZoneRadiusHelp,
         ),
       ],
     );

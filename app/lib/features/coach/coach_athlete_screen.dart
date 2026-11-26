@@ -8,9 +8,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import '../progress/power_summary.dart';
 import '../rides/ride_title.dart';
-import '../progress/training_summary.dart';
 import '../training/training_goals.dart';
 import '../training/training_text.dart';
 import 'coach_athlete_view_model.dart';
@@ -58,6 +56,7 @@ class CoachAthleteScreen extends ConsumerWidget {
         else if (c.load.running && summary == null)
           const LoadingState()
         else if (summary != null) ...[
+          // What the athlete shares, in the design's order, right under their name.
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.xs,
@@ -66,10 +65,10 @@ class CoachAthleteScreen extends ConsumerWidget {
                 AppBadge(l10n.sharesRides, tone: AppBadgeTone.good),
               if (summary.sharesAnalytics)
                 AppBadge(l10n.sharesTraining, tone: AppBadgeTone.good),
-              if (summary.sharesRoutes)
-                AppBadge(l10n.sharesRoutes, tone: AppBadgeTone.good),
               if (summary.sharesWellbeing)
                 AppBadge(l10n.sharesWellbeing, tone: AppBadgeTone.good),
+              if (summary.sharesRoutes)
+                AppBadge(l10n.sharesRoutes, tone: AppBadgeTone.good),
             ],
           ),
           if (c.load.failure case final failure?)
@@ -77,39 +76,13 @@ class CoachAthleteScreen extends ConsumerWidget {
               message: failureText(l10n, failure),
               actionKey: const Key('coach-athlete-error'),
             ),
-          // Each shared part has its card, paired two by two on a wider window.
+          // The design's cards only: this week's plan, the shared rides, then the wellbeing scores. Read-only.
           CardGrid(
             key: const Key('coach-athlete-parts'),
             columns: 2,
             tabletColumns: 2,
             children: [
               if (c.plan case final plan?) _CoachPlanCard(plan: plan),
-              if (c.training case final training?) ...[
-                TrainingSummary(
-                  training: training,
-                  days: c.days,
-                  onDays: (days) => ref
-                      .read(
-                        coachAthleteViewModelProvider(clubId, userId).notifier,
-                      )
-                      .setDays(days),
-                ),
-                DailyLoadCard(training: training),
-                TrainingLoadCard(training: training),
-              ],
-              if (c.powerCurve case final curve?)
-                PowerSummary(
-                  curve: curve,
-                  days: c.days,
-                  onDays: (days) => ref
-                      .read(
-                        coachAthleteViewModelProvider(clubId, userId).notifier,
-                      )
-                      .setDays(days),
-                  readOnly: true,
-                ),
-              if (c.wellbeing case final wellbeing?)
-                _CoachWellbeingCard(wellbeing: wellbeing),
               if (summary.sharesRides)
                 SectionCard(
                   key: const Key('coach-rides-card'),
@@ -120,28 +93,25 @@ class CoachAthleteScreen extends ConsumerWidget {
                         key: const Key('coach-no-rides'),
                         message: l10n.coachNoRides,
                         icon: Icons.directions_bike,
+                        framed: false,
                       )
                     else
                       Column(
                         children: [
-                          for (final ride in c.rides)
-                            ListTile(
-                              key: Key('coach-ride-${ride.id}'),
-                              contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.directions_bike),
-                              // The ride's name leads, as the mock-up draws it; the day is the detail.
-                              title: Text(rideTitle(l10n, ride)),
-                              subtitle: Text(
-                                '${DateFormat.MMMd(Localizations.localeOf(context).toLanguageTag()).format((ride.startTime ?? ride.uploadedAt).toLocal())} · '
-                                '${km(units, ride.distanceM)} · '
-                                '${duration(ride.movingS)}',
-                              ),
+                          for (final (i, ride) in c.rides.indexed) ...[
+                            if (i > 0) const Divider(),
+                            _CoachRideRow(
+                              ride: ride,
+                              units: units,
                               onTap: () => onOpenRide(ride.id),
                             ),
+                          ],
                         ],
                       ),
                   ],
                 ),
+              if (c.wellbeing case final wellbeing?)
+                _CoachWellbeingCard(wellbeing: wellbeing),
             ],
           ),
         ],
@@ -242,46 +212,168 @@ class _CoachPlanRow extends StatelessWidget {
 String? _coachPlanSkipReason(AppLocalizations l10n, String? reason) =>
     reason == null ? null : trainingSkipReason(l10n, reason);
 
-/// What a coach may see of wellbeing: daily scores and per-ride RPE, never the member's notes.
-class _CoachWellbeingCard extends StatelessWidget {
-  const _CoachWellbeingCard({required this.wellbeing});
+/// One shared ride as the mock-up's row: the ride's name over its day, distance and time.
+class _CoachRideRow extends StatelessWidget {
+  const _CoachRideRow({
+    required this.ride,
+    required this.units,
+    required this.onTap,
+  });
 
-  final CoachWellbeingResponse wellbeing;
+  final RideResponse ride;
+  final Units units;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final locale = Localizations.localeOf(context).toLanguageTag();
-    String date(DateTime value) => DateFormat.MMMd(locale).format(value);
+    return ListTile(
+      key: Key('coach-ride-${ride.id}'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.directions_bike),
+      title: Text(
+        rideTitle(l10n, ride),
+        style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        [
+          DateFormat.MMMd(locale)
+              .format((ride.startTime ?? ride.uploadedAt).toLocal()),
+          km(units, ride.distanceM),
+          duration(ride.movingS),
+        ].join(' · '),
+        style: text.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+/// What a coach may see of wellbeing: daily scores and per-ride RPE, never the member's notes, as the mock-up's
+/// table draws them.
+class _CoachWellbeingCard extends StatelessWidget {
+  const _CoachWellbeingCard({required this.wellbeing});
+
+  final CoachWellbeingResponse wellbeing;
+
+  /// A cell that carries no value: the day has no check-in, or no ride of its own.
+  static const _none = '–';
+
+  static const _dayWidth = 88.0;
+  static const _numberWidth = 56.0;
+  static const _rpeWidth = 96.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final muted = text.bodySmall?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    );
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final heads = [
+      l10n.dayUnit,
+      l10n.wellbeingFatigue,
+      l10n.wellbeingSoreness,
+      l10n.wellbeingMood,
+      l10n.readinessFactorRpe,
+    ];
+    final rpeByDay = {
+      for (final ride in wellbeing.rides) _dayOf(ride.date): ride.rpe,
+    };
+    final checkInByDay = {
+      for (final checkIn in wellbeing.checkIns) _dayOf(checkIn.date): checkIn,
+    };
+    // Newest first, one row a day, whether it holds a check-in, an RPE, or both.
+    final days = {...rpeByDay.keys, ...checkInByDay.keys}.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    Widget cell(String value, double width, {bool mutedText = false}) =>
+        SizedBox(
+          width: width,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: mutedText ? muted : text.bodySmall,
+          ),
+        );
 
     return SectionCard(
       key: const Key('coach-wellbeing'),
       title: l10n.coachWellbeing,
       description: l10n.coachWellbeingNoNotes,
       children: [
-        if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty)
-          Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
-        for (final checkIn in wellbeing.checkIns)
+        if (days.isEmpty)
           Text(
-            [
-              date(checkIn.date),
-              '${l10n.wellbeingShortFatigue} ${checkIn.fatigue}',
-              '${l10n.wellbeingShortSoreness} ${checkIn.soreness}',
-              '${l10n.wellbeingShortMood} ${checkIn.mood}',
-              '${l10n.wellbeingShortStress} ${checkIn.stress}',
-              '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
-              if (checkIn.sleep.orElse(null) case final sleep?)
-                '${l10n.wellbeingShortSleep} $sleep',
-            ].join(' · '),
-            style: text.bodySmall,
-          ),
-        for (final ride in wellbeing.rides)
-          Text(
-            '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
-            style: text.bodySmall,
+            l10n.coachWellbeingEmpty,
+            key: const Key('coach-wellbeing-empty'),
+            style: text.bodyMedium,
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: _dayWidth,
+                      child: Text(heads.first, style: text.labelSmall),
+                    ),
+                    for (final head in heads.skip(1).take(3))
+                      cell(head, _numberWidth, mutedText: true),
+                    cell(heads.last, _rpeWidth, mutedText: true),
+                  ],
+                ),
+                const Divider(),
+                for (final day in days)
+                  Padding(
+                    key: Key('coach-wellbeing-$day'),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: _dayWidth,
+                          child: Text(
+                            DateFormat.MMMd(locale).format(day),
+                            style: text.bodySmall,
+                          ),
+                        ),
+                        cell(
+                          checkInByDay[day]?.fatigue.toString() ?? _none,
+                          _numberWidth,
+                        ),
+                        cell(
+                          checkInByDay[day]?.soreness.toString() ?? _none,
+                          _numberWidth,
+                        ),
+                        cell(
+                          checkInByDay[day]?.mood.toString() ?? _none,
+                          _numberWidth,
+                        ),
+                        cell(
+                          rpeByDay[day] == null
+                              ? _none
+                              : l10n.wellbeingRpeSaved(rpeByDay[day]!),
+                          _rpeWidth,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
       ],
     );
   }
 }
+
+/// The calendar day of a server date, without the time: both the scores and the RPE are kept a day at a time.
+DateTime _dayOf(DateTime value) => DateTime(value.year, value.month, value.day);

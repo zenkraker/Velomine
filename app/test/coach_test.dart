@@ -1,6 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/avatar.dart';
+import 'package:velomine/core/widgets/badge.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -36,8 +39,6 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('share-rides')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('share-rides')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('My coaches').last);
     await tester.pumpAndSettle();
     // Sharing with a coach is told before it happens, so the rider agrees first.
     await tester.tap(find.byKey(const Key('share-rides-confirm')));
@@ -129,7 +130,6 @@ void main() {
     await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('training-tss')), findsOneWidget);
     expect(find.byKey(const Key('coach-ride-r1')), findsOneWidget);
     // The row leads with the ride's name, its day in the detail, as the mock-up draws it.
     expect(
@@ -145,7 +145,7 @@ void main() {
 
     expect(find.byKey(const Key('coach-ride-not-found')), findsNothing);
     expect(find.byKey(const Key('route-not-shared')), findsOneWidget);
-    expect(find.byKey(const Key('chart-power')), findsOneWidget);
+    expect(find.byKey(const Key('coach-ride-numbers')), findsOneWidget);
 
     // The athlete shares routes too: the same ride now has its map.
     server.sharingChoices['routes'] = 'coaches';
@@ -192,7 +192,6 @@ void main() {
     await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('power-curve-card')), findsOneWidget);
     expect(find.byKey(const Key('coach-wellbeing')), findsOneWidget);
     expect(find.textContaining('A private note'), findsNothing);
     expect(find.textContaining('RPE 7/10'), findsOneWidget);
@@ -411,6 +410,139 @@ void main() {
     // The ride's name is the title, the athlete the caption above it.
     expect(find.text('Sunday long ride'), findsOneWidget);
     expect(find.text('Athlete Luca'), findsWidgets);
+  });
+
+  testWidgets('CoachAthletesScreen_ShouldLeadEachRowWithInitials_WhenOpened', (
+    tester,
+  ) async {
+    server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+
+    expect(find.byType(Avatar), findsOneWidget);
+    expect(find.text('AL'), findsOneWidget);
+  });
+
+  testWidgets(
+    'CoachAthleteScreen_ShouldBadgeWhatIsSharedUnderTheName_WhenOpened',
+    (tester) async {
+      final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+      server.sharingChoices['rides'] = 'coaches';
+      server.sharingChoices['analytics'] = 'coaches';
+      server.sharingChoices['routes'] = 'coaches';
+      server.sharingChoices['wellbeing'] = 'coaches';
+      server.wellbeingConsent = true;
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openAthletes(tester);
+      await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+      await tester.pumpAndSettle();
+
+      // The share chips sit under the name in the design's order: rides, training, wellbeing, routes.
+      final labels = tester
+          .widgetList<AppBadge>(find.byType(AppBadge))
+          .map((badge) => badge.label)
+          .toList();
+      expect(
+        labels,
+        containsAllInOrder(['Rides', 'Training', 'Wellbeing', 'Routes']),
+      );
+    },
+  );
+
+  testWidgets(
+    'CoachAthleteScreen_ShouldKeepOnlyTheDesignsCards_WhenEverythingIsShared',
+    (tester) async {
+      final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+      server.sharingChoices['rides'] = 'coaches';
+      server.sharingChoices['analytics'] = 'coaches';
+      server.sharingChoices['wellbeing'] = 'coaches';
+      server.wellbeingConsent = true;
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openAthletes(tester);
+      await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+      await tester.pumpAndSettle();
+
+      // The mock-up draws the plan, the rides and the wellbeing, and no training or power card.
+      expect(find.byKey(const Key('coach-rides-card')), findsOneWidget);
+      expect(find.byKey(const Key('coach-wellbeing')), findsOneWidget);
+      expect(find.byKey(const Key('power-curve-card')), findsNothing);
+      expect(find.byKey(const Key('training-tss')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'CoachAthleteScreen_ShouldReadWellbeingAsTheDesignsTable_WhenScoresAreShared',
+    (tester) async {
+      final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+      server.sharingChoices['rides'] = 'coaches';
+      server.sharingChoices['wellbeing'] = 'coaches';
+      server.wellbeingConsent = true;
+      server.checkIns.add({
+        'date': '2026-11-08',
+        'fatigue': 4,
+        'soreness': 2,
+        'mood': 4,
+        'stress': 2,
+        'motivation': 5,
+      });
+      server.rideFeels['r1'] = {'rpe': 7};
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openAthletes(tester);
+      await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+      await tester.pumpAndSettle();
+
+      final card = find.byKey(const Key('coach-wellbeing'));
+      for (final head in ['Fatigue', 'Soreness', 'Mood']) {
+        expect(
+          find.descendant(of: card, matching: find.text(head)),
+          findsOneWidget,
+        );
+      }
+      // The mock-up's columns only: stress, motivation and sleep are not drawn.
+      expect(
+        find.descendant(of: card, matching: find.text('Stress')),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Motivation')),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: card, matching: find.textContaining('RPE 7/10')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('CoachRideScreen_ShouldKeepTheMapAndTheNumbersOnly_WhenShared', (
+    tester,
+  ) async {
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    server.sharingChoices['routes'] = 'coaches';
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+    await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('coach-ride-r1')));
+    await tester.pumpAndSettle();
+
+    // The design's page draws the map and the Numbers card: no lap table and no chart per stream.
+    expect(find.byKey(const Key('route-map')), findsOneWidget);
+    expect(find.byKey(const Key('coach-ride-numbers')), findsOneWidget);
+    expect(find.byKey(const Key('chart-power')), findsNothing);
+    expect(find.byKey(const Key('chart-heart-rate')), findsNothing);
   });
 
   for (final width in [390.0, 1300.0]) {

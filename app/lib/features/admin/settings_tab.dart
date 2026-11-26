@@ -7,10 +7,31 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/more_details.dart';
 import '../../core/widgets/section_card.dart';
+
+/// The settings area's one action: the page pins it under the content ([PageScaffold.bottomAction]).
+class AdminSettingsSave extends ConsumerWidget {
+  const AdminSettingsSave({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(adminSettingsViewModelProvider);
+    // Nothing to save until the settings have arrived; the tab shows why meanwhile.
+    if (s.settings == null) return const SizedBox.shrink();
+    return BottomActionBar.button(
+      buttonKey: const Key('setting-save'),
+      label: context.l10n.save,
+      busy: s.save.running,
+      onPressed: () =>
+          ref.read(adminSettingsViewModelProvider.notifier).saveSettings(),
+    );
+  }
+}
 
 /// The settings an admin can change, and (read-only) what only the server's environment sets.
 class SettingsTab extends ConsumerWidget {
@@ -51,7 +72,9 @@ class SettingsTab extends ConsumerWidget {
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
+            constraints: const BoxConstraints(
+              maxWidth: AppLayout.contentNarrow,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.lg,
@@ -94,18 +117,6 @@ class SettingsTab extends ConsumerWidget {
                       ),
                     if (s.save.completed)
                       Text(l10n.saved, key: const Key('settings-saved')),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: FilledButton(
-                        key: const Key('setting-save'),
-                        onPressed: s.save.running
-                            ? null
-                            : () => ref
-                                  .read(adminSettingsViewModelProvider.notifier)
-                                  .saveSettings(),
-                        child: Text(l10n.save),
-                      ),
-                    ),
                   ],
                 ),
                 SectionCard(
@@ -198,29 +209,30 @@ class SettingsTab extends ConsumerWidget {
                         ),
                         key: const Key('catalogue-contributions'),
                       ),
-                      if (catalogue.problems.isNotEmpty) ...[
-                        Text(
-                          l10n.catalogueProblems,
-                          style: Theme.of(context).textTheme.titleSmall,
+                      if (catalogue.problems.isNotEmpty)
+                        // The design folds them behind one row, carrying the parts that were not taken.
+                        MoreDetails(
+                          label: l10n.catalogueProblems,
+                          children: [
+                            for (final problem in catalogue.problems)
+                              ListTile(
+                                key: Key('contribution-${problem.id}'),
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  '${problem.typeName} · '
+                                  '${_partText(problem.brand, problem.model, problem.mpn)}',
+                                ),
+                                subtitle: problem.reason == null
+                                    ? null
+                                    : Text(problem.reason!),
+                                trailing: Text(
+                                  problem.status == 'rejected'
+                                      ? l10n.contributionRejected
+                                      : l10n.contributionFailed,
+                                ),
+                              ),
+                          ],
                         ),
-                        for (final problem in catalogue.problems)
-                          ListTile(
-                            key: Key('contribution-${problem.id}'),
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              '${problem.typeName} · '
-                              '${_partText(problem.brand, problem.model, problem.mpn)}',
-                            ),
-                            subtitle: problem.reason == null
-                                ? null
-                                : Text(problem.reason!),
-                            trailing: Text(
-                              problem.status == 'rejected'
-                                  ? l10n.contributionRejected
-                                  : l10n.contributionFailed,
-                            ),
-                          ),
-                      ],
                     ],
                   ],
                 ),

@@ -198,7 +198,9 @@ void main() {
       expect(server.clubLatitude, closeTo(45.4642, 0.00001));
       expect(server.clubLongitude, closeTo(9.19, 0.00001));
 
+      // The map above it grew the card, so the switch needs the scroll to settle first.
       await tester.ensureVisible(find.byKey(const Key('club-discoverable')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('club-discoverable')));
       await tester.pumpAndSettle();
 

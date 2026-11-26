@@ -2522,6 +2522,12 @@ abstract class AppLocalizations {
   /// **'≥ {from} {unit}'**
   String zoneRangeOpen(int from, String unit);
 
+  /// No description provided for @zoneName.
+  ///
+  /// In en, this message translates to:
+  /// **'{zone, select, 1{Z1 Recovery} 2{Z2 Endurance} 3{Z3 Tempo} 4{Z4 Threshold} 5{Z5 VO2max} 6{Z6 Anaerobic} 7{Z7 Neuromuscular} other{Zone}}'**
+  String zoneName(String zone);
+
   /// No description provided for @bike.
   ///
   /// In en, this message translates to:
@@ -2557,6 +2563,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Route colour shows heart rate from {min} to {max} bpm'**
   String mapHeartRateHint(int min, int max);
+
+  /// No description provided for @mapHeartRateLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'{min}–{max} bpm'**
+  String mapHeartRateLegend(int min, int max);
 
   /// No description provided for @seriesElevation.
   ///
@@ -4856,6 +4868,12 @@ abstract class AppLocalizations {
   /// **'Search again'**
   String get searchAgain;
 
+  /// No description provided for @sensorSignalStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'{rssi} dBm'**
+  String sensorSignalStrength(int rssi);
+
   /// No description provided for @recorderPermission.
   ///
   /// In en, this message translates to:
@@ -6529,6 +6547,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'They are told, without a reason.'**
   String get joinRequestDeclineBody;
+
+  /// No description provided for @noteQuoted.
+  ///
+  /// In en, this message translates to:
+  /// **'“{note}”'**
+  String noteQuoted(String note);
 
   /// No description provided for @notificationClubJoinRequest.
   ///
@@ -9685,6 +9709,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Main set'**
   String get sessionMainSet;
+
+  /// No description provided for @relativeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get relativeNow;
+
+  /// No description provided for @relativeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String relativeMinutes(int count);
+
+  /// No description provided for @relativeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String relativeHours(int count);
+
+  /// No description provided for @relativeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get relativeYesterday;
+
+  /// No description provided for @formStateBuilding.
+  ///
+  /// In en, this message translates to:
+  /// **'Building'**
+  String get formStateBuilding;
+
+  /// No description provided for @totalsTableWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Week by week'**
+  String get totalsTableWeekly;
+
+  /// No description provided for @totalsTableMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Month by month'**
+  String get totalsTableMonthly;
+
+  /// No description provided for @totalsTableYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Year by year'**
+  String get totalsTableYearly;
+
+  /// No description provided for @totalsColumnWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get totalsColumnWeek;
+
+  /// No description provided for @totalsColumnMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get totalsColumnMonth;
+
+  /// No description provided for @totalsColumnYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get totalsColumnYear;
+
+  /// No description provided for @wellbeingFeelSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'{today} out of 5 today; your usual is {usual}.'**
+  String wellbeingFeelSentence(String today, String usual);
+
+  /// No description provided for @wellbeingPrivateNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you see your notes. Coaches you share with see scores and ride effort, never notes.'**
+  String get wellbeingPrivateNotes;
+
+  /// No description provided for @accountSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name or email'**
+  String get accountSearchHint;
+
+  /// No description provided for @askedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'asked just now'**
+  String get askedJustNow;
+
+  /// No description provided for @askedHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'asked {count} h ago'**
+  String askedHoursAgo(int count);
+
+  /// No description provided for @askedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'asked {count} d ago'**
+  String askedDaysAgo(int count);
 }
 
 class _AppLocalizationsDelegate

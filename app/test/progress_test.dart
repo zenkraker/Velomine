@@ -106,7 +106,8 @@ void main() {
       find.descendant(of: card, matching: find.text('This week')),
       findsOneWidget,
     );
-    // The latest week is 42.5 km against a 60 km week before it: below the average.
+    // The latest week is 42.5 km against a 60 km week before it: below the average, and the sentence
+    // keeps the rides and the time the week took.
     expect(
       find.descendant(of: card, matching: find.text('42.5 km')),
       findsOneWidget,
@@ -114,7 +115,9 @@ void main() {
     expect(
       find.descendant(
         of: card,
-        matching: find.text('Below your 12-week average of 60.0 km.'),
+        matching: find.text(
+          '2 rides, 1 h 30 min. Below your 12-week average of 60.0 km.',
+        ),
       ),
       findsOneWidget,
     );
@@ -230,25 +233,62 @@ void main() {
   );
 
   testWidgets(
-    'ProgressScreen_ShouldOpenTheFilterInASheet_WhenTheMenuEntryIsChosen',
+    'ProgressScreen_ShouldNotRepeatTheSportFilter_WhenTheChipsAlreadyDrawIt',
     (tester) async {
       await openProgress(tester);
 
-      await tester.tap(find.byKey(const Key('progress-actions')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('progress-filter')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(BottomSheet), findsOneWidget);
-      await tester.tap(
-        find.descendant(
-          of: find.byType(BottomSheet),
-          matching: find.byKey(const Key('progress-filter-gravel')),
-        ),
-      );
+      // The chips on the page are the only way to the filter: no menu repeats them.
+      expect(find.byKey(const Key('progress-actions')), findsNothing);
+      await tester.tap(find.byKey(const Key('progress-filter-gravel')));
       await tester.pumpAndSettle();
 
       expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldShowTheFormStateWord_WhenTheFormArrives', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    final card = find.byKey(const Key('metric-form'));
+    expect(
+      find.descendant(of: card, matching: find.text('Building')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldShowEmptyCards_WhenTheRiderHasNoLoadAndNoRides',
+    (tester) async {
+      server.training = {...trainingJson(), 'days': const <Object?>[]};
+      server.totals['week'] = [];
+      await openProgress(tester);
+
+      // No data is a fact the cards carry: they say what makes one appear instead of vanishing.
+      for (final (key, sentence) in [
+        (
+          'metric-form',
+          'No training load in this range. Rides with power or heart rate add to it.',
+        ),
+        (
+          'metric-period',
+          'No rides yet. Upload or record a ride to see your totals.',
+        ),
+      ]) {
+        final card = find.byKey(Key(key));
+        expect(card, findsOneWidget, reason: key);
+        expect(
+          find.descendant(of: card, matching: find.text(sentence)),
+          findsOneWidget,
+          reason: key,
+        );
+        expect(
+          find.descendant(of: card, matching: find.text('–')),
+          findsOneWidget,
+          reason: key,
+        );
+      }
     },
   );
 

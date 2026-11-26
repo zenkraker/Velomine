@@ -42,7 +42,7 @@ The toolchain is a dev container in `.devcontainer/`. It holds the editor, the a
 | Claude Code | 2.1.329 | npm, in the volume; the agents' CLI |
 | Sentry MCP | 0.49.0 | npm, in the volume; the local server Pi starts |
 
-The image is Debian 12, the last Debian whose apt has JDK 17, which Gradle 9, the Android Gradle Plugin 9, CI and the OpenAPI generator all need. **Not in the container:** the Android emulator and its system images (no hardware acceleration inside a container, so use a phone with `just phone`) and a browser (use `just up`, or `flutter run -d web-server` and open the forwarded port on your machine). iOS builds need macOS with Xcode.
+The image is Debian 12, the last Debian whose apt has JDK 17, which Gradle 9, the Android Gradle Plugin 9, CI and the OpenAPI generator all need. **Not in the container:** the Android emulator and its system images (no hardware acceleration inside a container, so use a phone with `just phone`). A browser for a person to click in is not there either: use `just up`, or `flutter run -d web-server` and open the forwarded port on your machine. **In the container:** `chrome-headless-shell` (Chrome for Testing, pinned in the `Dockerfile`), which `dart run tools/screenshots.dart` drives for the screenshot check — it takes pictures, it is not a browser to work in. iOS builds need macOS with Xcode.
 
 ## Set up
 

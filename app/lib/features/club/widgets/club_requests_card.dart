@@ -70,7 +70,7 @@ class ClubRequestsCard extends StatelessWidget {
                   request.displayName,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
-                if (request.note != null) Text('“${request.note}”'),
+                if (request.note != null) Text(request.note!),
                 Align(
                   alignment: Alignment.centerRight,
                   child: ToolbarRow(

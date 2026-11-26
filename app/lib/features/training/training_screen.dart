@@ -60,6 +60,9 @@ class TrainingScreen extends ConsumerWidget {
 
     final plan = state.plan;
     final goal = plan?.goal ?? plan?.suggestedGoal ?? 'fitter';
+    // The server sends one reason, the one it picked the suggested goal with: it explains the goal in force
+    // only while that goal is the suggested one.
+    final reason = goal == plan?.suggestedGoal ? plan?.suggestionReason : null;
     final failure = state.load.failure ?? state.week.failure;
     final firstLoad =
         state.weeks.isEmpty &&
@@ -81,11 +84,14 @@ class TrainingScreen extends ConsumerWidget {
           trainingGoalName(l10n, goal),
           style: VelomineText.of(context).stat,
         ),
-        Text(
-          trainingSuggestionReason(l10n, plan?.suggestionReason ?? ''),
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-        ),
+        if (reason != null)
+          Text(
+            trainingSuggestionReason(l10n, reason),
+            key: const Key('training-goal-reason'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
       ],
     );
     return PageScaffold(
@@ -295,6 +301,7 @@ class _WeekCard extends StatelessWidget {
             for (var day = 0; day < 7; day++)
               _DayRow(
                 date: DateUtils.addDaysToDate(week.start, day),
+                plain: preview,
                 session: week.sessions
                     .where(
                       (session) => DateUtils.isSameDay(
@@ -331,11 +338,15 @@ class _DayRow extends StatelessWidget {
     required this.date,
     required this.session,
     required this.today,
+    this.plain = false,
   });
 
   final DateTime date;
   final TrainingWeekSession? session;
   final DateTime today;
+
+  /// A row of the next-week preview, which the guideline draws plain: no way in.
+  final bool plain;
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +372,7 @@ class _DayRow extends StatelessWidget {
           ? AppBadgeTone.good
           : AppBadgeTone.neutral,
       isToday: isToday,
-      onTap: session == null
+      onTap: session == null || plain
           ? null
           : () => context.push('/training/sessions/${session.id}'),
     );

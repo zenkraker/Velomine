@@ -124,8 +124,12 @@ class TotalsChart extends ConsumerWidget {
       values: values,
       labels: [for (final t in totals) periodLabel(period, t.start)],
       format: (value) => _measureReading(l10n, units, measure, value),
-      // The line only: its value sits in the card's title row, where no bar label can reach it.
+      // The server sends the periods oldest first and the current one last: this chart names it rather
+      // than letting the widget assume it.
+      currentIndex: totals.isEmpty ? 0 : totals.length - 1,
+      // The mean, with its number on the chart line where it is read against the bars.
       average: average,
+      averageText: totalsAverage(l10n, units, measure, totals),
       semanticLabel: l10n.totalsSemanticsMeasure(
         totalsMeasureName(l10n, measure),
         _periodWord(l10n, period),

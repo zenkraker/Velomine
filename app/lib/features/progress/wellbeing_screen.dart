@@ -76,7 +76,7 @@ class WellbeingScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.wellbeing,
-      parent: wide ? l10n.navProgress : null,
+      parent: l10n.navProgress,
       primaryAction: consentRequired == false
           ? FilledButton(
               key: const Key('wellbeing-check-in'),

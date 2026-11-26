@@ -65,6 +65,19 @@ class _Status extends StatelessWidget {
     final processing = status.status == 'processing';
     final done =
         status.imported + status.duplicates + status.failed + status.skipped;
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    // One outcome, as the mock-up draws it: a glyph, then what it says.
+    Widget outcome(String key, IconData icon, String label, {Color? color}) =>
+        Row(
+          key: Key(key),
+          spacing: AppSpacing.md,
+          children: [
+            Icon(icon, color: color ?? scheme.onSurfaceVariant),
+            Expanded(child: Text(label, style: text.bodyLarge)),
+          ],
+        );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,8 +85,8 @@ class _Status extends StatelessWidget {
       children: [
         SectionCard(
           key: const Key('import-status'),
-          title: l10n.importTitle,
-          description: processing ? l10n.importRunning : l10n.importFinished,
+          // The card's own title, not the page's: it says what is happening, as the mock-up has it.
+          title: processing ? l10n.importRunning : l10n.importFinished,
           children: [
             if (status.total > 0)
               // The count read of the total is the card's number, its unit under it.
@@ -100,23 +113,40 @@ class _Status extends StatelessWidget {
                     ? null
                     : (done / status.total).clamp(0.0, 1.0),
               ),
-            if (!processing) ...[
-              Text(
+            // What came of them, from the first file on: the mock-up's rows are there while the archive
+            // is still being read, so the import shows its work instead of only its ending.
+            if (status.imported > 0)
+              outcome(
+                'import-imported',
+                Icons.check,
                 l10n.importSummaryImported(status.imported),
-                key: const Key('import-imported'),
               ),
-              if (status.duplicates > 0)
-                Text(l10n.importSummaryDuplicates(status.duplicates)),
-              if (status.failed > 0)
-                Text(l10n.importSummaryFailed(status.failed)),
-              if (status.skipped > 0)
-                Text(l10n.importSummarySkipped(status.skipped)),
-              if (status.status == 'failed')
-                Text(
-                  importErrorText(l10n, status.error),
-                  key: const Key('import-failure'),
-                ),
-            ],
+            if (status.duplicates > 0)
+              outcome(
+                'import-duplicates',
+                Icons.copy_all_outlined,
+                l10n.importSummaryDuplicates(status.duplicates),
+              ),
+            if (status.failed > 0)
+              outcome(
+                'import-failed',
+                Icons.description_outlined,
+                l10n.importSummaryFailed(status.failed),
+                color: scheme.error,
+              ),
+            if (status.skipped > 0)
+              outcome(
+                'import-skipped',
+                Icons.skip_next_outlined,
+                l10n.importSummarySkipped(status.skipped),
+              ),
+            if (status.status == 'failed')
+              outcome(
+                'import-failure',
+                Icons.error_outline,
+                importErrorText(l10n, status.error),
+                color: scheme.error,
+              ),
           ],
         ),
         // The quiet way out, under the card, as the mock-up draws it.

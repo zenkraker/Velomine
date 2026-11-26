@@ -11,12 +11,6 @@ import '../../../core/widgets/section_card.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../sharing/sharing_state.dart';
 
-String _audienceName(AppLocalizations l10n, String audience) =>
-    switch (audience) {
-      'coaches' => l10n.audienceCoaches,
-      _ => l10n.audienceNone,
-    };
-
 String _viewName(AppLocalizations l10n, String what) => switch (what) {
   'rides' => l10n.shareRides,
   'analytics' => l10n.shareAnalytics,
@@ -69,6 +63,7 @@ class ClubSharingCard extends StatelessWidget {
       apply(to);
     }
 
+    // One switch per thing shared: on is the club's coaches, off is nobody.
     Widget choice(
       String label,
       String value,
@@ -76,27 +71,15 @@ class ClubSharingCard extends StatelessWidget {
       void Function(String value) onChanged, {
       bool enabled = true,
       String? helper,
-    }) => InputDecorator(
-      decoration: InputDecoration(labelText: label, helperText: helper),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          key: Key(key),
-          value: value,
-          isExpanded: true,
-          items: [
-            for (final audience in ['none', 'coaches'])
-              DropdownMenuItem(
-                value: audience,
-                child: Text(_audienceName(l10n, audience)),
-              ),
-          ],
-          onChanged: state.save.running || !enabled
-              ? null
-              : (v) {
-                  if (v != null) onChanged(v);
-                },
-        ),
-      ),
+    }) => SwitchListTile(
+      key: Key(key),
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      subtitle: helper == null ? null : Text(helper),
+      value: value == 'coaches',
+      onChanged: state.save.running || !enabled
+          ? null
+          : (on) => onChanged(on ? 'coaches' : 'none'),
     );
 
     return SectionCard(
@@ -163,8 +146,15 @@ class ClubSharingCard extends StatelessWidget {
                 size: AppClub.inlineIcon,
               ),
               title: Text(view.viewerName),
-              subtitle: Text(_viewName(l10n, view.what)),
-              trailing: Text(dateTime(view.at)),
+              // What and when on one line under the name: a trailing date pushed the row past
+              // half a card's width. Two Texts, so the log still reads what was looked at.
+              subtitle: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(child: Text(_viewName(l10n, view.what))),
+                  Text(' · ${dateTime(view.at)}'),
+                ],
+              ),
             ),
       ],
     );

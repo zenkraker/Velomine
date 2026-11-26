@@ -11,12 +11,12 @@ import '../../core/widgets/ftp_suggestion_card.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'ftp_history_sheet.dart';
-import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
 import 'progress_data.dart';
 import 'progress_filter_sheet.dart';
 import 'progress_screen.dart';
 import 'progress_tabs.dart';
+import 'ftp_reminder_card.dart';
 import 'progress_view_models.dart';
 import 'rider_card.dart';
 
@@ -50,7 +50,7 @@ class PowerScreen extends ConsumerWidget {
     final failure = power.load.failure;
     return PageScaffold(
       title: l10n.metricPower,
-      parent: wide ? l10n.navProgress : null,
+      parent: l10n.navProgress,
       menu: PageMenu(
         buttonKey: const Key('power-actions'),
         badge: filters.discipline != null,

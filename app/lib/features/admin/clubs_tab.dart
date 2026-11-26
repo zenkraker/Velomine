@@ -16,6 +16,7 @@ import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/loading_state.dart';
 
 /// Every club on the server, for the instance admin: create one, and turn it on or off.
 /// Opens the create-club sheet. The page header holds the button, so the screen and the tab both
@@ -106,7 +107,9 @@ class ClubsTab extends ConsumerWidget {
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
+            constraints: const BoxConstraints(
+              maxWidth: AppLayout.contentNarrow,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.md,
@@ -116,7 +119,12 @@ class ClubsTab extends ConsumerWidget {
                     failureText(l10n, failure),
                     key: const Key('clubs-error'),
                   ),
-                if (s.clubs.isEmpty && !s.load.running)
+                // The first load is a loading state, not "no clubs yet".
+                if (s.clubs.isEmpty &&
+                    s.load.failure == null &&
+                    !s.load.completed)
+                  const LoadingState.rows(),
+                if (s.clubs.isEmpty && s.load.completed)
                   EmptyState(
                     key: const Key('no-clubs'),
                     message: l10n.adminNoClubs,
@@ -160,12 +168,7 @@ class ClubsTab extends ConsumerWidget {
             ),
           ],
         ),
-        subtitle: Text(
-          club.memberLimit == null
-              ? l10n.clubMemberCount(club.memberCount)
-              : l10n.clubPlanMembers(club.memberCount, club.memberLimit!),
-          key: Key('club-members-${club.id}'),
-        ),
+        // No subtitle: the facts are the caption under the row, as the mock-up draws them.
         trailing: PageMenu(
           buttonKey: Key('club-menu-${club.id}'),
           entries: [
@@ -193,8 +196,8 @@ class ClubsTab extends ConsumerWidget {
           ],
         ),
       ),
-      // The facts sit under the tile with the card's whole width: beside the
-      // trailing menu an email had a third of it and broke mid-word.
+      // The facts are one caption under the name, as the mock-up draws them: owner, members, the plan
+      // and the join code on one line, not four.
       Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -202,30 +205,36 @@ class ClubsTab extends ConsumerWidget {
           AppSpacing.lg,
           AppSpacing.sm,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.xs,
+        child: Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            if (club.paidUntil != null)
+            for (final (i, part) in [
+              if (club.ownerName != null)
+                Text(
+                  '${l10n.clubOwner} ${club.ownerName}',
+                  key: Key('club-owner-${club.id}'),
+                ),
               Text(
-                l10n.clubPlanPaidUntil(dateOnly(club.paidUntil)),
-                key: Key('club-paid-until-${club.id}'),
-                style: Theme.of(context).textTheme.bodySmall,
+                club.memberLimit == null
+                    ? l10n.clubMemberCount(club.memberCount)
+                    : l10n.clubPlanMembers(club.memberCount, club.memberLimit!),
+                key: Key('club-members-${club.id}'),
               ),
-            if (club.ownerName != null)
-              Text(
-                club.ownerName!,
-                style: Theme.of(context).textTheme.bodySmall,
+              if (club.paidUntil != null)
+                Text(
+                  l10n.clubPlanPaidUntil(dateOnly(club.paidUntil)),
+                  key: Key('club-paid-until-${club.id}'),
+                ),
+              Text('${l10n.adminClubJoinCode}: ${club.joinCode}'),
+            ].indexed) ...[
+              if (i > 0) const Text(' · '),
+              DefaultTextStyle.merge(
+                style: Theme.of(context).textTheme.bodySmall!,
+                child: part,
               ),
-            if (club.ownerEmail != null)
-              Text(
-                club.ownerEmail!,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            Text(
-              '${l10n.adminClubJoinCode}: ${club.joinCode}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            ],
           ],
         ),
       ),

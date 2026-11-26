@@ -125,10 +125,65 @@ void main() {
     expect(numbers.kpi.fontSize, 40);
     expect(numbers.kpi.fontWeight, FontWeight.w400);
     expect(numbers.stat.fontSize, 24);
+    // nav-label 15/500: the pill and the sidebar never wear Material's labelLarge 14.
+    expect(numbers.navLabel.fontSize, 15);
+    expect(numbers.navLabel.fontWeight, FontWeight.w500);
     final text = dayTheme().textTheme;
+    // card-title 17/24, semibold: the slot a card's title is written in.
     expect(text.titleMedium!.fontSize, 17);
+    expect(text.titleMedium!.fontWeight, FontWeight.w600);
+    expect(text.titleMedium!.height, closeTo(24 / 17, 0.001));
     expect(text.bodyLarge!.fontSize, 15);
+    // The design has one body size, so the default body slot carries it too:
+    // a widget that reaches for bodyMedium must never render an off-scale 14.
+    expect(text.bodyMedium!.fontSize, 15);
     expect(text.bodySmall!.fontSize, 13);
     expect(text.labelSmall!.fontSize, 12);
+  });
+
+  test('Theme_ShouldPadTapTargets_WhenTheWebResolvesThePlatform', () {
+    // linux/macOS/windows (what the web build reports) resolve an unset target to shrinkWrap, so a
+    // 32 dp chip would have a 32 dp tap area under the design's 48 dp minimum.
+    expect(dayTheme().materialTapTargetSize, MaterialTapTargetSize.padded);
+    expect(nightTheme().materialTapTargetSize, MaterialTapTargetSize.padded);
+  });
+
+  test('TextTheme_ShouldCarryTabularFigures_WhenANumberSitsInAColumn', () {
+    for (final theme in [dayTheme(), nightTheme()]) {
+      final text = theme.textTheme;
+      for (final style in [
+        text.bodyMedium,
+        text.bodySmall,
+        text.labelSmall,
+        text.titleMedium,
+      ]) {
+        expect(
+          style!.fontFeatures,
+          contains(const FontFeature.tabularFigures()),
+          reason: '${style.fontSize}',
+        );
+      }
+    }
+    expect(tabularFigures, contains(const FontFeature.tabularFigures()));
+  });
+
+  test('VelomineText_ShouldSpaceAJoinCode_WhenAThemeIsBuilt', () {
+    final code = nightTheme().extension<VelomineText>()!.code;
+    expect(code.fontSize, 22);
+    expect(code.fontWeight, FontWeight.w600);
+    // 0.08em, as the mock-up's `vm-code` draws it, and nothing like the old letterSpacing 4.
+    expect(code.letterSpacing, closeTo(22 * 0.08, 0.001));
+    expect(code.fontFeatures, contains(const FontFeature.tabularFigures()));
+  });
+
+  test('VelomineText_ShouldSetTheAuthWordmarkInInk_WhenAThemeIsBuilt', () {
+    final theme = dayTheme();
+    final wordmark = theme.extension<VelomineText>()!.wordmark;
+    // 28/32 display in ink, per `docs/design/pages/bundle.css` `.vm-auth .brand`.
+    expect(wordmark.fontSize, 28);
+    expect(wordmark.height, closeTo(32 / 28, 0.001));
+    expect(wordmark.fontFamily, 'Instrument Serif');
+    expect(wordmark.color, theme.colorScheme.onSurface);
+    expect(AppAuth.width, 440);
   });
 }

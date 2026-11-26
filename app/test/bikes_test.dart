@@ -31,6 +31,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Opens a part row's `⋯`, where Edit and Replace sit.
+  Future<void> openPartMenu(WidgetTester tester, String id) async {
+    await tester.tap(find.byKey(Key('part-actions-$id')));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> addBike(WidgetTester tester, String name) async {
     await tester.tap(find.byKey(const Key('add-bike')));
     await tester.pumpAndSettle();
@@ -270,6 +276,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Replace it'), findsOneWidget);
 
+    await openPartMenu(tester, 'part-1');
     await tester.tap(find.byKey(const Key('replace-part-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('part-save')));
@@ -281,7 +288,9 @@ void main() {
     expect(list[0]['status'], 'retired');
     expect(list[1]['removedOn'], isNull);
     expect(list[1]['expectedDistanceM'], 4000000.0); // same limit as before
-    expect(find.text('Replaced parts'), findsOneWidget);
+    // The replaced part stays in its card with the word, instead of a card of its own.
+    expect(find.text('Replaced parts'), findsNothing);
+    expect(find.text('Replaced'), findsOneWidget);
   });
 
   testWidgets('BikeDetailScreen_ShouldDefaultArchiveAndDelete_WhenUsed', (
@@ -345,16 +354,17 @@ void main() {
       findsOneWidget,
     ); // the dropdown's current value
 
-    // The map is now above the numbers, so the bike picker sits further down the page.
+    // The design draws the bike as a card with a Change action, not a dropdown: the card's
+    // action opens the picker sheet, and the choice is the bike's key.
     await tester.scrollUntilVisible(
-      find.byType(DropdownButtonFormField<String?>),
+      find.byKey(const Key('ride-bike-change')),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String?>));
+    await tester.tap(find.byKey(const Key('ride-bike-change')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Gravel').last);
+    await tester.tap(find.byKey(const Key('ride-bike-option-b2')));
     await tester.pumpAndSettle();
 
     expect(server.rides.first['bikeId'], 'b2');
@@ -628,7 +638,16 @@ void main() {
       expect(find.text('Drivetrain'), findsOneWidget);
       expect(find.text('Wheels'), findsOneWidget);
       // The wear colour never stands alone: the word is beside it.
-      expect(find.text('Replace'), findsWidgets);
+      expect(find.text('Replace it'), findsOneWidget);
+      // Edit and Replace are the row's `⋯`, never two buttons on every row.
+      expect(find.byKey(const Key('edit-part-1')), findsNothing);
+      expect(find.byKey(const Key('replace-part-1')), findsNothing);
+      await tester.tap(find.byKey(const Key('part-actions-part-1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('edit-part-1')), findsOneWidget);
+      expect(find.byKey(const Key('replace-part-1')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('part-actions-part-1')));
+      await tester.pumpAndSettle();
       expect(
         find.descendant(
           of: find.byKey(const Key('part-part-2')),

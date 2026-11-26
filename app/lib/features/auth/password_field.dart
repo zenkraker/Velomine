@@ -2,7 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/l10n.dart';
 
-/// A password box with the eye that shows what was typed, so a typo can be seen before the form is sent.
+/// A password box with the word that shows what was typed, so a typo can be seen before the form is sent.
+/// The design draws a text button at the end of the box (`docs/design/pages/sign-in/SignInPage.html`), not an eye.
 class PasswordField extends StatefulWidget {
   const PasswordField({
     super.key,
@@ -55,15 +56,10 @@ class _PasswordFieldState extends State<PasswordField> {
         labelText: widget.label,
         helperText: widget.helperText,
         helperMaxLines: widget.helperMaxLines,
-        suffixIcon: IconButton(
+        suffixIcon: TextButton(
           key: widget.visibilityKey,
-          tooltip: _visible ? l10n.hidePassword : l10n.showPassword,
-          icon: Icon(
-            _visible
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-          ),
           onPressed: () => setState(() => _visible = !_visible),
+          child: Text(_visible ? l10n.hidePassword : l10n.showPassword),
         ),
       ),
     );

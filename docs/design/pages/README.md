@@ -48,6 +48,7 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 
 - Two families: Geist (`sans`) for everything you read and every number; Instrument Serif (`display`) only for the page title and the wordmark.
 - The scale: `page-title` 40, `kpi` 40, `stat` 24, `card-title` 17, `body` and `nav-label` 15, `caption` 13, `axis` 12. Do not add sizes.
+- **One body size, 15, everywhere.** Any running text, a card's explaining sentence or a row's main line is `body` 15; there is no 14 in this design. In Flutter both `bodyLarge` and `bodyMedium` carry the 15, so a widget cannot land off the scale by choosing the other body slot; `design_tokens_test` fails if either drifts.
 - Big numbers are `kpi` at regular weight with tabular figures; the unit beside them is `caption` size in `ink-muted`.
 - Card titles are `card-title`, one line, sentence case.
 
@@ -67,7 +68,7 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 
 ### Charts
 
-- Drawn with Flutter's canvas, never a chart library.
+- Drawn with `fl_chart` through the app's chart widgets (`AreaChart`, `BarChart`, `GoalGauge`), so values, axes and interaction come from one library. A chart the library cannot express is a special case for the owner; the app never hand-draws a chart with a painter without that answer.
 - Faint `hairline` grid at round values (0, 40, 80, 120), at most four lines; axis labels in `axis` and `ink-muted`.
 - Bars have `radius-sm` tops and a vertical fade from full colour at the top to 55 % at the base.
 - Area charts: a 2 px line, the area under it faded to transparent, the last point marked with a dot and its value.
@@ -89,6 +90,7 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 - A sub-page's title row carries the parent's name as a `caption` above the `page-title`.
 - An overview page fits in about one screen. When it grows past that, a card moves to its own sub-page, not further down the page.
 - One main action per screen, as a filled pill in the page header. Rare and destructive actions go in the header's `⋯` menu, destructive last, in `danger`.
+- The action and the `⋯` menu sit at the **end of the title row, level with the title**. They are never centred, never float over the content and never get a row of their own: a page whose buttons sit halfway across the header is a bug in the page scaffold, not a layout choice.
 
 ### Motion
 

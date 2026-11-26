@@ -64,3 +64,15 @@ RUN curl -fsSL -o /tmp/codegraph.tar.gz "https://github.com/colbymchenry/codegra
     && echo "${CODEGRAPH_SHA256}  /tmp/codegraph.tar.gz" | sha256sum -c - \
     && tar -xzf /tmp/codegraph.tar.gz -C /opt && mv /opt/codegraph-linux-x64 /opt/codegraph && rm /tmp/codegraph.tar.gz
 ENV PATH="/opt/codegraph/bin:${PATH}"
+
+# Chrome for Testing, headless shell: `tools/screenshots.dart` drives it over the DevTools protocol, so
+# the screenshot check in `.pi/skills/ui-build/SKILL.md` works from inside the container.
+# `CHROME` overrides the binary for a different build.
+ARG CHROME_VERSION=158.0.8127.88
+ARG CHROME_SHA256=63401333cc587645bfaeea7f0c90958b327d249251e23954a47f30112ca23d5b
+RUN curl -fsSL -o /tmp/chrome-headless-shell.zip "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-headless-shell-linux64.zip" \
+    && echo "${CHROME_SHA256}  /tmp/chrome-headless-shell.zip" | sha256sum -c - \
+    && apt-get update && apt-get install -y --no-install-recommends unzip \
+    && unzip -q /tmp/chrome-headless-shell.zip -d /opt \
+    && rm -rf /tmp/chrome-headless-shell.zip /var/lib/apt/lists/* \
+    && ln -s /opt/chrome-headless-shell-linux64/chrome-headless-shell /usr/local/bin/chrome-headless-shell

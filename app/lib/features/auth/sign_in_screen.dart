@@ -178,8 +178,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             onChanged: (value) => setState(() => _staySignedIn = value),
             title: Text(l10n.staySignedIn),
           ),
-          Align(
-            alignment: Alignment.centerRight,
+          // Below the fields and above the ways in, as the design draws it: a full-width text button, not a
+          // link pushed to the right edge.
+          SizedBox(
+            width: double.infinity,
             child: TextButton(
               key: const Key('forgot-password'),
               onPressed: () => context.push('/forgot-password'),

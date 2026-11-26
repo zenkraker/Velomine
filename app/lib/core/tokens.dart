@@ -123,6 +123,9 @@ abstract final class AppLoading {
 
   /// The size of the icon before an error line.
   static const double errorIcon = 18;
+
+  /// The box around an indicator shown inside a row, such as "Reading file".
+  static const double inlineIndicator = 16;
 }
 
 /// Where a number came from: the size of [SourceNote].
@@ -133,8 +136,9 @@ abstract final class AppSourceNote {
 
 /// The floating navigation pill the shell draws over a phone's content.
 abstract final class AppNav {
-  /// The collapsed rail's width: icons with labels under them.
-  static const double railWidth = 88;
+  /// The collapsed rail's width: icons with labels under them, wide enough for `nav-label` 15 on one
+  /// line in both languages ("Progressi" is the longest).
+  static const double railWidth = 104;
 
   /// The expanded rail's width: the brand, labels beside the icons, the club and the privacy note.
   static const double railExpandedWidth = 240;
@@ -153,6 +157,10 @@ abstract final class AppNav {
 
   /// The blur behind the translucent pill, where the device can afford it (see `pillBlurOf`).
   static const double pillBlur = 20;
+
+  /// The ground behind a rail destination's icon, a pill in the mock-up.
+  static const double railIndicatorWidth = 56;
+  static const double railIndicatorHeight = 32;
 
   /// The least height of the live-ride banner, a comfortable tap target.
   static const double bannerHeight = 56;
@@ -195,6 +203,9 @@ abstract final class AppProgress {
   static const double effectWidth = 34;
   static const double scoreLabelWidth = 108;
   static const double dateWidth = 54;
+
+  /// The column of a zone's label ("Z2") before its range and its bar.
+  static const double zoneLabelWidth = 30;
 }
 
 /// The training screens: the shape strip of a session, and the date block of a week's row.
@@ -233,6 +244,9 @@ abstract final class AppChart {
   /// The label step on a phone, and from the tablet width up.
   static const int compactLabelStep = 3;
   static const int mediumLabelStep = 2;
+
+  /// The colour dot before a legend's label.
+  static const double legendDot = 10;
 }
 
 /// The sizes inside a stat card.
@@ -258,4 +272,16 @@ abstract final class AppClub {
 
   /// The map of the location picker, which sits in the page's scroll view.
   static const double pickerMapHeight = 420;
+}
+
+/// The auth screens: one narrow column under the wordmark, centred on the page (`docs/design/pages/sign-in/`).
+abstract final class AppAuth {
+  /// The measure of the column, narrower than a page of prose.
+  static const double width = 440;
+}
+
+/// The initials avatar that stands for a member in a row or a list (`docs/design/pages/README.md`, cards).
+abstract final class AppAvatar {
+  /// The circle's size, as the mock-up's `vm-avatar` draws it.
+  static const double size = 40;
 }

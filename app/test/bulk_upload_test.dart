@@ -277,6 +277,76 @@ void main() {
       },
     );
 
+    testWidgets(
+      'RidesScreen_ShouldShowTheDropAreaOnThePage_WhenTheWindowIsWide',
+      (tester) async {
+        tester.view.physicalSize = const Size(600, 2000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final server = FakeServer();
+        server.signInBrowser(server.add('rider@example.com'));
+        final source = _FakeDropSource(files: [_MemoryFile('morning.gpx')]);
+
+        await startApp(
+          tester,
+          server.session(useCookies: true),
+          overrides: [
+            dropSourceProvider.overrideWithValue(source),
+            bulkRunnerProvider.overrideWithValue(
+              BulkUploadRunner(wait: (_) async {}),
+            ),
+          ],
+        );
+
+        // The way in is on the page, not only a target that appears during a drag.
+        final zone = find.byKey(const Key('ride-drop-zone'));
+        expect(zone, findsOneWidget);
+        expect(tester.takeException(), isNull);
+        expect(
+          find.descendant(
+            of: zone,
+            matching: find.byKey(const Key('drop-files')),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('drop-files')));
+        for (var i = 0; i < 30; i++) {
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+
+        expect(find.text('1 new ride'), findsOneWidget);
+        expect(
+          server.requests.where((r) => r == 'POST /api/v1/rides/uploads'),
+          hasLength(1),
+        );
+      },
+    );
+
+    testWidgets(
+      'RidesScreen_ShouldKeepTheDropAreaOffThePage_WhenTheWindowIsAPhone',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final server = FakeServer();
+        server.signInBrowser(server.add('rider@example.com'));
+
+        await startApp(
+          tester,
+          server.session(useCookies: true),
+          overrides: [dropSourceProvider.overrideWithValue(_FakeDropSource())],
+        );
+
+        // RidesPage.md: on a phone the ways in open from the menu.
+        expect(find.byKey(const Key('ride-drop-zone')), findsNothing);
+        await tester.tap(find.byKey(const Key('rides-actions')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('bulk-files')), findsOneWidget);
+        expect(find.byKey(const Key('bulk-folder')), findsOneWidget);
+      },
+    );
+
     testWidgets('RidesScreen_ShouldShowOneSummary_WhenAFileIsChosen', (
       tester,
     ) async {

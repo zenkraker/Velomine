@@ -698,6 +698,14 @@
       }
     }
   },
+  "zoneName": "{zone, select, 1{Z1 Recovery} 2{Z2 Endurance} 3{Z3 Tempo} 4{Z4 Threshold} 5{Z5 VO2max} 6{Z6 Anaerobic} 7{Z7 Neuromuscular} other{Zone}}",
+  "@zoneName": {
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
+  },
   "bike": "Bike",
   "noBike": "No bike",
   "mapOfRoute": "Map of the route",
@@ -705,6 +713,17 @@
   "heartRateOnMap": "Show heart rate on the map",
   "mapHeartRateHint": "Route colour shows heart rate from {min} to {max} bpm",
   "@mapHeartRateHint": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mapHeartRateLegend": "{min}–{max} bpm",
+  "@mapHeartRateLegend": {
     "placeholders": {
       "min": {
         "type": "int"
@@ -1479,6 +1498,14 @@
   "searchingStraps": "Searching for straps…",
   "noStraps": "No straps found. Make sure the strap is worn and Bluetooth is on.",
   "searchAgain": "Search again",
+  "sensorSignalStrength": "{rssi} dBm",
+  "@sensorSignalStrength": {
+    "placeholders": {
+      "rssi": {
+        "type": "int"
+      }
+    }
+  },
   "recorderPermission": "Allow precise location, and notifications if asked, so the ride can keep recording.",
   "recorderGpsOff": "Turn on location (GPS) to record a ride.",
   "recorderLocationFailed": "The phone could not start location updates.",
@@ -2084,6 +2111,14 @@
     }
   },
   "joinRequestDeclineBody": "They are told, without a reason.",
+  "noteQuoted": "“{note}”",
+  "@noteQuoted": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
 
   "notificationClubJoinRequest": "{name} asked to join your club.",
   "@notificationClubJoinRequest": {
@@ -3008,5 +3043,27 @@
   "sessionOpenRide": "Open the ride →",
   "sessionTime": "Time",
   "sessionEffortScore": "Effort score",
-  "sessionMainSet": "Main set"
+  "sessionMainSet": "Main set",
+  "relativeNow": "now",
+  "relativeMinutes": "{count} min ago",
+  "relativeHours": "{count} h ago",
+  "relativeYesterday": "yesterday",
+  "@relativeMinutes": {"placeholders": {"count": {"type": "int"}}},
+  "@relativeHours": {"placeholders": {"count": {"type": "int"}}},
+  "formStateBuilding": "Building",
+  "totalsTableWeekly": "Week by week",
+  "totalsTableMonthly": "Month by month",
+  "totalsTableYearly": "Year by year",
+  "totalsColumnWeek": "Week",
+  "totalsColumnMonth": "Month",
+  "totalsColumnYear": "Year",
+  "wellbeingFeelSentence": "{today} out of 5 today; your usual is {usual}.",
+  "wellbeingPrivateNotes": "Only you see your notes. Coaches you share with see scores and ride effort, never notes.",
+  "@wellbeingFeelSentence": {"placeholders": {"today": {"type": "String"}, "usual": {"type": "String"}}},
+  "accountSearchHint": "Name or email",
+  "askedJustNow": "asked just now",
+  "askedHoursAgo": "asked {count} h ago",
+  "askedDaysAgo": "asked {count} d ago",
+  "@askedHoursAgo": {"placeholders": {"count": {"type": "int"}}},
+  "@askedDaysAgo": {"placeholders": {"count": {"type": "int"}}}
 }

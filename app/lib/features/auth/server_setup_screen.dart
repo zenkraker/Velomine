@@ -83,6 +83,10 @@ class ServerSetupViewModel extends _$ServerSetupViewModel {
   }
 }
 
+/// Whether the typed address is heading for plain http, which the server does not encrypt.
+bool isInsecureAddress(String input) =>
+    input.trim().toLowerCase().startsWith('http:');
+
 /// The first screen on a phone: which Velomine server does this member belong to?
 class ServerSetupScreen extends ConsumerStatefulWidget {
   const ServerSetupScreen({super.key, this.initialUrl = ''});
@@ -140,7 +144,8 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
             if (!s.busy) _save();
           },
         ),
-        if (_url.text.trim().toLowerCase().startsWith('http://')) ...[
+        // Said as soon as the address is written as http, before the rest of it is typed.
+        if (isInsecureAddress(_url.text)) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.setupInsecure,

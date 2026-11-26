@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:velomine/core/theme.dart';
+import 'package:velomine/core/widgets/page_scaffold.dart';
 import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/features/supporter/supporter_badge.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
@@ -132,7 +132,7 @@ void main() {
     },
   );
 
-  testWidgets('SupporterCelebration_ShouldUseThemeColours_WhenShown', (
+  testWidgets('SupporterCelebration_ShouldBeAPageLikeAnyOther_WhenShown', (
     tester,
   ) async {
     licence();
@@ -146,22 +146,30 @@ void main() {
     }
     await tester.pumpAndSettle();
 
-    final scaffold = tester.widget<Scaffold>(
+    // The one bespoke screen is a PageScaffold, and its own lights come from the theme: no eyebrow, no
+    // "verified" chip and no second line under the badge, as the mock-up draws it.
+    expect(
       find.descendant(
         of: find.byType(SupporterCelebrationScreen),
-        matching: find.byType(Scaffold),
+        matching: find.byType(PageScaffold),
       ),
+      findsOneWidget,
     );
-    // The one bespoke screen takes its colours from the theme, not from hand-picked constants, and no
-    // text is upper-cased into an eyebrow.
-    final scheme = nightTheme().colorScheme;
-    expect(scaffold.backgroundColor, scheme.surface);
+    expect(find.byKey(const Key('supporter-eyebrow')), findsNothing);
     expect(find.text('Licence verified'.toUpperCase()), findsNothing);
-    expect(find.byKey(const Key('supporter-eyebrow')), findsOneWidget);
-    final eyebrow = tester.widget<Text>(
-      find.byKey(const Key('supporter-eyebrow')),
+    expect(find.byKey(const Key('supporter-chip')), findsNothing);
+    // The headline is the theme's page title, not a scaled one with a serif fallback.
+    final headline = tester.widget<Text>(
+      find.byKey(const Key('supporter-headline')),
     );
-    expect(eyebrow.data, isNot(eyebrow.data!.toUpperCase()));
+    final pageTitle = Theme.of(
+      tester.element(find.byKey(const Key('supporter-headline'))),
+    ).textTheme.headlineLarge;
+    expect(headline.style?.fontFamily, pageTitle?.fontFamily);
+    expect(headline.style?.fontSize, pageTitle?.fontSize);
+    // The supporting text is the theme's muted ink, and the button the one accent.
+    expect(find.byKey(const Key('supporter-body')), findsOneWidget);
+    expect(find.byKey(const Key('supporter-continue')), findsOneWidget);
   });
 
   testWidgets('SupporterBadge_ShouldOpenTheCelebration_WhenTappedThreeTimes', (
@@ -183,8 +191,8 @@ void main() {
     expect(find.byType(SupporterCelebrationScreen), findsOneWidget);
     final l10n = strings(tester);
     expect(find.byKey(const Key('supporter-headline')), findsOneWidget);
-    expect(find.textContaining(l10n.supporterThanksName('')), findsOneWidget);
-    expect(find.textContaining('Ada'), findsOneWidget);
+    // The whole name, once: "Thank you, Ada.", not the placeholder's own full stop twice.
+    expect(find.text(l10n.supporterThanksName('Ada')), findsOneWidget);
     expect(find.text(l10n.supporterContinue), findsOneWidget);
     // The licence's own badge pill is on the celebration too, the same widget as the profile's.
     expect(

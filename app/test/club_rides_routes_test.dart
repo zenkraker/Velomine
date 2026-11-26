@@ -1,6 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/widgets/app_card.dart';
+import 'package:velomine/core/widgets/avatar.dart';
+import 'package:velomine/core/widgets/badge.dart';
+import 'package:velomine/core/widgets/page_scaffold.dart';
 import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/core/widgets/section_card.dart';
 import 'package:velomine/features/calendar/club_ride_widgets.dart';
@@ -109,7 +112,7 @@ void main() {
   });
 
   testWidgets(
-    'RouteDetailScreen_ShouldOfferRemovalToTheClubOwner_WhenTheRouteIsSomeoneElses',
+    'RouteDetailScreen_ShouldOfferNoMenuEntries_WhenTheRouteIsSomeoneElses',
     (tester) async {
       wide(tester);
       final rider = server.add('rider@example.com');
@@ -129,14 +132,10 @@ void main() {
       await tapVisible(tester, const Key('open-club-routes'));
       await tapVisible(tester, const Key('route-route-1'));
 
+      // The design gives the menu to the member who added the route, and to nobody else.
       expect(find.byKey(const Key('edit-route')), findsNothing);
-      await tapVisible(tester, const Key('route-actions'));
-      expect(find.byKey(const Key('remove-route-as-owner')), findsOneWidget);
-      await tapVisible(tester, const Key('remove-route-as-owner'));
-      await tester.tap(find.byKey(const Key('confirm-withdraw-route')));
-      await tester.pumpAndSettle();
-
-      expect(server.routeLibrary.single['shared'], isFalse);
+      expect(find.byKey(const Key('route-actions')), findsNothing);
+      expect(server.routeLibrary.single['shared'], isTrue);
     },
   );
 
@@ -850,6 +849,250 @@ void main() {
     },
   );
 
+  testWidgets('RoutesScreen_ShouldCaptionThePageClubRoutes_WhenItOpens', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.routeLibrary.add(
+      routeSeed(
+        id: 'route-1',
+        name: 'Lake loop',
+        ownerId: rider.id,
+        ownerName: rider.name,
+      ),
+    );
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('open-club-routes'));
+
+    // The page belongs to the club library, so its caption says so above the title.
+    expect(
+      find.descendant(
+        of: find.byType(SliverPersistentHeader),
+        matching: find.text('Club routes'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('RoutesScreen_ShouldDrawTheNameAboveTheLine_WhenTheRouteHasOne', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.routeLibrary.add(
+      routeSeed(
+        id: 'route-1',
+        name: 'Lake loop',
+        ownerId: rider.id,
+        ownerName: rider.name,
+      ),
+    );
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('open-club-routes'));
+
+    final card = find.byKey(const Key('route-route-1'));
+    final name = find.descendant(of: card, matching: find.text('Lake loop'));
+    final line = find.descendant(
+      of: card,
+      matching: find.byKey(const Key('route-line-route-1')),
+    );
+    expect(tester.getTopLeft(name).dy, lessThan(tester.getTopLeft(line).dy));
+    // The design draws the surface, and no second badge for a route that is out of the library.
+    expect(
+      find.descendant(of: card, matching: find.byType(AppBadge)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('RoutesScreen_ShouldOfferTheSurfaceAsOneChoice_WhenItOpens', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('open-club-routes'));
+
+    final surface = find.byKey(const Key('route-surface'));
+    expect(tester.widget<SegmentedButton<String?>>(surface).selected, <String?>{
+      null,
+    });
+  });
+
+  testWidgets(
+    'RouteDetailScreen_ShouldKeepAMissingRouteInThePage_WhenThereIsNone',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com');
+      server.signInBrowser(rider);
+      await startApp(tester, server.session(useCookies: true));
+
+      await goTo(tester, '/club/routes/nowhere');
+
+      expect(find.byKey(const Key('route-missing')), findsOneWidget);
+      expect(find.byType(PageScaffold), findsOneWidget);
+    },
+  );
+
+  testWidgets('AddRouteScreen_ShouldShowTheRideNotTheFile_WhenTheRidesArrive', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.rides.add(rideJson('ride-1', 'ready', distanceM: 48000));
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('add-route-from-club'));
+
+    final row = find.byKey(const Key('route-ride-ride-1'));
+    expect(
+      find.descendant(of: row, matching: find.text('Morning ride')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: row, matching: find.text('ride.fit')),
+      findsNothing,
+    );
+    // The design draws no radio: the chosen row is the raised one.
+    expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
+    expect(find.byIcon(Icons.radio_button_checked), findsNothing);
+  });
+
+  testWidgets('AddRouteScreen_ShouldSayTheLoadFailed_WhenTheRidesDoNotArrive', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.failing.add('/api/v1/rides');
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('add-route-from-club'));
+
+    expect(find.byKey(const Key('add-route-rides-error')), findsOneWidget);
+    expect(find.byKey(const Key('no-rides-for-route')), findsNothing);
+  });
+
+  testWidgets(
+    'AddRouteScreen_ShouldNoteThePrivacyUnderTheMap_WhenARideIsChosen',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com');
+      server.rides.add(rideJson('ride-1', 'ready', distanceM: 48000));
+      server.signInBrowser(rider);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('add-route-from-club'));
+      await tapVisible(tester, const Key('route-ride-ride-1'));
+
+      final map = find.byKey(const Key('route-map')).last;
+      final note = find.byKey(const Key('add-route-privacy-note'));
+      expect(
+        tester.getTopLeft(note).dy,
+        greaterThan(tester.getTopLeft(map).dy),
+      );
+    },
+  );
+
+  testWidgets('ClubRidesScreen_ShouldBadgeACancelledRide_WhenTheRideIsOff', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.clubRides.add(
+      rideSeed(id: 'plan-1', title: 'Sunday ride')
+        ..['cancelledAt'] = '2026-11-10T09:00:00Z',
+    );
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('open-club-rides'));
+
+    // A state is a badge of the app, never a raw Chip.
+    final row = find.byKey(const Key('club-ride-plan-1'));
+    expect(find.descendant(of: row, matching: find.byType(Chip)), findsNothing);
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.widgetWithText(AppBadge, 'Cancelled'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'ClubRidesScreen_ShouldDrawTheRowTitleInTheBodySize_WhenTheRidesAreListed',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com');
+      server.clubRides.add(rideSeed(id: 'plan-1', title: 'Sunday ride'));
+      server.signInBrowser(rider);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-rides'));
+
+      final title = tester.widget<Text>(find.text('Sunday ride').last);
+      expect(title.style?.fontSize, 15);
+    },
+  );
+
+  testWidgets(
+    'ClubRideDetailScreen_ShouldMakeJoinTheActionForAPlannerToo_WhenACoachOpensIt',
+    (tester) async {
+      wide(tester);
+      final coach = server.add('coach@example.com', clubRole: 'coach');
+      server.clubRides.add(rideSeed(id: 'plan-1', title: 'Sunday ride'));
+      server.signInBrowser(coach);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-rides'));
+      await tapVisible(tester, const Key('club-ride-plan-1'));
+
+      // The planner rides too, so the page keeps one action and the ride's two live in the menu.
+      final join = find.byKey(const Key('join-ride'));
+      expect(
+        find.ancestor(of: join, matching: find.byType(SliverPersistentHeader)),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('club-ride-actions')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ClubRideDetailScreen_ShouldDrawTheFieldAsInitials_WhenTheRideHasParticipants',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com', name: 'Giulia Ferri');
+      server.clubRides.add(rideSeed(id: 'plan-1', title: 'Sunday ride'));
+      server.rideSignUps['plan-1'] = [rider.id];
+      server.signInBrowser(rider);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-rides'));
+      await tapVisible(tester, const Key('club-ride-plan-1'));
+
+      expect(find.byType(Avatar), findsOneWidget);
+      expect(find.text('GF'), findsOneWidget);
+    },
+  );
+
   for (final width in [390.0, 1300.0]) {
     testWidgets(
       'ClubRidesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
@@ -903,6 +1146,31 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+
+    testWidgets('RoutesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      final rider = server.add('rider@example.com');
+      server.routeLibrary.add(
+        routeSeed(
+          id: 'route-1',
+          name: 'Lake loop',
+          ownerId: rider.id,
+          ownerName: rider.name,
+        ),
+      );
+      server.signInBrowser(rider);
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      await goTo(tester, '/club/routes');
+
+      expect(find.byKey(const Key('route-route-1')), findsOneWidget);
+      expect(find.byKey(const Key('route-surface')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets(
       'RouteDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',

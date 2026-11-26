@@ -11,7 +11,9 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 import 'notifications_text.dart';
 import 'notifications_view_model.dart';
 
@@ -64,24 +66,27 @@ class NotificationsScreen extends ConsumerWidget {
       ...groups,
     };
 
-    final markAllAction = s.markAll.running
-        ? null
-        : ref.read(notificationsViewModelProvider.notifier).markAllRead;
     // The main action is a filled pill with its words at every width: an icon alone would not say what
-    // it does.
-    final markAll = s.unread > 0
-        ? FilledButton.icon(
-            key: const Key('notifications-read-all'),
-            onPressed: markAllAction,
-            icon: const Icon(Icons.done_all),
-            label: Text(l10n.markAllRead),
-          )
-        : null;
+    // it does. It stays in the header with nothing to do rather than vanishing, so the page's one action
+    // keeps its place.
+    final markAll = FilledButton.icon(
+      key: const Key('notifications-read-all'),
+      onPressed: s.unread == 0 || s.markAll.running
+          ? null
+          : ref.read(notificationsViewModelProvider.notifier).markAllRead,
+      icon: const Icon(Icons.done_all),
+      label: Text(l10n.markAllRead),
+    );
     return PageScaffold(
       title: l10n.notifications,
       subtitle: l10n.notificationsSubtitle,
       primaryAction: markAll,
+      // The inbox is a list of short rows: it reads at the narrow measure, as the mock-up draws it.
+      maxWidth: AppLayout.contentNarrow,
       children: [
+        // The first load is a loading state, not a page that says there is nothing.
+        if (s.items.isEmpty && s.load.failure == null && !s.load.completed)
+          const LoadingState(),
         if (s.load.failure case final failure?)
           ErrorState(
             message: failureText(l10n, failure),
@@ -90,7 +95,7 @@ class NotificationsScreen extends ConsumerWidget {
                 ? null
                 : ref.read(notificationsViewModelProvider.notifier).refresh,
           ),
-        if (s.items.isEmpty && !s.load.running && s.load.failure == null)
+        if (s.items.isEmpty && s.load.completed)
           EmptyState(
             key: const Key('no-notifications'),
             message: l10n.noNotifications,
@@ -158,7 +163,7 @@ class _NotificationGroup extends StatelessWidget {
               AppSpacing.xl,
               AppSpacing.sm,
             ),
-            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+            child: SectionHeading(title: title),
           ),
           for (final (i, n) in items.indexed) ...[
             if (i > 0) const Divider(height: 1),
@@ -207,7 +212,10 @@ class _NotificationTile extends StatelessWidget {
       leading: Icon(_icon(n.type), color: warning ? scheme.error : null),
       title: Text(
         notificationText(context.l10n, n),
-        style: n.isRead ? null : const TextStyle(fontWeight: FontWeight.w600),
+        style: n.isRead
+            ? null
+            : Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(dateTime(n.createdAt)),
       // An unread row says so in words, beside its date, as the mock-up draws it.

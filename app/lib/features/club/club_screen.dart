@@ -14,6 +14,7 @@ import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/inline_error.dart';
@@ -241,7 +242,6 @@ class ClubScreen extends ConsumerWidget {
 
     final owner = club.myRole == 'owner';
     final coach = owner || club.myRole == 'coach';
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
     // What the club is: the plan and the code that lets people in, beside the club's own card.
     final about = <Widget>[
@@ -249,12 +249,7 @@ class ClubScreen extends ConsumerWidget {
       if (owner && club.joinCode != null)
         ClubJoinCodeCard(
           code: club.joinCode!,
-          busy: clubState.action.running,
           onCopy: () => _copy(context, club.joinCode!),
-          // The dialog opens after the menu has closed, so the two never fight for the tap.
-          onNewCode: () => scheduleMicrotask(() {
-            if (context.mounted) _rotateCode(context, ref);
-          }),
         ),
     ];
 
@@ -294,6 +289,8 @@ class ClubScreen extends ConsumerWidget {
         ClubLocationCard(
           club: club,
           busy: clubState.action.running,
+          tileUrl: tileUrl,
+          attribution: attribution,
           onSetLocation: () => _saveLocation(
             context,
             ref,
@@ -305,39 +302,46 @@ class ClubScreen extends ConsumerWidget {
         ),
     ];
 
-    // Paired on a desktop window, one under the other on a tablet.
-    Widget cards(List<Widget> children) => wide
-        ? CardGrid(columns: 2, children: children)
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpacing.lg,
-            children: children,
-          );
+    // Paired from the tablet width up, one under the other on a phone.
+    Widget cards(List<Widget> children) =>
+        CardGrid(columns: 2, children: children);
 
     return PageScaffold(
       // The club's own name names the page; "Club" is the crumb above it.
       title: club.name,
       parent: l10n.navClub,
       subtitle: l10n.clubSubtitle,
-      // Leaving ends the member's place in the club: in the menu, last and red. The owner cannot leave.
-      menu: owner
-          ? null
-          : PageMenu(
-              buttonKey: const Key('club-actions'),
-              entries: [
-                PageMenuEntry(
-                  key: const Key('leave-club'),
-                  label: l10n.clubLeave,
-                  icon: Icons.logout,
-                  destructive: true,
-                  onSelected: clubState.action.running
-                      ? () {}
-                      : () => scheduleMicrotask(() {
-                          if (context.mounted) _leave(context, ref);
-                        }),
-                ),
-              ],
+      // Leaving ends the member's place in the club; a new code ends the old one for good. Both are in the menu,
+      // last and red. The owner cannot leave, and a rider cannot make a code.
+      menu: PageMenu(
+        buttonKey: const Key('club-actions'),
+        entries: [
+          if (owner)
+            PageMenuEntry(
+              key: const Key('new-join-code'),
+              label: l10n.clubNewCode,
+              icon: Icons.refresh,
+              destructive: true,
+              onSelected: clubState.action.running
+                  ? () {}
+                  : () => scheduleMicrotask(() {
+                      if (context.mounted) _rotateCode(context, ref);
+                    }),
+            )
+          else
+            PageMenuEntry(
+              key: const Key('leave-club'),
+              label: l10n.clubLeave,
+              icon: Icons.logout,
+              destructive: true,
+              onSelected: clubState.action.running
+                  ? () {}
+                  : () => scheduleMicrotask(() {
+                      if (context.mounted) _leave(context, ref);
+                    }),
             ),
+        ],
+      ),
       children: [
         ClubHeroCard(club: club),
         if (!club.isActive)
@@ -381,13 +385,13 @@ class ClubScreen extends ConsumerWidget {
     // The real header while the club is read, so the page is opaque from its first frame.
     if (clubState.load.running && !clubState.loaded) {
       return PageScaffold(
-        title: l10n.clubNoneTitleShort,
+        title: l10n.navClub,
         subtitle: l10n.clubNoneSubtitle,
         children: const [LoadingState.rows(key: Key('club-loading'), count: 4)],
       );
     }
     return PageScaffold(
-      title: l10n.clubNoneTitleShort,
+      title: l10n.navClub,
       subtitle: l10n.clubNoneSubtitle,
       children: [
         if (clubState.load.failure case final failure?)
@@ -417,7 +421,7 @@ class ClubScreen extends ConsumerWidget {
             title: l10n.nearbyPendingTitle(request.clubName),
             description: l10n.nearbyPendingBody,
             children: [
-              if (request.note != null) Text('“${request.note}”'),
+              if (request.note != null) Text(request.note!),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -432,8 +436,10 @@ class ClubScreen extends ConsumerWidget {
               ),
             ],
           )
-        // A request that is waiting takes the place of the three ways forward.
+        // A pending request takes the place of the three ways forward.
         else
+          // The three ways are peers: one card each, one button style, and the third stays when an operator
+          // has turned club creation off (its button is simply off).
           CardGrid(
             columns: 3,
             children: [
@@ -442,7 +448,7 @@ class ClubScreen extends ConsumerWidget {
                 title: l10n.nearbyTitle,
                 body: l10n.clubNearbyBody,
                 icon: Icons.explore_outlined,
-                action: FilledButton(
+                action: OutlinedButton(
                   key: const Key('go-nearby-clubs'),
                   onPressed: onOpenClubs,
                   child: Text(l10n.clubSeeNearby),
@@ -459,18 +465,17 @@ class ClubScreen extends ConsumerWidget {
                   child: Text(l10n.joinTitle),
                 ),
               ),
-              if (clubState.canStartClub)
-                _ClubWayCard(
-                  cardKey: const Key('club-way-start'),
-                  title: l10n.startClubButton,
-                  body: l10n.clubStartBody,
-                  icon: Icons.group_add_outlined,
-                  action: TextButton(
-                    key: const Key('go-start-club'),
-                    onPressed: onStartClub,
-                    child: Text(l10n.startClubButton),
-                  ),
+              _ClubWayCard(
+                cardKey: const Key('club-way-start'),
+                title: l10n.startClubButton,
+                body: l10n.clubStartBody,
+                icon: Icons.group_add_outlined,
+                action: OutlinedButton(
+                  key: const Key('go-start-club'),
+                  onPressed: clubState.canStartClub ? onStartClub : null,
+                  child: Text(l10n.startClubButton),
                 ),
+              ),
             ],
           ),
       ],
@@ -500,17 +505,7 @@ class ClubScreen extends ConsumerWidget {
           Text(l10n.ridesEmpty, key: const Key('club-rides-empty'))
         else
           for (final ride in s.upcoming.take(3))
-            ListTile(
-              key: Key('club-ride-${ride.id}'),
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event),
-              title: Text(ride.title),
-              subtitle: Text(
-                '${rideStartText(context, ride.startsAt, ride.utcOffsetMinutes)} · '
-                '${ride.meetingName} · ${ridePlaces(l10n, ride)}',
-              ),
-              onTap: () => onOpenRide(ride.id),
-            ),
+            _UpcomingRideRow(ride: ride, onOpen: () => onOpenRide(ride.id)),
         ToolbarRow(
           children: [
             TextButton(
@@ -518,8 +513,9 @@ class ClubScreen extends ConsumerWidget {
               onPressed: onOpenRides,
               child: Text(l10n.clubRidesSeeAll),
             ),
+            // Planning a ride is the card's own quiet action; the page keeps a single main action.
             if (canPlan)
-              FilledButton.tonalIcon(
+              TextButton.icon(
                 key: const Key('plan-ride-from-club'),
                 onPressed: onPlanRide,
                 icon: const Icon(Icons.add),
@@ -568,7 +564,8 @@ class ClubScreen extends ConsumerWidget {
               onPressed: onOpenRoutes,
               child: Text(l10n.clubRoutesSeeAll),
             ),
-            FilledButton.tonalIcon(
+            // Adding a route is the card's own quiet action; the page keeps a single main action.
+            TextButton.icon(
               key: const Key('add-route-from-club'),
               onPressed: onAddRoute,
               icon: const Icon(Icons.add),
@@ -611,6 +608,80 @@ class _ClubWayCard extends StatelessWidget {
           Text(body),
           action,
         ],
+      ),
+    );
+  }
+}
+
+/// One of the club's next rides, led by the day it happens: the day and month, the title with its time,
+/// meeting point and pace, and the rider's own state or how many places are left.
+class _UpcomingRideRow extends StatelessWidget {
+  const _UpcomingRideRow({required this.ride, required this.onOpen});
+
+  final ClubRideSummaryResponse ride;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final date = rideDateBlock(ride.startsAt, ride.utcOffsetMinutes);
+    final subtitle = [
+      rideRowTime(context, ride.startsAt, ride.utcOffsetMinutes),
+      ride.meetingName,
+      ridePaceName(l10n, ride.pace),
+      if (ride.noDrop) l10n.rideNoDrop,
+    ].join(' · ');
+    return InkWell(
+      key: Key('club-ride-${ride.id}'),
+      onTap: onOpen,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Row(
+          spacing: AppSpacing.md,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(date.day, style: text.titleMedium),
+                Text(
+                  date.month,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpacing.xs,
+                children: [
+                  Text(ride.title, style: text.bodyLarge),
+                  Text(
+                    subtitle,
+                    style: text.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AppBadge(
+              ride.isCancelled
+                  ? l10n.rideCancelled
+                  : ride.isSignedUp
+                  ? l10n.rideSignedUp
+                  : ridePlaces(l10n, ride),
+              tone: ride.isCancelled
+                  ? AppBadgeTone.bad
+                  : ride.isSignedUp
+                  ? AppBadgeTone.good
+                  : AppBadgeTone.neutral,
+            ),
+          ],
+        ),
       ),
     );
   }

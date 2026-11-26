@@ -19,6 +19,16 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 
+/// The glyph a session's label calls for: a phone for the app on a phone, a computer for the web and the
+/// desktop apps. The server sends a label, not a platform, so the words decide.
+IconData _deviceGlyph(String label) =>
+    RegExp(
+      'android|iphone|ios|phone|pixel',
+      caseSensitive: false,
+    ).hasMatch(label)
+    ? Icons.smartphone
+    : Icons.computer;
+
 class SessionsScreen extends ConsumerWidget {
   const SessionsScreen({super.key});
 
@@ -87,9 +97,15 @@ class SessionsScreen extends ConsumerWidget {
                 for (final session in sessions ?? const [])
                   ListTile(
                     key: Key('session-${session.id}'),
+                    // The mock-up puts a laptop or a phone before the device, and says when it was last
+                    // used in words: "now", "2 h ago", "2 Nov".
+                    leading: Icon(
+                      _deviceGlyph(session.label),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     title: Text(session.label),
                     subtitle: Text(
-                      '${l10n.sessionLastUsed}: ${dateTime(session.lastUsedAt)}',
+                      '${l10n.sessionLastUsed} ${relativeTime(l10n, session.lastUsedAt)}',
                     ),
                     trailing: session.current
                         ? AppBadge(

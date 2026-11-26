@@ -26,15 +26,6 @@ String trainingGoalName(AppLocalizations l10n, String? goal) => switch (goal) {
   _ => l10n.goalFitter,
 };
 
-/// The one line under a goal in the setup, and the reason on the Training page's goal card.
-String trainingGoalLine(AppLocalizations l10n, String goal) => switch (goal) {
-  'aerobic' => l10n.goalLineAerobic,
-  'faster' => l10n.goalFasterLine,
-  'event' => l10n.goalLineEvent,
-  'keep' => l10n.goalLineKeep,
-  _ => l10n.goalLineFitter,
-};
-
 /// The one-line reason the setup shows under the suggested goal, from the code the server picked it with.
 String trainingSuggestionReason(AppLocalizations l10n, String reason) =>
     switch (reason) {

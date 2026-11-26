@@ -263,7 +263,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                   style: theme.textTheme.titleMedium,
                 ),
                 Text(l10n.nearbyPendingBody),
-                if (s.request!.note != null) Text('“${s.request!.note}”'),
+                if (s.request!.note != null) Text(s.request!.note!),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(

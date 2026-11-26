@@ -11,8 +11,8 @@ import 'settings_tab.dart';
 
 /// The admin pages: an overview of the server, the accounts, the clubs and the settings.
 ///
-/// The four areas are chips that scroll sideways under the page title — the same control the Progress
-/// sub-pages use — and the chosen one's content is built into the page's own scroll.
+/// The four areas are one segmented choice under the page title, and the chosen one's content is built
+/// into the page's own scroll.
 class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
 
@@ -51,8 +51,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               icon: const Icon(Icons.add),
               label: Text(l10n.adminCreateClub),
             ),
+      // The settings area is one form, so its Save is pinned under the content.
+      bottomAction: _tab == 3 ? const AdminSettingsSave() : null,
       children: [
+        // Chips in one row that scrolls sideways, as the admin pages draw them (`.vm-chips`): a
+        // segmented track stretched across the whole window instead of sitting in its corner.
         SingleChildScrollView(
+          key: const Key('admin-tabs'),
           scrollDirection: Axis.horizontal,
           child: Row(
             spacing: AppSpacing.sm,

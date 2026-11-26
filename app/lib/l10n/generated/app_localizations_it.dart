@@ -1433,6 +1433,21 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String zoneName(String zone) {
+    String _temp0 = intl.Intl.selectLogic(zone, {
+      '1': 'Z1 Recupero',
+      '2': 'Z2 Resistenza',
+      '3': 'Z3 Tempo',
+      '4': 'Z4 Soglia',
+      '5': 'Z5 VO2max',
+      '6': 'Z6 Anaerobico',
+      '7': 'Z7 Neuromuscolare',
+      'other': 'Zona',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get bike => 'Bici';
 
   @override
@@ -1451,6 +1466,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String mapHeartRateHint(int min, int max) {
     return 'Il colore del percorso indica la frequenza cardiaca da $min a $max bpm';
+  }
+
+  @override
+  String mapHeartRateLegend(int min, int max) {
+    return '$min–$max bpm';
   }
 
   @override
@@ -2792,6 +2812,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get searchAgain => 'Cerca di nuovo';
 
   @override
+  String sensorSignalStrength(int rssi) {
+    return '$rssi dBm';
+  }
+
+  @override
   String get recorderPermission =>
       'Consenti la posizione precisa, e le notifiche se richieste, così il giro può continuare a registrare.';
 
@@ -3790,6 +3815,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get joinRequestDeclineBody => 'Verrà avvisato, senza motivazione.';
+
+  @override
+  String noteQuoted(String note) {
+    return '«$note»';
+  }
 
   @override
   String notificationClubJoinRequest(String name) {
@@ -5676,4 +5706,66 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sessionMainSet => 'Serie principale';
+
+  @override
+  String get relativeNow => 'ora';
+
+  @override
+  String relativeMinutes(int count) {
+    return '$count min fa';
+  }
+
+  @override
+  String relativeHours(int count) {
+    return '$count h fa';
+  }
+
+  @override
+  String get relativeYesterday => 'ieri';
+
+  @override
+  String get formStateBuilding => 'In costruzione';
+
+  @override
+  String get totalsTableWeekly => 'Settimana per settimana';
+
+  @override
+  String get totalsTableMonthly => 'Mese per mese';
+
+  @override
+  String get totalsTableYearly => 'Anno per anno';
+
+  @override
+  String get totalsColumnWeek => 'Settimana';
+
+  @override
+  String get totalsColumnMonth => 'Mese';
+
+  @override
+  String get totalsColumnYear => 'Anno';
+
+  @override
+  String wellbeingFeelSentence(String today, String usual) {
+    return 'Oggi $today su 5; la tua media è $usual.';
+  }
+
+  @override
+  String get wellbeingPrivateNotes =>
+      'Solo tu vedi le tue note. I coach con cui condividi vedono i punteggi e lo sforzo dei giri, mai le note.';
+
+  @override
+  String get accountSearchHint => 'Nome o email';
+
+  @override
+  String get askedJustNow => 'richiesta poco fa';
+
+  @override
+  String askedHoursAgo(int count) {
+    return 'richiesta $count h fa';
+  }
+
+  @override
+  String askedDaysAgo(int count) {
+    return 'richiesta $count g fa';
+  }
 }

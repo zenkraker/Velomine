@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
@@ -173,12 +174,12 @@ class _FactorRow extends StatelessWidget {
     };
     final value = switch (factor.key) {
       'recentLoad' => '${factor.value.round()} TSS',
-      'wellbeing' => '${factor.value.toStringAsFixed(1)}/5',
+      'wellbeing' => '${decimal(factor.value, 1)}/5',
       'rpe' => '${factor.value.round()}/10',
-      _ => factor.value.toStringAsFixed(1),
+      _ => decimal(factor.value, 1),
     };
     final effect = factor.effect;
-    final effectText = '${effect > 0 ? '+' : ''}${effect.toStringAsFixed(0)}';
+    final effectText = '${effect > 0 ? '+' : ''}${decimal(effect, 0)}';
     final colors = VelomineColors.of(context);
     final color = effect > 0
         ? colors.accentStrong

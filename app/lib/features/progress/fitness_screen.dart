@@ -7,9 +7,11 @@ import '../../core/tokens.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/heart_rate_note_card.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'efficiency_card.dart';
 import 'intensity_card.dart';
+import 'progress_filter_sheet.dart';
 import 'progress_tabs.dart';
 import 'progress_view_models.dart';
 import 'training_summary.dart';
@@ -30,7 +32,20 @@ class FitnessScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.fitness,
-      parent: wide ? l10n.navProgress : null,
+      parent: l10n.navProgress,
+      // The sub-pages draw no sport chips, so the filter is the menu's one entry, as on Power and Totals.
+      menu: PageMenu(
+        buttonKey: const Key('fitness-actions'),
+        badge: filters.discipline != null,
+        entries: [
+          PageMenuEntry(
+            key: const Key('fitness-filter'),
+            icon: Icons.filter_list,
+            label: l10n.progressFilterTitle,
+            onSelected: () => showProgressFilterSheet(context),
+          ),
+        ],
+      ),
       children: [
         // Under 600 dp the sub-pages are tabs; from there the shell and the caption carry them.
         if (!wide) ProgressTabs(location: '/progress/fitness'),

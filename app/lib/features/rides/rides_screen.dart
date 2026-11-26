@@ -12,6 +12,7 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../recording/recording_providers.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
@@ -23,6 +24,7 @@ import '../../core/widgets/toolbar_row.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'bulk/bulk_upload_card.dart';
 import 'bulk/bulk_upload_view_model.dart';
+import 'bulk/ride_drop_area.dart';
 import 'ride_filters.dart';
 import 'ride_title.dart';
 import 'ride_type_chips.dart';
@@ -148,14 +150,14 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
     void chooseDiscipline(String? value) => notifier.setDisciplineFilter(value);
 
     final disciplineChips = <Widget>[
-      ChoiceChip(
+      FilterChip(
         key: const Key('filter-all'),
         label: Text(l10n.rideFilterAll),
         selected: s.disciplineFilter == null,
         onSelected: (_) => chooseDiscipline(null),
       ),
       for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-        ChoiceChip(
+        FilterChip(
           key: Key('filter-$discipline'),
           label: Text(disciplineName(l10n, discipline)),
           selected: s.disciplineFilter == discipline,
@@ -213,29 +215,6 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
         ...disciplineChips,
       ],
     );
-    // The ways to add rides, inline where a rider has none: getting data in is the whole job there.
-    final emptyActions = Wrap(
-      alignment: WrapAlignment.center,
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        FilledButton.icon(
-          key: const Key('empty-upload'),
-          onPressed: upload,
-          icon: const Icon(Icons.upload_file),
-          label: Text(uploadLabel),
-        ),
-        for (final (key, icon, label, onPressed) in imports)
-          if (label != null)
-            OutlinedButton.icon(
-              key: Key('empty-${(key as ValueKey<String>).value}'),
-              onPressed: onPressed,
-              icon: Icon(icon),
-              label: Text(label),
-            ),
-      ],
-    );
-
     final page = PageScaffold(
       title: l10n.navRides,
       subtitle: l10n.ridesSubtitle,
@@ -244,6 +223,8 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
       controller: notifier.scroll,
       refresh: notifier.refresh,
       children: [
+        // The way in on the page itself, not only while a file is dragged over it.
+        if (wide) const RideDropZone(),
         if (wide) const BulkUploadCard(),
         if (s.load.failure case final failure?)
           ErrorState(
@@ -271,12 +252,12 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
               ],
             )
           else
+            // The ways in are the page's own (the drop area, Upload and the menu), never a wall of
+            // import buttons in the empty state.
             EmptyState(
               key: const Key('no-rides'),
               message: l10n.noRides,
               icon: Icons.directions_bike,
-              // Wide has the ways in on its page already.
-              action: wide ? null : emptyActions,
             ),
         if (s.rides.isEmpty && !s.load.running && !s.filtered && bulkSupported)
           SectionCard(
@@ -345,7 +326,7 @@ class _RidesFilterSheet extends ConsumerWidget {
     final notifier = ref.read(ridesViewModelProvider.notifier);
     final l10n = context.l10n;
     Widget discipline(String key, String label, String? value, bool selected) =>
-        ChoiceChip(
+        FilterChip(
           key: Key(key),
           label: Text(label),
           selected: selected,
@@ -507,84 +488,94 @@ class RideCard extends ConsumerWidget {
           ),
       ],
     ].where((fact) => layout.rideListFacts.contains(fact.$1)).toList();
-    return Card(
+    return AppCard(
       key: Key('ride-${ride.id}'),
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.xs,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: AppSpacing.xs,
+            spacing: AppSpacing.md,
             children: [
-              Text(
-                rideTitle(l10n, ride),
-                key: const Key('ride-title'),
-                style: text.titleMedium,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                dateTime(ride.startTime ?? ride.uploadedAt),
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-              if (ready && rideTypeIsSet(ride))
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.xs),
-                  child: RideTypeChips(ride: ride),
+              Expanded(
+                child: Text(
+                  rideTitle(l10n, ride),
+                  key: const Key('ride-title'),
+                  style: text.titleMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              const SizedBox(height: AppSpacing.sm),
-              if (ride.status == 'processing')
-                Row(
-                  children: [
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              // When it happened, as the caption at the card's end rather than a line of its own. It gives
+              // way to the title rather than running over the card's edge.
+              Flexible(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(
+                    weekdayTime(ride.startTime ?? ride.uploadedAt),
+                    key: const Key('ride-date'),
+                    textAlign: TextAlign.end,
+                    style: text.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(l10n.readingFile, key: const Key('processing')),
-                  ],
-                )
-              else if (ride.status == 'failed')
-                InlineError(
-                  rideErrorText(l10n, ride.error),
-                  key: const Key('ride-failed'),
-                )
-              else if (empty || facts.isEmpty)
-                Text(
-                  l10n.rideNoData,
-                  key: const Key('ride-no-data'),
-                  style: text.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
                   ),
-                )
-              else
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    // A few columns of numbers under the title, so the card reads as a table.
-                    const gap = AppSpacing.md;
-                    const columns = 3;
-                    final width =
-                        (constraints.maxWidth - gap * (columns - 1)) / columns;
-                    return Wrap(
-                      spacing: gap,
-                      runSpacing: AppSpacing.sm,
-                      children: [
-                        for (final (_, label, value) in facts)
-                          SizedBox(
-                            width: math.max(width, 62),
-                            child: StatFigure(label: label, value: value),
-                          ),
-                      ],
-                    );
-                  },
                 ),
+              ),
             ],
           ),
-        ),
+          if (ready && rideTypeIsSet(ride))
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: RideTypeChips(ride: ride),
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          if (ride.status == 'processing')
+            Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(l10n.readingFile, key: const Key('processing')),
+              ],
+            )
+          else if (ride.status == 'failed')
+            InlineError(
+              rideErrorText(l10n, ride.error),
+              key: const Key('ride-failed'),
+            )
+          else if (empty || facts.isEmpty)
+            Text(
+              l10n.rideNoData,
+              key: const Key('ride-no-data'),
+              style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // A few columns of numbers under the title, so the card reads as a table.
+                const gap = AppSpacing.md;
+                const columns = 3;
+                final width =
+                    (constraints.maxWidth - gap * (columns - 1)) / columns;
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final (_, label, value) in facts)
+                      SizedBox(
+                        width: math.max(width, 62),
+                        child: StatFigure(label: label, value: value),
+                      ),
+                  ],
+                );
+              },
+            ),
+        ],
       ),
     );
   }

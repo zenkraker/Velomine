@@ -11,10 +11,10 @@ import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
-import '../../core/widgets/toolbar_row.dart';
 import 'club_rides_view_model.dart';
 
 /// The member's private calendar address: shown once, replaceable, and stopped when they leave the club.
@@ -35,11 +35,24 @@ class CalendarFeedScreen extends ConsumerWidget {
     );
 
     final busy = s.action.running;
+    // Until the status has arrived there is nothing to act on: neither the address nor the fact that
+    // there is none.
+    final loaded = !s.load.running && !s.load.idle;
     return PageScaffold(
       title: l10n.calendarTitle,
       parent: l10n.clubCalendarCaption,
       subtitle: l10n.calendarHelp,
       maxWidth: AppLayout.contentNarrow,
+      // The one action that makes the address is the page's main action; replace and stop live in the
+      // menu once there is one.
+      primaryAction: !loaded || (s.active && s.address != null)
+          ? null
+          : FilledButton.icon(
+              key: const Key('create-calendar-address'),
+              onPressed: busy ? null : notifier.create,
+              icon: const Icon(Icons.add_link),
+              label: Text(l10n.calendarCreate),
+            ),
       menu: s.active
           ? PageMenu(
               buttonKey: const Key('calendar-actions'),
@@ -91,7 +104,9 @@ class CalendarFeedScreen extends ConsumerWidget {
           key: const Key('calendar-address-card'),
           title: l10n.calendarAddressTitle,
           children: [
-            if (s.load.failure case final failure?)
+            if (s.load.running)
+              const LoadingState()
+            else if (s.load.failure case final failure?)
               ErrorState(
                 message: failureText(l10n, failure),
                 actionKey: const Key('calendar-feed-error'),
@@ -133,19 +148,6 @@ class CalendarFeedScreen extends ConsumerWidget {
               ),
           ],
         ),
-        // Replace and Stop live in the menu once there is an address; before that there is only the
-        // one action that makes it.
-        if (!s.active || s.address == null)
-          ToolbarRow(
-            children: [
-              FilledButton.icon(
-                key: const Key('create-calendar-address'),
-                onPressed: busy ? null : notifier.create,
-                icon: const Icon(Icons.add_link),
-                label: Text(l10n.calendarCreate),
-              ),
-            ],
-          ),
       ],
     );
   }

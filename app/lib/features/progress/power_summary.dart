@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:intl/intl.dart' show NumberFormat;
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
@@ -10,6 +8,7 @@ import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/card_grid.dart';
+import '../../core/widgets/line_chart.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/widgets/source_note.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -159,7 +158,7 @@ class PowerSummary extends StatelessWidget {
                     Text(l10n.vo2MaxEstimate, style: text.titleMedium),
                     if (vo2Max != null) ...[
                       _Number(
-                        value: vo2Max.value.toStringAsFixed(1),
+                        value: decimal(vo2Max.value, 1),
                         unit: 'ml/kg/min',
                       ),
                       SourceNote(l10n.vo2MaxSource(dateOnly(vo2Max.from))),
@@ -214,32 +213,37 @@ class PowerSummary extends StatelessWidget {
                         curve.ftp?.watts.toString() ?? '–',
                       ),
                       child: ExcludeSemantics(
-                        child: SizedBox(
+                        child: PowerCurveChart(
+                          paintKey: const Key('power-curve-chart'),
+                          seconds: [
+                            for (final point in curve.points)
+                              point.seconds.toDouble(),
+                          ],
+                          watts: [
+                            for (final point in curve.points)
+                              point.watts.toDouble(),
+                          ],
+                          // The durations the axis names, on the log time axis.
+                          marks: [
+                            for (final seconds in const [
+                              1,
+                              10,
+                              60,
+                              300,
+                              1200,
+                              3600,
+                            ])
+                              (
+                                seconds: seconds.toDouble(),
+                                label: _shortDuration(seconds),
+                              ),
+                          ],
+                          ftp: curve.currentFtpW,
+                          ftpLabel: curve.currentFtpW == null
+                              ? null
+                              : l10n.ftpValue(curve.currentFtpW!),
+                          emptyMessage: l10n.powerCurveEmpty,
                           height: AppChart.height + 60,
-                          child: CustomPaint(
-                            painter: _PowerCurvePainter(
-                              points: curve.points,
-                              line: Theme.of(context).colorScheme.primary,
-                              area: Theme.of(context).colorScheme.primary,
-                              dot: Theme.of(context).colorScheme.primary,
-                              grid: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant,
-                              labelStyle:
-                                  (text.labelSmall ??
-                                          const TextStyle(fontSize: 11))
-                                      .copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                              ftp: curve.currentFtpW,
-                              ftpLabel: curve.currentFtpW == null
-                                  ? null
-                                  : l10n.ftpValue(curve.currentFtpW!),
-                            ),
-                            child: const SizedBox.expand(),
-                          ),
                         ),
                       ),
                     ),
@@ -399,7 +403,7 @@ class _BestEffortsTable extends StatelessWidget {
                     top: AppSpacing.xs,
                   ),
                   child: Text(
-                    (point.watts / weight).toStringAsFixed(1),
+                    decimal((point.watts / weight), 1),
                     style: numbers,
                     textAlign: TextAlign.end,
                   ),
@@ -409,175 +413,4 @@ class _BestEffortsTable extends StatelessWidget {
       ],
     );
   }
-}
-
-class _PowerCurvePainter extends CustomPainter {
-  _PowerCurvePainter({
-    required this.points,
-    required this.line,
-    required this.area,
-    required this.dot,
-    required this.grid,
-    required this.labelStyle,
-    this.ftp,
-    this.ftpLabel,
-  });
-
-  final List<PowerCurvePoint> points;
-  final Color line;
-  final Color area;
-  final Color dot;
-  final Color grid;
-  final TextStyle labelStyle;
-
-  /// The FTP in use, drawn as a dashed line across the curve.
-  final int? ftp;
-  final String? ftpLabel;
-
-  static const _logMax = 3600.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-
-    const left = 44.0;
-    const right = 8.0;
-    const top = 8.0;
-    const bottom = 22.0;
-    final plot = Rect.fromLTRB(
-      left,
-      top,
-      size.width - right,
-      size.height - bottom,
-    );
-    final maxWatts = points.map((p) => p.watts).reduce(math.max).toDouble();
-    final axis = Paint()
-      ..color = grid
-      ..strokeWidth = 1;
-
-    // Horizontal grid at round steps, so a value can be read off the curve.
-    final step = maxWatts / 3;
-    for (var i = 0; i <= 3; i++) {
-      final y = plot.bottom - plot.height * (i / 3);
-      canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), axis);
-      _label(
-        canvas,
-        '${(step * i).round()}',
-        Offset(plot.left - 6, y),
-        alignRight: true,
-      );
-    }
-
-    double x(double seconds) {
-      final clamped = seconds.clamp(1, _logMax).toDouble();
-      return plot.left + plot.width * (math.log(clamped) / math.log(_logMax));
-    }
-
-    double y(int watts) => maxWatts <= 0
-        ? plot.bottom
-        : plot.bottom - plot.height * (watts / maxWatts);
-
-    final path = Path();
-    for (var i = 0; i < points.length; i++) {
-      final point = Offset(x(points[i].seconds.toDouble()), y(points[i].watts));
-      if (i == 0) {
-        path.moveTo(point.dx, point.dy);
-      } else {
-        path.lineTo(point.dx, point.dy);
-      }
-    }
-
-    // The area under the curve, fading to the base. It stops under the last effort: the curve has no
-    // value past it, and a wedge reaching the right edge would claim one.
-    final last = Offset(
-      x(points.last.seconds.toDouble()),
-      y(points.last.watts),
-    );
-    final first = Offset(
-      x(points.first.seconds.toDouble()),
-      y(points.first.watts),
-    );
-    final filled = Path.from(path)
-      ..lineTo(last.dx, plot.bottom)
-      ..lineTo(first.dx, plot.bottom)
-      ..close();
-    canvas.drawPath(
-      filled,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [area.withValues(alpha: 0.3), area.withValues(alpha: 0)],
-        ).createShader(plot),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = line
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke,
-    );
-    for (final point in points) {
-      canvas.drawCircle(
-        Offset(x(point.seconds.toDouble()), y(point.watts)),
-        3,
-        Paint()..color = dot,
-      );
-    }
-
-    // The FTP in use, dashed, so the curve is read against the number it is trained by.
-    if (ftp case final ftp?) {
-      final ftpY = y(ftp);
-      const dash = 6.0, gap = 4.0;
-      final paint = Paint()
-        ..color = grid
-        ..strokeWidth = 1.4;
-      var dx = plot.left;
-      while (dx < plot.right) {
-        final end = math.min(dx + dash, plot.right);
-        canvas.drawLine(Offset(dx, ftpY), Offset(end, ftpY), paint);
-        dx = end + gap;
-      }
-      if (ftpLabel case final label?) {
-        _label(canvas, label, Offset(plot.left + 6, ftpY - 14));
-      }
-    }
-
-    for (final seconds in [1, 10, 60, 300, 1200, 3600]) {
-      _label(
-        canvas,
-        PowerSummary._shortDuration(seconds),
-        Offset(x(seconds.toDouble()), plot.bottom + 3),
-        centerX: true,
-      );
-    }
-  }
-
-  void _label(
-    Canvas canvas,
-    String text,
-    Offset at, {
-    bool alignRight = false,
-    bool centerX = false,
-  }) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: labelStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final dx = alignRight
-        ? at.dx - painter.width
-        : centerX
-        ? at.dx - painter.width / 2
-        : at.dx;
-    final dy = alignRight || centerX ? at.dy - painter.height / 2 : at.dy;
-    painter.paint(canvas, Offset(dx, dy));
-  }
-
-  @override
-  bool shouldRepaint(_PowerCurvePainter old) =>
-      old.points != points ||
-      old.line != line ||
-      old.grid != grid ||
-      old.labelStyle != labelStyle ||
-      old.ftp != ftp;
 }

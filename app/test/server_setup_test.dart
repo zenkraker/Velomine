@@ -159,6 +159,22 @@ void main() {
     expect(find.text('https://old.example'), findsOneWidget);
   });
 
+  testWidgets(
+    'ServerSetupScreen_ShouldWarnAboutPlainHttp_WhenTheSchemeIsTyped',
+    (tester) async {
+      await pump(tester, check: (_) async => info());
+      final field = find.byKey(const Key('server-url'));
+
+      await tester.enterText(field, 'http:');
+      await tester.pump();
+      expect(find.byKey(const Key('server-insecure')), findsOneWidget);
+
+      await tester.enterText(field, 'https://velo.example');
+      await tester.pump();
+      expect(find.byKey(const Key('server-insecure')), findsNothing);
+    },
+  );
+
   testWidgets('ServerSetupScreen_ShouldBeSkipped_WhenTheWindowIsTheWeb', (
     tester,
   ) async {

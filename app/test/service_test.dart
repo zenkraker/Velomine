@@ -34,6 +34,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Opens a row's `⋯`, where its own jobs and Remove sit.
+  Future<void> openRowMenu(WidgetTester tester, String key) async {
+    await tester.tap(find.byKey(Key(key)));
+    await tester.pumpAndSettle();
+  }
+
   Map<String, Object?> reminder(
     String id,
     String name,
@@ -212,11 +218,14 @@ void main() {
     server.reminders['bike-1'] = [reminder('r1', 'Lube the chain', 'ok')];
     await openBike(tester);
 
+    await openRowMenu(tester, 'reminder-actions-r1');
     await tester.tap(find.byKey(const Key('reminder-pause-r1')));
     await tester.pumpAndSettle();
 
     expect(server.reminders['bike-1']!.single['isPaused'], isTrue);
     expect(find.text('Paused'), findsOneWidget);
+    // Paused, so the row's menu offers Resume instead.
+    await openRowMenu(tester, 'reminder-actions-r1');
     expect(find.text('Resume'), findsOneWidget);
   });
 
@@ -243,6 +252,7 @@ void main() {
     server.reminders['bike-1'] = [reminder('r1', 'Lube the chain', 'ok')];
     await openBike(tester);
 
+    await openRowMenu(tester, 'reminder-actions-r1');
     await tester.tap(find.byKey(const Key('reminder-edit-r1')));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -377,6 +387,7 @@ void main() {
     ];
     await openBike(tester);
 
+    await openRowMenu(tester, 'part-actions-part-1');
     await tester.tap(find.byKey(const Key('replace-part-1')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('part-brand')), 'Shimano');

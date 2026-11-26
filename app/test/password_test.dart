@@ -19,6 +19,9 @@ void main() {
 
   Future<void> openForgot(WidgetTester tester) async {
     await startApp(tester, server.session(useCookies: false));
+    // The link follows the fields, so on the default window it sits below the fold.
+    await tester.ensureVisible(find.byKey(const Key('forgot-password')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('forgot-password')));
     await tester.pumpAndSettle();
   }
@@ -179,6 +182,23 @@ void main() {
       lessThan(tester.getTopLeft(find.text('Reset your password')).dy),
     );
   });
+
+  testWidgets(
+    'ForgotPasswordScreen_ShouldOfferTheWayBack_WhenNothingHasBeenSent',
+    (tester) async {
+      await openForgot(tester);
+
+      final back = find.byKey(const Key('forgot-back'));
+      expect(back, findsOneWidget);
+      expect(find.text('Back to sign in'), findsOneWidget);
+
+      await tester.ensureVisible(back);
+      await tester.pump();
+      await tester.tap(back);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sign-in')), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'ResetPasswordScreen_ShouldShowOneButtonAndItsCaption_WhenTheLinkOpens',

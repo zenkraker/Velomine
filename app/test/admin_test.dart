@@ -4,6 +4,7 @@ import 'package:velomine/core/failure.dart';
 import 'package:velomine/core/result.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/widgets/badge.dart';
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/core/widgets/empty_state.dart';
 import 'package:velomine/core/widgets/error_state.dart';
 import 'package:velomine/core/widgets/section_card.dart';
@@ -230,7 +231,6 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('setting-approval')));
-    await tester.ensureVisible(find.byKey(const Key('setting-save')));
     await tester.tap(find.byKey(const Key('setting-save')));
     await tester.pumpAndSettle();
 
@@ -511,6 +511,89 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-retry')));
     await tester.pumpAndSettle();
     expect(data.settingsCalls, 2);
+  });
+
+  testWidgets('AdminScreen_ShouldShowTheFourAreasAsChips_WhenOpened', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+
+    // The admin pages draw their areas as chips in a row (`.vm-chips`), not a segmented track.
+    final tabs = find.byKey(const Key('admin-tabs'));
+    expect(tabs, findsOneWidget);
+    expect(
+      find.descendant(of: tabs, matching: find.byType(ChoiceChip)),
+      findsNWidgets(4),
+    );
+    expect(find.byType(SegmentedButton<int>), findsNothing);
+  });
+
+  testWidgets('AccountsTab_ShouldSayMember_WhenTheAccountHasNoOtherRole', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', name: 'Rider');
+    await openAdmin(tester);
+
+    expect(
+      find.descendant(
+        of: find.byKey(Key('user-${rider.id}')),
+        matching: find.text('Member'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('AccountsTab_ShouldOfferTheRowMenu_WhenTheAccountIsWaiting', (
+    tester,
+  ) async {
+    final waiting = server.add(
+      'new@example.com',
+      approved: false,
+      name: 'Newcomer',
+    );
+    await openAdmin(tester);
+
+    expect(find.byKey(Key('approve-${waiting.id}')), findsOneWidget);
+    expect(find.byKey(Key('user-menu-${waiting.id}')), findsOneWidget);
+  });
+
+  testWidgets('ClubsTab_ShouldShowOneCaption_WhenTheClubIsListed', (
+    tester,
+  ) async {
+    server.clubPaidUntil = '2099-03-31';
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    // Members and the plan share one caption line instead of four stacked lines, and the owner's
+    // address is not on the page.
+    final members = tester.getTopLeft(
+      find.byKey(const Key('club-members-club-1')),
+    );
+    final paid = tester.getTopLeft(
+      find.byKey(const Key('club-paid-until-club-1')),
+    );
+    expect(paid.dy, members.dy);
+    expect(paid.dx, greaterThan(members.dx));
+    expect(find.textContaining('@'), findsNothing);
+  });
+
+  testWidgets('SettingsTab_ShouldPinSaveUnderTheContent_WhenOpened', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-settings')));
+    await tester.pumpAndSettle();
+
+    final save = find.byKey(const Key('setting-save'));
+    expect(
+      find.descendant(of: find.byType(SectionCard), matching: save),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: find.byType(BottomActionBar), matching: save),
+      findsOneWidget,
+    );
   });
 
   for (final width in [390.0, 1300.0]) {

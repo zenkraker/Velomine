@@ -117,8 +117,10 @@ class _ZoneRow extends StatelessWidget {
       spacing: AppSpacing.sm,
       children: [
         SizedBox(
-          width: 30,
-          child: Text('Z${zone.zone}', style: text.labelMedium),
+          // The design's 120 px label column: the number and its word.
+          // shortcut: 4 × zoneLabelWidth until tokens.dart grows a named width for it.
+          width: AppProgress.zoneLabelWidth * 4,
+          child: Text(l10n.zoneName('${zone.zone}'), style: text.labelMedium),
         ),
         Text(range, style: text.bodyMedium),
       ],

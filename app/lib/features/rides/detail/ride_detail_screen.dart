@@ -24,8 +24,8 @@ import '../ride_text_sheet.dart';
 import '../ride_title.dart';
 import '../ride_type_chips.dart';
 import '../ride_type_sheet.dart';
-import '../../progress/events.dart';
 import '../../progress/progress_view_models.dart';
+import 'lap_range.dart';
 import 'lap_table.dart';
 import 'effort_word.dart';
 import 'power_record_chips.dart';
@@ -33,13 +33,16 @@ import 'ride_detail_state.dart';
 import 'ride_detail_view_model.dart';
 import 'ride_feel_card.dart';
 import 'ride_selection.dart';
+import 'ride_series.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
 import '../../../core/tokens.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/badge.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
+import '../../../core/widgets/form_sheet.dart';
 import '../../../core/widgets/ftp_suggestion_card.dart';
 import '../../../core/widgets/heart_rate_note_card.dart';
 import '../../../core/widgets/training_question_card.dart';
@@ -139,6 +142,8 @@ class RideDetailScreen extends ConsumerWidget {
       parent: l10n.navRides,
       title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
       titleKey: const Key('ride-title'),
+      // When it was and what it was, in the header, as the mock-up draws it.
+      subtitle: ride == null ? null : _rideSubtitle(context, ride),
       menu: menu,
       children: _body(context, ref, s, selection),
     );
@@ -224,7 +229,6 @@ class RideDetailScreen extends ConsumerWidget {
     RideDetailState s,
     RideSelection selection,
   ) {
-    final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     if (s.notFound) {
       return [
@@ -284,28 +288,14 @@ class RideDetailScreen extends ConsumerWidget {
     final powerZones = ride.powerZones.orElse(null) ?? const <ZoneTime>[];
 
     return [
-      // The page header already names the ride; the body starts with when it was.
-      Text(dateTime(ride.startTime ?? ride.uploadedAt), style: text.bodyMedium),
-      Text(
-        [ride.fileName, if (ride.device != null) ride.device!].join(' · '),
-        style: text.bodySmall,
-      ),
+      // The header carries the date and the surface; the body starts with the rider's own words.
       if (ride.description case final description?
           when description.trim().isNotEmpty)
         Text(
           description,
           key: const Key('ride-description'),
-          style: text.bodyMedium,
-        )
-      else if (ride.status == 'ready')
-        Text(
-          l10n.rideTextAdd,
-          key: const Key('add-ride-description'),
-          style: text.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-      EventLinkCard(rideId: ride.id),
       if (s.load.failure case final failure?)
         InlineError(failureText(l10n, failure), key: const Key('ride-error')),
       if (ride.status == 'processing')
@@ -356,6 +346,16 @@ class RideDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final effort = layout.effortWord ? effortWord(heartRateZones) : null;
     final training = ride.training.orElse(null);
+    final shownCharts = [
+      for (final chart in s.series?.series ?? const <Series>[])
+        if (!layout.foldAdvanced || layout.rideChartIds.contains(chart.id))
+          chart,
+    ];
+    final foldedCharts = [
+      for (final chart in s.series?.series ?? const <Series>[])
+        if (layout.foldAdvanced && !layout.rideChartIds.contains(chart.id))
+          chart,
+    ];
     final items = <(Widget, bool)>[
       // The session this ride might be asks first: it changes what the ride itself is.
       if (training != null)
@@ -394,19 +394,9 @@ class RideDetailScreen extends ConsumerWidget {
         if (note != null)
           for (final card in _heartRateNoteCard(s, ride, note, notifier))
             (card, true),
-      if (rideTypeIsSet(ride) ||
-          (ride.powerRecords.orElse(const []) ?? const []).isNotEmpty)
-        (
-          ToolbarRow(
-            children: [
-              RideTypeChips(ride: ride),
-              PowerRecordChips(
-                records: ride.powerRecords.orElse(const []) ?? const [],
-              ),
-            ],
-          ),
-          true,
-        ),
+      // The ride's labels are one strip of badges, as the mock-up draws them: its surface, its records,
+      // and the event it was.
+      (_RideBadges(ride: ride), true),
       if (s.series?.hasRoute ?? false)
         (
           RouteMap(
@@ -443,42 +433,30 @@ class RideDetailScreen extends ConsumerWidget {
           ),
           false,
         ),
-      // The charts come straight after the numbers: one cursor runs along all of them.
-      if (s.series != null && s.series!.series.isNotEmpty) ...[
+      // The charts share one card and one cursor, as the mock-up draws them. A simple mode keeps its
+      // own charts in the card and folds the rest behind the one button.
+      if (shownCharts.isNotEmpty)
         (
-          ValueListenableBuilder<int?>(
-            valueListenable: selection.selected,
-            builder: (_, index, _) => Text(
-              index == null
-                  ? l10n.momentHint
-                  : _moment(
-                      l10n,
-                      s,
-                      index,
-                      ref.watch(unitsChoiceViewModelProvider),
-                    ),
-              key: const Key('moment'),
-              style: text.bodyMedium?.copyWith(
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
+          _RideCharts(
+            key: const Key('ride-charts'),
+            data: s.series!,
+            charts: shownCharts,
+            selected: selection.selected,
+            selectedLap: selection.selectedLap,
           ),
-          layout.rideChartIds.isEmpty,
+          false,
         ),
-        for (final series in s.series!.series)
-          (
-            SeriesChart(
-              series: series,
-              time: s.series!.time,
-              selected: selection.selected,
-              selectedLap: selection.selectedLap,
-              color:
-                  VelomineColors.of(context).series[series.id] ??
-                  Theme.of(context).colorScheme.primary,
-            ),
-            !layout.rideChartIds.contains(series.id),
+      if (foldedCharts.isNotEmpty)
+        (
+          _RideCharts(
+            key: const Key('ride-charts-more'),
+            data: s.series!,
+            charts: foldedCharts,
+            selected: selection.selected,
+            selectedLap: selection.selectedLap,
           ),
-      ],
+          true,
+        ),
       if (layout.foldAdvanced)
         (_Stats(ride: ride, show: _StatsShow.advanced), true),
       if (heartRateZones.isEmpty &&
@@ -519,7 +497,7 @@ class RideDetailScreen extends ConsumerWidget {
       ),
       if (s.bikes.isNotEmpty || ride.bikeId != null)
         (
-          _BikePicker(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
+          _BikeCard(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
           false,
         ),
       if (s.views case final views?) (_ViewsCard(views: views), false),
@@ -535,20 +513,6 @@ class RideDetailScreen extends ConsumerWidget {
       if (folded.isNotEmpty)
         MoreDetails(label: l10n.moreDetailsAll, children: folded),
     ];
-  }
-
-  String _moment(
-    AppLocalizations l10n,
-    RideDetailState s,
-    int index,
-    Units units,
-  ) {
-    final data = s.series!;
-    final distance = data.distance == null ? null : data.distance![index];
-    return l10n.momentAt(
-      clock(data.time[index]),
-      distance == null ? '' : ' · ${km(units, distance)}',
-    );
   }
 
   /// The card for what this ride did to a heart-rate number, when it caused one: a measured value is a note,
@@ -705,24 +669,16 @@ class _Stats extends ConsumerWidget {
       if (ride.maxPowerW != null)
         ('max-power', l10n.statMaxPower, '${ride.maxPowerW} W'),
       if (ride.intensityFactor != null)
-        (
-          'intensity',
-          l10n.statIntensity,
-          ride.intensityFactor!.toStringAsFixed(2),
-        ),
+        ('intensity', l10n.statIntensity, decimal(ride.intensityFactor!, 2)),
       if (ride.tss != null) ('tss', l10n.statTss, ride.tss!.round().toString()),
       // The effort score the dashboard uses for this ride, and where it came from.
       if (ride.effortScore.value case final score?)
         ('effort-score', l10n.statEffortScore, score.round().toString()),
       if (ride.efficiencyFactor.value case final efficiency?)
-        ('efficiency', l10n.statEfficiency, efficiency.toStringAsFixed(2)),
+        ('efficiency', l10n.statEfficiency, decimal(efficiency, 2)),
       if (ride.decouplingPct.value case final decoupling?
           when ride.steady.value == true)
-        (
-          'decoupling',
-          l10n.statDecoupling,
-          '${decoupling.toStringAsFixed(1)} %',
-        ),
+        ('decoupling', l10n.statDecoupling, '${decimal(decoupling, 1)} %'),
       if (ride.trimp != null)
         ('trimp', l10n.statTrimp, ride.trimp!.round().toString()),
       if (ride.avgHeartRate != null)
@@ -789,8 +745,8 @@ class _Stats extends ConsumerWidget {
           if (ride.minWPrimeBalanceJ.value case final low?)
             Text(
               l10n.wPrimeLowest(
-                (low / 1000).toStringAsFixed(1),
-                ((ride.wPrimeJ.value ?? 0) / 1000).toStringAsFixed(1),
+                decimal((low / 1000), 1),
+                decimal((ride.wPrimeJ.value ?? 0) / 1000, 1),
               ),
               key: const Key('wprime-lowest'),
               style: text.bodySmall,
@@ -811,7 +767,7 @@ class _Stats extends ConsumerWidget {
                 when ride.steady.value == true)
               Text(
                 l10n.decoupling(
-                  decoupling.toStringAsFixed(1),
+                  decimal(decoupling, 1),
                   decouplingWord(l10n, decoupling),
                 ),
                 key: const Key('decoupling'),
@@ -919,9 +875,7 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
                   ],
                   selected: kind,
                   onChanged: (value) => setState(() => _kind = value),
-                )
-              else
-                Text(duration(total), style: text.bodySmall),
+                ),
             ],
           ),
           for (final (index, zone) in zones.indexed) ...[
@@ -934,8 +888,13 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
               child: Row(
                 children: [
                   SizedBox(
-                    width: 30,
-                    child: Text('Z${zone.zone}', style: text.labelMedium),
+                    // The design's 120 px label column: the number and its word.
+                    // shortcut: 4 × zoneLabelWidth until tokens.dart grows a named width for it.
+                    width: AppProgress.zoneLabelWidth * 4,
+                    child: Text(
+                      l10n.zoneName('${zone.zone}'),
+                      style: text.labelMedium,
+                    ),
                   ),
                   SizedBox(
                     width: 92,
@@ -977,6 +936,7 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
           ],
           if (kind == 'heart')
             if (widget.heartRateNote case final note?) SourceNote(note),
+          // The ride's time in these zones, said once, under the rows it is the sum of.
           Text(duration(total), style: text.bodySmall),
         ],
       ),
@@ -989,37 +949,104 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
       : l10n.zoneRange(zone.from, zone.to!, kind == 'heart' ? 'bpm' : 'W');
 }
 
-/// The event this ride was, when one is linked to it.
-class EventLinkCard extends ConsumerWidget {
-  const EventLinkCard({super.key, required this.rideId});
+/// The ride's labels as one strip of badges: its surface and records, then the event it was. Nothing to
+/// label draws nothing.
+class _RideBadges extends ConsumerWidget {
+  const _RideBadges({required this.ride});
 
-  final String rideId;
+  final RideResponse ride;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final events = ref.watch(eventsViewModelProvider);
-    final event = events.events.where((e) => e.rideId == rideId).firstOrNull;
-    if (event == null) return const SizedBox.shrink();
-    return SectionCard(
-      key: const Key('ride-event'),
-      title: l10n.eventYourRide(event.name),
-      description: eventDetail(
-        l10n,
-        ref.watch(unitsChoiceViewModelProvider),
-        event,
-      ),
+    final records = ride.powerRecords.orElse(const []) ?? const <PowerRecord>[];
+    final event = ref
+        .watch(eventsViewModelProvider)
+        .events
+        .where((e) => e.rideId == ride.id)
+        .firstOrNull;
+    if (!rideTypeIsSet(ride) && records.isEmpty && event == null) {
+      return const SizedBox.shrink();
+    }
+    return ToolbarRow(
       children: [
-        if (event.notes case final notes? when notes.isNotEmpty)
-          Text(notes, style: Theme.of(context).textTheme.bodyMedium),
+        RideTypeChips(ride: ride),
+        PowerRecordChips(records: records),
+        if (event != null)
+          AppBadge(
+            l10n.eventYourRide(event.name),
+            key: const Key('ride-event'),
+          ),
       ],
     );
   }
 }
 
-/// Which bike was ridden. An archived bike is only listed when this ride already uses it.
-class _BikePicker extends StatelessWidget {
-  const _BikePicker({
+/// The ride's charts in one card, as the mock-up draws them: the sentence about the cursor, then one chart
+/// per signal. Every chart shares the cursor and the chosen lap.
+class _RideCharts extends ConsumerWidget {
+  const _RideCharts({
+    super.key,
+    required this.data,
+    required this.charts,
+    required this.selected,
+    required this.selectedLap,
+  });
+
+  final RideSeries data;
+  final List<Series> charts;
+  final ValueNotifier<int?> selected;
+  final ValueNotifier<LapRange?> selectedLap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final colors = VelomineColors.of(context);
+    final units = ref.watch(unitsChoiceViewModelProvider);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.lg,
+        children: [
+          ValueListenableBuilder<int?>(
+            valueListenable: selected,
+            builder: (_, index, _) => Text(
+              index == null
+                  ? l10n.momentHint
+                  : _moment(l10n, data, index, units),
+              key: const Key('moment'),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          for (final chart in charts)
+            SeriesChart(
+              series: chart,
+              time: data.time,
+              selected: selected,
+              selectedLap: selectedLap,
+              color:
+                  colors.series[chart.id] ??
+                  Theme.of(context).colorScheme.primary,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Where the cursor is, with the distance when the ride has one: "At 5:30 · 12.4 km".
+String _moment(AppLocalizations l10n, RideSeries data, int index, Units units) {
+  final distance = data.distance == null ? null : data.distance![index];
+  return l10n.momentAt(
+    clock(data.time[index]),
+    distance == null ? '' : ' · ${km(units, distance)}',
+  );
+}
+
+/// Which bike was ridden, as the mock-up's Bike card draws it: the bike with how far it has gone and one
+/// button to change it. An archived bike is only offered when this ride already uses it.
+class _BikeCard extends ConsumerWidget {
+  const _BikeCard({
     required this.bikes,
     required this.ride,
     required this.onChanged,
@@ -1029,26 +1056,76 @@ class _BikePicker extends StatelessWidget {
   final RideResponse ride;
   final ValueChanged<String?> onChanged;
 
+  Future<void> _change(BuildContext context) async {
+    final l10n = context.l10n;
+    final shown = bikes.where((b) => b.isActive || b.id == ride.bikeId);
+    // An empty id is "no bike": the sheet has to tell it from a dismissed one.
+    final options = [
+      (key: 'none', id: '', name: l10n.noBike),
+      for (final bike in shown) (key: bike.id, id: bike.id, name: bike.name),
+    ];
+    final picked = await showSheet<String>(
+      context,
+      builder: (context) => SheetFrame(
+        title: l10n.bike,
+        children: [
+          for (final option in options)
+            ListTile(
+              key: Key('ride-bike-option-${option.key}'),
+              title: Text(option.name),
+              trailing: option.id == (ride.bikeId ?? '')
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () => Navigator.of(context).pop(option.id),
+            ),
+        ],
+      ),
+    );
+    if (picked != null) onChanged(picked.isEmpty ? null : picked);
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final shown = bikes
-        .where((b) => b.isActive || b.id == ride.bikeId)
-        .toList();
-    // A bike this list does not know (deleted meanwhile) must not break the dropdown.
-    final value = shown.any((b) => b.id == ride.bikeId) ? ride.bikeId : null;
-    return DropdownButtonFormField<String?>(
-      key: ValueKey('ride-bike-$value'),
-      initialValue: value,
-      decoration: InputDecoration(labelText: context.l10n.bike),
-      items: [
-        DropdownMenuItem<String?>(
-          value: null,
-          child: Text(context.l10n.noBike),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
+    final text = Theme.of(context).textTheme;
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final bike = bikes.where((b) => b.id == ride.bikeId).firstOrNull;
+    final caption = bike == null
+        ? null
+        : [
+            if (bike.isDefault) l10n.defaultBike,
+            km(units, bike.distanceM),
+          ].join(' · ');
+    return SectionCard(
+      key: const Key('ride-bike'),
+      title: l10n.bike,
+      children: [
+        Row(
+          spacing: AppSpacing.md,
+          children: [
+            Icon(Icons.directions_bike_outlined, color: muted),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(bike?.name ?? l10n.noBike, style: text.bodyMedium),
+                  if (caption != null)
+                    Text(
+                      caption,
+                      style: text.bodySmall?.copyWith(color: muted),
+                    ),
+                ],
+              ),
+            ),
+            TextButton(
+              key: const Key('ride-bike-change'),
+              onPressed: () => _change(context),
+              child: Text(l10n.change),
+            ),
+          ],
         ),
-        for (final b in shown)
-          DropdownMenuItem<String?>(value: b.id, child: Text(b.name)),
       ],
-      onChanged: onChanged,
     );
   }
 }
@@ -1061,6 +1138,13 @@ String _rideDate(BuildContext context, RideResponse ride) {
   return '${DateFormat.yMMMEd(locale).format(start)} · '
       '${DateFormat.Hm(locale).format(start)}';
 }
+
+/// The one line under the title: when the ride was and what it was.
+String _rideSubtitle(BuildContext context, RideResponse ride) => [
+  _rideDate(context, ride),
+  if (ride.discipline case final discipline?)
+    disciplineName(context.l10n, discipline),
+].join(' · ');
 
 /// The facts the map card has room for: distance, moving time and climbing, when the ride has them.
 List<({String label, String value})> _mapFacts(

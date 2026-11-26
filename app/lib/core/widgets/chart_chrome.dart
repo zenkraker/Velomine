@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../theme.dart';
 import '../tokens.dart';
 
 /// The tile provider's credit, one look on every map.
@@ -10,12 +11,15 @@ class MapAttribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    color: Colors.white.withValues(alpha: 0.75),
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    color: VelomineColors.of(context).glass,
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.sm,
+      vertical: AppSpacing.xs,
+    ),
     child: Text(
       text,
       style: Theme.of(context).textTheme.labelSmall
-          ?.copyWith(color: Colors.black87),
+          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
     ),
   );
 }
@@ -48,8 +52,8 @@ class MapControl extends StatelessWidget {
           tooltip: tooltip,
           onPressed: onPressed,
           style: IconButton.styleFrom(
-            backgroundColor: Colors.black.withValues(alpha: 0.45),
-            foregroundColor: Colors.white,
+            backgroundColor: VelomineColors.of(context).glass,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
           ),
           icon: Icon(icon, size: 18),
         );
@@ -77,8 +81,8 @@ class ChartHeader extends StatelessWidget {
       children: [
         if (color != null) ...[
           Container(
-            width: 10,
-            height: 10,
+            width: AppSpacing.md,
+            height: AppSpacing.md,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -102,7 +106,10 @@ class ChartHeader extends StatelessWidget {
   }
 }
 
-/// The style of the numbers written inside a chart's plot area.
-TextStyle chartLabelStyle(BuildContext context) =>
-    (Theme.of(context).textTheme.labelSmall ?? const TextStyle(fontSize: 11))
-        .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
+/// The style of the numbers written inside a chart's plot area: the axis size in the muted ink.
+TextStyle chartLabelStyle(BuildContext context) {
+  final theme = Theme.of(context);
+  return (theme.textTheme.labelSmall ?? const TextStyle()).copyWith(
+    color: theme.colorScheme.onSurfaceVariant,
+  );
+}

@@ -14,7 +14,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/bottom_action_bar.dart';
-import '../../core/widgets/error_state.dart';
+import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/segmented_control.dart';
@@ -375,9 +375,9 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
         if (problem != null)
           AuthFailure(keyName: 'plan-ride-problem', message: problem),
         if (s.action.failure case final failure?)
-          ErrorState(
-            message: failureText(l10n, failure),
-            actionKey: const Key('plan-ride-error'),
+          InlineError(
+            failureText(l10n, failure),
+            key: const Key('plan-ride-error'),
           ),
       ],
     );
