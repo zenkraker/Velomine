@@ -14,6 +14,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/confirm.dart';
 import '../../core/device_time_zone.dart';
+import '../../core/time_zones.dart';
 import '../../core/format.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
@@ -129,12 +130,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   /// athlete fields it never touched.
   bool _preferenceSave = false;
 
-  /// The time zone the account holds, as the picker's value.
+  /// The time zone the account holds. Null when it holds none.
   String? _zone;
+  final _zoneText = TextEditingController();
+  final _zoneFocus = FocusNode();
 
-  /// What the time zone picker offers: the zone the account holds, the device's own (a browser names it),
-  /// and UTC. The server stores an IANA name, which a hand-typed value almost never matched.
-  List<String> get _zoneChoices => {?_zone, ?deviceTimeZone(), 'UTC'}.toList();
+  /// The zone the picker shows: the account's, else the device's own (a browser names it), else UTC.
+  String get _shownZone => _zone ?? deviceTimeZone() ?? 'UTC';
 
   /// When the ride a test FTP came from started: the day of the effort, which the ride itself knows.
   DateTime? _ftpSourceRideStart;
@@ -147,6 +149,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _zoneFocus.addListener(() {
+      if (!_zoneFocus.hasFocus && mounted) _settleZone();
+    });
     _profileSub = ref.listenManual(profileViewModelProvider, (_, next) {
       final profile = next.profile;
       if (profile == null) return;
@@ -230,6 +235,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ? p.thresholdHeartRate.orElse(null)?.toString() ?? ''
           : '';
       _zone = p.timeZone;
+      _zoneText.text = _shownZone;
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
       _emailAccount = p.emailAccountNotifications;
@@ -244,10 +250,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void dispose() {
     _profileSub.close();
-    for (final c in [_name, _ftp, _weight, _birthYear, _maxHr, _thresholdHr]) {
+    for (final c in [
+      _name,
+      _ftp,
+      _weight,
+      _birthYear,
+      _maxHr,
+      _thresholdHr,
+      _zoneText,
+    ]) {
       c.dispose();
     }
+    _zoneFocus.dispose();
     super.dispose();
+  }
+
+  /// Saves the zone the rider picked, and a name typed in full (any letter case). Anything else goes back to the
+  /// zone shown, so a name that is not in the list is never saved.
+  void _settleZone() {
+    final typed = _zoneText.text.trim().toLowerCase();
+    final match = timeZoneNames
+        .where((z) => z.toLowerCase() == typed)
+        .firstOrNull;
+    if (match == null || match == _shownZone) {
+      _zoneText.text = _shownZone;
+      return;
+    }
+    _chooseZone(match);
+  }
+
+  void _chooseZone(String zone) {
+    setState(() => _zone = zone);
+    _zoneText.text = zone;
+    _savePreference(timeZone: zone);
   }
 
   /// An empty box means "not set"; anything else must be a number in range.
@@ -668,24 +703,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: [
           // Each choice in a pair, as the mock-up draws them: a picker saves itself the moment it changes.
           _FieldPair(
-            DropdownButtonFormField<String>(
-              key: const Key('profile-zone'),
-              initialValue: _zone ?? _zoneChoices.first,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: l10n.timeZone,
-                helperText: l10n.timeZoneHelper,
-                helperMaxLines: 3,
-              ),
-              items: [
-                for (final zone in _zoneChoices)
-                  DropdownMenuItem(value: zone, child: Text(zone)),
-              ],
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() => _zone = value);
-                _savePreference(timeZone: value);
+            // Type a part of the name ("Eu" suggests Europe/Rome) or scroll the whole list; a pick saves at once.
+            Autocomplete<String>(
+              textEditingController: _zoneText,
+              focusNode: _zoneFocus,
+              optionsBuilder: (value) {
+                final typed = value.text.trim().toLowerCase();
+                if (typed.isEmpty) return timeZoneNames;
+                // Names that start with the text come first, so "Eu" lists Europe/* before Australia/Eucla.
+                final hits = timeZoneNames
+                    .where((z) => z.toLowerCase().contains(typed))
+                    .toList();
+                return [
+                  ...hits.where((z) => z.toLowerCase().startsWith(typed)),
+                  ...hits.where((z) => !z.toLowerCase().startsWith(typed)),
+                ];
               },
+              onSelected: _chooseZone,
+              fieldViewBuilder: (context, controller, focusNode, _) =>
+                  AppTextField(
+                    fieldKey: const Key('profile-zone'),
+                    controller: controller,
+                    focusNode: focusNode,
+                    label: l10n.timeZone,
+                    helper: l10n.timeZoneHelper,
+                    textInputAction: TextInputAction.done,
+                    onDone: (_) => _settleZone(),
+                  ),
             ),
             DropdownButtonFormField<String>(
               key: const Key('profile-first-day'),

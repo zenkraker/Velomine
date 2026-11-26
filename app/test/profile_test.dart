@@ -59,8 +59,8 @@ void main() {
     expect(hint('profile-max-hr'), '183');
     expect(field('profile-threshold-hr'), '');
     expect(hint('profile-threshold-hr'), '163');
-    // The zone is a picker of the zones the app knows, not a free-text field.
-    expect(find.text('Europe/Rome'), findsOneWidget);
+    // The zone is a searchable picker of the zones the app knows; the account's zone is what it shows.
+    expect(field('profile-zone'), 'Europe/Rome');
     expect(find.text('Sunday'), findsOneWidget);
   });
 
@@ -918,27 +918,68 @@ void main() {
     },
   );
 
-  testWidgets('ProfileScreen_ShouldOfferTheZoneAsAPicker_WhenOpened', (
+  testWidgets('SettingsScreen_ShouldSuggestEuropeZones_WhenUserTypesEu', (
     tester,
   ) async {
     await openProfile(tester, size: const Size(1000, 4000));
 
-    // The zone is chosen from a list, never typed: the server stores an IANA name.
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('profile-zone')),
-        matching: find.byType(TextField),
-      ),
-      findsNothing,
-    );
+    // Typing "Eu" suggests the Europe zones and not the Americas; typing a zone in full narrows to it.
     await tester.tap(find.byKey(const Key('profile-zone')));
+    await tester.enterText(find.byKey(const Key('profile-zone')), 'Eu');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('UTC').last);
+    expect(find.textContaining('Europe/'), findsWidgets);
+    expect(find.textContaining('America/'), findsNothing);
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+
+    await tester.enterText(
+      find.byKey(const Key('profile-zone')),
+      'Europe/Rome',
+    );
+    await tester.pumpAndSettle();
+    // The suggestion is the last match: the field itself also holds the text.
+    await tester.tap(find.text('Europe/Rome').last);
     await tester.pumpAndSettle();
 
-    // A preference saves the moment it is chosen.
+    // A pick saves at once.
     expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
-    expect(server.profiles['rider@example.com']!['timeZone'], 'UTC');
+    expect(server.profiles['rider@example.com']!['timeZone'], 'Europe/Rome');
+  });
+
+  testWidgets(
+    'SettingsScreen_ShouldKeepTheZoneUsable_WhenPhoneKeyboardIsOpen',
+    (tester) async {
+      // A phone: 360 wide, 640 high, with the on-screen keyboard taking the bottom 300.
+      await openProfile(tester, size: const Size(360, 640));
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.resetViewInsets);
+
+      final zone = find.byKey(const Key('profile-zone'));
+      await tester.ensureVisible(zone);
+      await tester.tap(zone);
+      await tester.enterText(zone, 'Eu');
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Europe/'), findsWidgets);
+    },
+  );
+
+  testWidgets('SettingsScreen_ShouldNotSaveAnUnknownZone_WhenTypedAndLeft', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    await tester.enterText(
+      find.byKey(const Key('profile-zone')),
+      'Mars/Olympus',
+    );
+    await tester.pumpAndSettle();
+    // Leaving the field puts back the zone the account shows.
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+    expect(find.text('Mars/Olympus'), findsNothing);
   });
 
   testWidgets('ProfileScreen_ShouldSaveTheFirstDay_WhenItIsChosen', (
