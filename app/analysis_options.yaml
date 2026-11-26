@@ -1,11 +1,9 @@
 include: package:flutter_lints/flutter.yaml
 
-# riverpod_lint is deliberately not enabled. Under the analyzer's plugin
-# mechanism it reports missing_provider_scope on the runApp calls in
-# telemetry.dart (the widget is already wrapped in a ProviderScope by main.dart)
-# and scoped_providers_should_specify_dependencies on a widget test's root
-# scope, and it honours neither per-line ignores nor custom_lint configuration,
-# so it could only be satisfied by disabling the checks in CI.
+plugins:
+  riverpod_lint:
+    version: ^3.2.0
+
 analyzer:
   exclude:
     - build/**

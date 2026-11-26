@@ -1,0 +1,84 @@
+<!doctype html>
+<!-- WellbeingPage: Progress → Wellbeing: readiness, why it is what it is, and how you feel. Guideline: WellbeingPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Wellbeing page</title>
+<style>
+  main { max-width: 1160px; margin: 0 auto; padding: var(--space-xxl) var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+  .head h1 { margin: 0; }
+  .crumb { color: var(--ink-muted); margin: 0 0 var(--space-xs); }
+  .r3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-lg); }
+  .r21 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); }
+  .r11 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-lg); }
+  @media (max-width: 900px) { .r3, .r21, .r11 { grid-template-columns: 1fr; } }
+  .chart { display: block; width: 100%; height: auto; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .zero { stroke: var(--ink-muted); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .lab { fill: var(--ink-muted); font-size: 12px; font-weight: 600; }
+  .lab.ink { fill: var(--ink); }
+  .legend { display: flex; gap: var(--space-lg); flex-wrap: wrap; color: var(--ink-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md) var(--space-lg); margin-top: var(--space-sm); }
+  .stats dt { color: var(--ink-muted); }
+  .stats dd { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink-muted); font-weight: 500; padding: 0 var(--space-sm) var(--space-sm); }
+  td { padding: var(--space-md) var(--space-sm); border-top: 1px solid var(--hairline); }
+  th.n, td.n { text-align: right; }
+  tr.now td { background: var(--accent-soft); color: var(--on-accent-soft); font-weight: 600; }
+  tr.now td:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  tr.now td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .scroll { overflow-x: auto; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+
+  .factors { display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-sm); }
+  .factor { display: grid; grid-template-columns: minmax(0, 1.4fr) 64px minmax(80px, 1fr) 32px; gap: var(--space-md); align-items: center; }
+  .fv { color: var(--ink-muted); text-align: right; }
+  .track { position: relative; height: 8px; border-radius: var(--radius-pill); background: var(--track); }
+  .track .mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-muted); }
+  .eff { position: absolute; top: 0; bottom: 0; border-radius: var(--radius-pill); }
+  .eff.up { background: var(--accent-strong); }
+  .eff.down { background: var(--signal); }
+  .fe { text-align: right; font-weight: 600; color: var(--ink-muted); }
+  .fe.up { color: var(--accent-strong); }
+  .fe.down { color: var(--signal); }
+  .feel { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .dotf { fill: var(--accent-strong); stroke: var(--card); stroke-width: 3; }
+  .note { margin: 0; padding: var(--space-md) var(--space-lg); border-radius: var(--radius-md); background: var(--card-raised); color: var(--ink-muted); }
+
+</style>
+</head>
+<body>
+<main>
+<div class="head"><div><p class="crumb caption">Progress</p><h1 class="page-title">Wellbeing</h1></div><div style="display:flex;gap:var(--space-sm);align-items:center"><button class="vm-btn button-label" type="button">Check in</button><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div></div>
+<section class="r11">
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Readiness</h3>
+    <div class="vm-number"><span class="kpi">50</span><span class="vm-state">Go easy</span></div>
+    <p class="vm-sentence body">Keep it easy today: endurance pace, no hard efforts.</p>
+    <p class="note caption">A guide for training, not a medical measure.</p>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Why 50</h3>
+    <p class="vm-sentence body">Two things pull it down: you feel a bit flat, and your load grew fast this week.</p>
+    <div class="factors"><div class="factor caption"><span>Form</span><span class="fv">0.6</span><span class="track"><i class="eff up" style="left:50%;width:50%"></i><i class="mid"></i></span><span class="fe up">+3</span></div><div class="factor caption"><span>Growth over 7 days</span><span class="fv">0.7</span><span class="track"><i class="eff down" style="right:50%;width:17%"></i><i class="mid"></i></span><span class="fe down">−1</span></div><div class="factor caption"><span>Last 2 days</span><span class="fv">0 TSS</span><span class="track"><i class="mid"></i></span><span class="fe ">0</span></div><div class="factor caption"><span>How you feel</span><span class="fv">2.8 / 5</span><span class="track"><i class="eff down" style="right:50%;width:33%"></i><i class="mid"></i></span><span class="fe down">−2</span></div><div class="factor caption"><span>Effort of the last ride</span><span class="fv">5 / 10</span><span class="track"><i class="mid"></i></span><span class="fe ">0</span></div></div>
+  </article>
+</section>
+<article class="vm-card">
+  <h3 class="vm-card-title card-title">How you feel</h3>
+  <p class="vm-sentence body">2.8 out of 5 today, a little under your usual 3.1.</p>
+  <svg class="chart" viewBox="0 0 700 140" role="img" aria-label="How you feel over the last 14 days, between 2.6 and 3.6 out of 5; today 2.8.">
+  <g class="grid"><line x1="36" y1="120.0" x2="690" y2="120.0"/><line x1="36" y1="68.0" x2="690" y2="68.0"/><line x1="36" y1="16.0" x2="690" y2="16.0"/></g>
+  <text class="ylab" x="30" y="124.0">1</text><text class="ylab" x="30" y="72.0">3</text><text class="ylab" x="30" y="20.0">5</text>
+  <path class="feel" d="M36.0 57.6 L86.3 62.8 L136.6 52.4 L186.9 68.0 L237.2 73.2 L287.5 65.4 L337.8 60.2 L388.2 68.0 L438.5 78.4 L488.8 70.6 L539.1 62.8 L589.4 68.0 L639.7 75.8 L690.0 73.2"/><circle class="dotf" cx="690" cy="73.2" r="5"/>
+  <text class="xlab" x="46" y="136">7 Nov</text><text class="xlab" x="674" y="136">Today</text>
+</svg>
+  <p class="note caption">Only you see your notes. Coaches you share with see scores and ride effort, never notes.</p>
+</article>
+</main>
+</body>
+</html>

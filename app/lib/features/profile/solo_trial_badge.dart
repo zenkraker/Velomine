@@ -2,8 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import '../../core/tokens.dart';
-import '../../core/theme.dart';
+import '../../core/widgets/badge.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// The solo trial as the member sees it: how many days are left, or that it has ended. It is billing state and
@@ -30,38 +29,16 @@ class SoloTrialBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final ends = endsAt;
     if (ends == null) return const SizedBox.shrink();
-    return Semantics(
-      label: label(context.l10n, ends, today),
-      excludeSemantics: true,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
+    final text = label(context.l10n, ends, today);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Semantics(
+        label: text,
+        excludeSemantics: true,
+        child: AppBadge(
+          text,
           key: const Key('solo-trial'),
-          constraints: const BoxConstraints(minHeight: 48),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: volt.withValues(alpha: 0.12),
-            border: Border.all(color: volt.withValues(alpha: 0.4)),
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: AppSpacing.sm,
-            children: [
-              const Icon(Icons.timer_outlined, size: 16),
-              Flexible(
-                child: Text(
-                  label(context.l10n, ends, today),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-              ),
-            ],
-          ),
+          icon: Icons.timer_outlined,
         ),
       ),
     );

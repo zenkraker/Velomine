@@ -1,0 +1,118 @@
+<!doctype html>
+<!-- FitnessPage: Progress → Fitness: one big fitness, fatigue and form chart, then what drives it. Guideline: FitnessPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Fitness page</title>
+<style>
+  main { max-width: 1160px; margin: 0 auto; padding: var(--space-xxl) var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+  .head h1 { margin: 0; }
+  .crumb { color: var(--ink-muted); margin: 0 0 var(--space-xs); }
+  .r3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-lg); }
+  .r21 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); }
+  .r11 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-lg); }
+  @media (max-width: 900px) { .r3, .r21, .r11 { grid-template-columns: 1fr; } }
+  .chart { display: block; width: 100%; height: auto; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .zero { stroke: var(--ink-muted); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .lab { fill: var(--ink-muted); font-size: 12px; font-weight: 600; }
+  .lab.ink { fill: var(--ink); }
+  .legend { display: flex; gap: var(--space-lg); flex-wrap: wrap; color: var(--ink-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md) var(--space-lg); margin-top: var(--space-sm); }
+  .stats dt { color: var(--ink-muted); }
+  .stats dd { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink-muted); font-weight: 500; padding: 0 var(--space-sm) var(--space-sm); }
+  td { padding: var(--space-md) var(--space-sm); border-top: 1px solid var(--hairline); }
+  th.n, td.n { text-align: right; }
+  tr.now td { background: var(--accent-soft); color: var(--on-accent-soft); font-weight: 600; }
+  tr.now td:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  tr.now td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .scroll { overflow-x: auto; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+
+  .s-a { stop-color: var(--accent-strong); }
+  .fit { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; }
+  .fat { fill: none; stroke: var(--series-power); stroke-width: 2; stroke-dasharray: 6 5; stroke-linejoin: round; }
+  .eff { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .dot-fit { fill: var(--accent-strong); stroke: var(--card); stroke-width: 3; }
+  .dot-fat { fill: var(--series-power); stroke: var(--card); stroke-width: 3; }
+  .fpos { fill: var(--accent-strong); }
+  .fneg { fill: var(--signal); }
+  .past { fill: var(--bar-muted); }
+  .now { fill: var(--accent-strong); }
+  .zones { display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-sm); }
+  .zone { display: flex; flex-direction: column; gap: 6px; }
+  .zone-row { display: flex; justify-content: space-between; }
+  .zone-row span:last-child { color: var(--ink-muted); }
+  .zone-bar { height: 10px; border-radius: var(--radius-pill); }
+  .z-easy { background: var(--ink-muted); }
+  .z-mod { background: var(--bar-muted); }
+  .z-hard { background: var(--accent-strong); }
+
+</style>
+</head>
+<body>
+<main>
+<div class="head"><div><p class="crumb caption">Progress</p><h1 class="page-title">Fitness</h1></div><div style="display:flex;gap:var(--space-sm);align-items:center"><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div></div>
+<article class="vm-card">
+  <div class="vm-card-head"><h3 class="vm-card-title card-title">Fitness, fatigue and form</h3><div class="vm-seg" role="group" aria-label="Period"><button type="button" aria-pressed="false">30 days</button><button type="button" aria-pressed="true">90 days</button><button type="button" aria-pressed="false">1 year</button></div><div class="legend caption"><span><i class="key" style="background:var(--accent-strong)"></i>Fitness</span><span><i class="key" style="background:var(--series-power)"></i>Fatigue</span><span><i class="key" style="background:var(--signal)"></i>Form below zero</span></div></div>
+  <p class="vm-sentence body">Fitness is building: up from 4 to 18 in 12 weeks. Form is −4, so you are a little tired. That is normal while you build.</p>
+  <svg class="chart" viewBox="0 0 1072 326" role="img" aria-label="Over 12 weeks fitness rose from 4 to 18 and fatigue from 6 to 22; form today is minus 4.">
+  <defs><linearGradient id="fa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-a" stop-opacity="0.35"/><stop offset="1" class="s-a" stop-opacity="0"/></linearGradient></defs>
+  <g class="grid"><line x1="44" y1="196.0" x2="1060" y2="196.0"/><line x1="44" y1="136.0" x2="1060" y2="136.0"/><line x1="44" y1="76.0" x2="1060" y2="76.0"/><line x1="44" y1="16.0" x2="1060" y2="16.0"/></g><text class="ylab" x="36" y="200.0">0</text><text class="ylab" x="36" y="140.0">10</text><text class="ylab" x="36" y="80.0">20</text><text class="ylab" x="36" y="20.0">30</text>
+  <path fill="url(#fa)" d="M44.0 172.0 L128.7 166.0 L213.3 154.0 L298.0 148.0 L382.7 142.0 L467.3 136.0 L552.0 124.0 L636.7 100.0 L721.3 106.0 L806.0 100.0 L890.7 106.0 L975.3 94.0 L1060.0 88.0 L1060.0 196 L44.0 196 Z"/>
+  <path class="fit" d="M44.0 172.0 L128.7 166.0 L213.3 154.0 L298.0 148.0 L382.7 142.0 L467.3 136.0 L552.0 124.0 L636.7 100.0 L721.3 106.0 L806.0 100.0 L890.7 106.0 L975.3 94.0 L1060.0 88.0"/>
+  <path class="fat" d="M44.0 160.0 L128.7 172.0 L213.3 124.0 L298.0 160.0 L382.7 148.0 L467.3 142.0 L552.0 112.0 L636.7 28.0 L721.3 124.0 L806.0 88.0 L890.7 148.0 L975.3 76.0 L1060.0 64.0"/>
+  <circle class="dot-fit" cx="1060.0" cy="88.0" r="5"/><circle class="dot-fat" cx="1060.0" cy="64.0" r="5"/>
+  <text class="lab ink" x="1050.0" y="106.0" text-anchor="end">Fitness 18</text>
+  <text class="lab" x="1050.0" y="54.0" text-anchor="end">Fatigue 22</text>
+  <text class="lab" x="44" y="228">Form</text>
+  <line class="zero" x1="44" y1="262" x2="1060" y2="262"/>
+  <rect class="fneg" x="35.0" y="262.0" width="18" height="6.0" rx="3"/><rect class="fpos" x="119.7" y="259.0" width="18" height="3.0" rx="3"/><rect class="fneg" x="204.3" y="262.0" width="18" height="15.0" rx="3"/><rect class="fpos" x="289.0" y="256.0" width="18" height="6.0" rx="3"/><rect class="fpos" x="373.7" y="259.0" width="18" height="3.0" rx="3"/><rect class="fpos" x="458.3" y="259.0" width="18" height="3.0" rx="3"/><rect class="fneg" x="543.0" y="262.0" width="18" height="6.0" rx="3"/><rect class="fneg" x="627.7" y="262.0" width="18" height="36.0" rx="3"/><rect class="fpos" x="712.3" y="253.0" width="18" height="9.0" rx="3"/><rect class="fneg" x="797.0" y="262.0" width="18" height="6.0" rx="3"/><rect class="fpos" x="881.7" y="241.0" width="18" height="21.0" rx="3"/><rect class="fneg" x="966.3" y="262.0" width="18" height="9.0" rx="3"/><rect class="fneg" x="1051.0" y="262.0" width="18" height="12.0" rx="3"/>
+  <text class="lab ink" x="1044.0" y="290.0" text-anchor="end">−4</text>
+  <text class="xlab" x="44.0" y="318">31 Aug</text><text class="xlab" x="213.3" y="318">14 Sep</text><text class="xlab" x="382.7" y="318">28 Sep</text><text class="xlab" x="552.0" y="318">12 Oct</text><text class="xlab" x="721.3" y="318">26 Oct</text><text class="xlab" x="890.7" y="318">9 Nov</text><text class="xlab" x="1060.0" y="318">20 Nov</text>
+</svg>
+</article>
+<section class="r21">
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Daily load</h3>
+    <p class="vm-sentence body">7 rides in four weeks. The last one was the hardest: 160 TSS.</p>
+    <svg class="chart" viewBox="0 0 700 140" role="img" aria-label="Daily training load over the last four weeks; 160 TSS on the last ride.">
+  <g class="grid"><line x1="36" y1="12" x2="690" y2="12"/><line x1="36" y1="66.0" x2="690" y2="66.0"/><line x1="36" y1="120" x2="690" y2="120"/></g>
+  <text class="ylab" x="30" y="16">160</text><text class="ylab" x="30" y="70.0">80</text><text class="ylab" x="30" y="124">0</text>
+  <rect class="past" x="85.7" y="78.2" width="17.4" height="41.9" rx="4"/><rect class="past" x="179.1" y="55.9" width="17.4" height="64.1" rx="4"/><rect class="past" x="249.2" y="87.6" width="17.4" height="32.4" rx="4"/><rect class="past" x="342.6" y="45.8" width="17.4" height="74.2" rx="4"/><rect class="past" x="436.1" y="82.9" width="17.4" height="37.1" rx="4"/><rect class="past" x="506.1" y="39.0" width="17.4" height="81.0" rx="4"/><rect class="now" x="669.6" y="12.0" width="17.4" height="108.0" rx="4"/>
+  <text class="xlab" x="82.71428571428572" y="136">24 Oct</text><text class="xlab" x="351.32142857142856" y="136">6 Nov</text><text class="xlab" x="670" y="136">Today</text>
+</svg>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Easy, moderate, hard</h3>
+    <p class="vm-sentence body">Mostly moderate. Add easy rides to recover better between hard ones.</p>
+    <div class="zones">
+      <div class="zone caption"><div class="zone-row"><span>Easy</span><span>31.9 %</span></div><div class="zone-bar z-easy" style="width:31.9%"></div></div>
+      <div class="zone caption"><div class="zone-row"><span>Moderate</span><span>59.5 %</span></div><div class="zone-bar z-mod" style="width:59.5%"></div></div>
+      <div class="zone caption"><div class="zone-row"><span>Hard</span><span>8.6 %</span></div><div class="zone-bar z-hard" style="width:8.6%"></div></div>
+    </div>
+  </article>
+</section>
+<section class="r11">
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Training load, 90 days</h3>
+    <dl class="stats"><div><dt class="caption">TSS</dt><dd class="stat">1,135</dd></div><div><dt class="caption">TRIMP</dt><dd class="stat">3,944</dd></div><div><dt class="caption">Rides</dt><dd class="stat">16</dd></div><div><dt class="caption">Distance</dt><dd class="stat">592 km</dd></div></dl>
+    <p class="note caption">TRIMP weights each heart-rate zone from 1 to 5 (Edwards).</p>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Aerobic efficiency</h3>
+    <p class="vm-sentence body">1.03 on your last ride. Higher is better: more power for the same heart rate.</p>
+    <svg class="chart" viewBox="0 0 340 100" role="img" aria-label="Efficiency factor across the last nine rides, between 0.90 and 1.05, last 1.03.">
+  <path class="eff" d="M12.0 58.0 L51.5 42.0 L91.0 10.0 L130.5 70.0 L170.0 34.0 L209.5 10.0 L249.0 38.0 L288.5 26.0 L328.0 18.0"/><circle class="dot-fit" cx="328" cy="18.0" r="5"/>
+</svg>
+  </article>
+</section>
+</main>
+</body>
+</html>

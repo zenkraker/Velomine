@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/widgets/app_card.dart';
 import 'package:velomine/features/notifications/notifications_text.dart';
 import 'package:velomine/l10n/generated/app_localizations_en.dart';
 import 'package:velomine/l10n/generated/app_localizations_it.dart';
@@ -30,6 +31,12 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
     await goTo(tester, '/bikes');
     await tester.tap(find.byKey(const Key('bike-bike-1')));
+    await tester.pumpAndSettle();
+  }
+
+  /// Opens a row's `⋯`, where its own jobs and Remove sit.
+  Future<void> openRowMenu(WidgetTester tester, String key) async {
+    await tester.tap(find.byKey(Key(key)));
     await tester.pumpAndSettle();
   }
 
@@ -64,6 +71,68 @@ void main() {
       expect(find.text('210 of 300 km'), findsOneWidget);
       expect(find.byKey(const Key('reminder-bar-r2')), findsOneWidget);
       expect(find.text('Last done 2026-10-01'), findsNWidgets(2));
+    },
+  );
+
+  testWidgets(
+    'ServiceSection_ShouldDrawARowPerItemInTwoCards_WhenTheBikeHasAReminderAndAnEntry',
+    (tester) async {
+      server.reminders['bike-1'] = [
+        reminder('r1', 'Lube the chain', 'due', percent: 104, usedKm: 312),
+      ];
+      server.serviceLog['bike-1'] = [
+        {
+          'id': 'e1',
+          'date': '2026-10-05',
+          'title': 'Full service',
+          'bikeDistanceM': 1200000.0,
+        },
+      ];
+      await openBike(tester);
+
+      Finder cardOf(Finder row) =>
+          find.ancestor(of: row, matching: find.byType(AppCard));
+      final reminderRow = find.byKey(const Key('reminder-r1'));
+      final entryRow = find.byKey(const Key('entry-e1'));
+      // A reminder and an entry are rows, never a card each.
+      expect(
+        find.descendant(of: reminderRow, matching: find.byType(AppCard)),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: entryRow, matching: find.byType(AppCard)),
+        findsNothing,
+      );
+      expect(cardOf(reminderRow), findsOneWidget);
+      expect(cardOf(entryRow), findsOneWidget);
+      expect(
+        find.descendant(
+          of: cardOf(reminderRow),
+          matching: find.text('Service'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: cardOf(entryRow),
+          matching: find.text('Service log'),
+        ),
+        findsOneWidget,
+      );
+
+      // The add links close each card, quiet buttons under its rows.
+      final addReminder = find.byKey(const Key('add-reminder'));
+      final addEntry = find.byKey(const Key('add-entry'));
+      expect(tester.widget(addReminder), isA<TextButton>());
+      expect(tester.widget(addEntry), isA<TextButton>());
+      expect(
+        tester.getTopLeft(addReminder).dy,
+        greaterThan(tester.getTopLeft(reminderRow).dy),
+      );
+      expect(
+        tester.getTopLeft(addEntry).dy,
+        greaterThan(tester.getTopLeft(entryRow).dy),
+      );
     },
   );
 
@@ -149,11 +218,14 @@ void main() {
     server.reminders['bike-1'] = [reminder('r1', 'Lube the chain', 'ok')];
     await openBike(tester);
 
+    await openRowMenu(tester, 'reminder-actions-r1');
     await tester.tap(find.byKey(const Key('reminder-pause-r1')));
     await tester.pumpAndSettle();
 
     expect(server.reminders['bike-1']!.single['isPaused'], isTrue);
     expect(find.text('Paused'), findsOneWidget);
+    // Paused, so the row's menu offers Resume instead.
+    await openRowMenu(tester, 'reminder-actions-r1');
     expect(find.text('Resume'), findsOneWidget);
   });
 
@@ -180,6 +252,7 @@ void main() {
     server.reminders['bike-1'] = [reminder('r1', 'Lube the chain', 'ok')];
     await openBike(tester);
 
+    await openRowMenu(tester, 'reminder-actions-r1');
     await tester.tap(find.byKey(const Key('reminder-edit-r1')));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -314,6 +387,7 @@ void main() {
     ];
     await openBike(tester);
 
+    await openRowMenu(tester, 'part-actions-part-1');
     await tester.tap(find.byKey(const Key('replace-part-1')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('part-brand')), 'Shimano');
@@ -399,6 +473,82 @@ void main() {
         'Manutenzione da fare: Lube the chain on Road bike.',
       );
       expect(notificationTarget(due), '/bikes/bike-1');
+    },
+  );
+
+  test('NotificationText_ShouldWordAMeasuredMax_WhenTheSubjectIsMaximum', () {
+    final measured = NotificationResponse.fromJson(
+      notificationJson(
+        'n-1',
+        'heart_rate_measured',
+        'Maximum 192 bpm',
+        rideId: 'ride-1',
+      ),
+    )!;
+
+    expect(
+      notificationText(AppLocalizationsEn(), measured),
+      'Your maximum heart rate is now 192 bpm, measured on a ride.',
+    );
+    expect(
+      notificationText(AppLocalizationsIt(), measured),
+      "La tua frequenza cardiaca massima ora è 192 bpm, misurata in un giro.",
+    );
+  });
+
+  test(
+    'NotificationText_ShouldWordASuggestedThreshold_WhenTheSubjectIsThreshold',
+    () {
+      final suggested = NotificationResponse.fromJson(
+        notificationJson(
+          'n-1',
+          'heart_rate_suggested',
+          'Threshold 165 bpm',
+          rideId: 'ride-1',
+        ),
+      )!;
+
+      expect(
+        notificationText(AppLocalizationsEn(), suggested),
+        'A ride suggests a threshold heart rate of 165 bpm.',
+      );
+      expect(
+        notificationText(AppLocalizationsIt(), suggested),
+        "Un giro suggerisce una frequenza cardiaca di soglia di 165 bpm.",
+      );
+    },
+  );
+
+  test('NotificationText_ShouldShowTheSubject_WhenItCannotBeRead', () {
+    final odd = NotificationResponse.fromJson(
+      notificationJson('n-1', 'heart_rate_measured', 'Something else'),
+    )!;
+
+    expect(notificationText(AppLocalizationsEn(), odd), 'Something else');
+  });
+
+  test(
+    'NotificationTarget_ShouldOpenTheRide_WhenAHeartRateNotificationHasARide',
+    () {
+      final measured = NotificationResponse.fromJson(
+        notificationJson(
+          'n-1',
+          'heart_rate_measured',
+          'Maximum 192 bpm',
+          rideId: 'ride-1',
+        ),
+      )!;
+      final suggested = NotificationResponse.fromJson(
+        notificationJson(
+          'n-2',
+          'heart_rate_suggested',
+          'Threshold 165 bpm',
+          rideId: 'ride-2',
+        ),
+      )!;
+
+      expect(notificationTarget(measured), '/rides/ride-1');
+      expect(notificationTarget(suggested), '/rides/ride-2');
     },
   );
 }

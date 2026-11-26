@@ -66,6 +66,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountsApi* | [**approveUser**](doc//AccountsApi.md#approveuser) | **POST** /api/v1/accounts/users/{id}/approve | 
 *AccountsApi* | [**changePassword**](doc//AccountsApi.md#changepassword) | **PUT** /api/v1/accounts/me/password | 
+*AccountsApi* | [**clearHeartRate**](doc//AccountsApi.md#clearheartrate) | **DELETE** /api/v1/accounts/me/heart-rate/{kind} | 
 *AccountsApi* | [**createExportLink**](doc//AccountsApi.md#createexportlink) | **POST** /api/v1/accounts/me/export-link | 
 *AccountsApi* | [**deleteMyAccount**](doc//AccountsApi.md#deletemyaccount) | **POST** /api/v1/accounts/me/delete | 
 *AccountsApi* | [**disableTwoFactor**](doc//AccountsApi.md#disabletwofactor) | **POST** /api/v1/accounts/me/two-factor/disable | 
@@ -74,11 +75,13 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**exchangeSsoToken**](doc//AccountsApi.md#exchangessotoken) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**forgotPassword**](doc//AccountsApi.md#forgotpassword) | **POST** /api/v1/accounts/password/forgot | 
+*AccountsApi* | [**getFtpHistory**](doc//AccountsApi.md#getftphistory) | **GET** /api/v1/accounts/me/ftp-history | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
 *AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
 *AccountsApi* | [**getTelemetry**](doc//AccountsApi.md#gettelemetry) | **GET** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**getTwoFactor**](doc//AccountsApi.md#gettwofactor) | **GET** /api/v1/accounts/me/two-factor | 
+*AccountsApi* | [**getZones**](doc//AccountsApi.md#getzones) | **GET** /api/v1/accounts/me/zones | 
 *AccountsApi* | [**listSessions**](doc//AccountsApi.md#listsessions) | **GET** /api/v1/accounts/me/sessions | 
 *AccountsApi* | [**listUsers**](doc//AccountsApi.md#listusers) | **GET** /api/v1/accounts/users | 
 *AccountsApi* | [**login**](doc//AccountsApi.md#login) | **POST** /api/v1/accounts/login | 
@@ -89,12 +92,16 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**resendVerification**](doc//AccountsApi.md#resendverification) | **POST** /api/v1/accounts/email/resend | 
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
+*AccountsApi* | [**resetZones**](doc//AccountsApi.md#resetzones) | **DELETE** /api/v1/accounts/me/zones/{set} | 
 *AccountsApi* | [**revokeOtherSessions**](doc//AccountsApi.md#revokeothersessions) | **POST** /api/v1/accounts/me/sessions/logout-others | 
 *AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
+*AccountsApi* | [**setHeartRate**](doc//AccountsApi.md#setheartrate) | **PUT** /api/v1/accounts/me/heart-rate/{kind} | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
+*AccountsApi* | [**setMyRiderMode**](doc//AccountsApi.md#setmyridermode) | **PUT** /api/v1/accounts/me/rider-mode | 
 *AccountsApi* | [**setMyUnits**](doc//AccountsApi.md#setmyunits) | **PUT** /api/v1/accounts/me/units | 
 *AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
+*AccountsApi* | [**setZones**](doc//AccountsApi.md#setzones) | **PUT** /api/v1/accounts/me/zones/{set} | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**startTwoFactorEnrollment**](doc//AccountsApi.md#starttwofactorenrollment) | **POST** /api/v1/accounts/me/two-factor/start | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
@@ -116,13 +123,22 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**setUserRoles**](doc//AdminApi.md#setuserroles) | **PUT** /api/v1/admin/users/{id}/roles | 
 *AdminApi* | [**unlockUser**](doc//AdminApi.md#unlockuser) | **POST** /api/v1/admin/users/{id}/unlock | 
 *AdminApi* | [**updateSettings**](doc//AdminApi.md#updatesettings) | **PUT** /api/v1/admin/settings | 
+*AnalyticsApi* | [**acceptFtpSuggestion**](doc//AnalyticsApi.md#acceptftpsuggestion) | **POST** /api/v1/analytics/ftp-suggestion/{suggestionId}/accept | 
+*AnalyticsApi* | [**acceptHeartRateSuggestion**](doc//AnalyticsApi.md#acceptheartratesuggestion) | **POST** /api/v1/analytics/heart-rate-suggestions/{suggestionId}/accept | 
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
+*AnalyticsApi* | [**dismissFtpSuggestion**](doc//AnalyticsApi.md#dismissftpsuggestion) | **POST** /api/v1/analytics/ftp-suggestion/{suggestionId}/dismiss | 
+*AnalyticsApi* | [**dismissHeartRateSuggestion**](doc//AnalyticsApi.md#dismissheartratesuggestion) | **POST** /api/v1/analytics/heart-rate-suggestions/{suggestionId}/dismiss | 
+*AnalyticsApi* | [**getFtpCheck**](doc//AnalyticsApi.md#getftpcheck) | **GET** /api/v1/analytics/ftp-check | 
+*AnalyticsApi* | [**getFtpSuggestion**](doc//AnalyticsApi.md#getftpsuggestion) | **GET** /api/v1/analytics/ftp-suggestion | 
 *AnalyticsApi* | [**getPowerCurve**](doc//AnalyticsApi.md#getpowercurve) | **GET** /api/v1/analytics/power-curve | 
 *AnalyticsApi* | [**getReadiness**](doc//AnalyticsApi.md#getreadiness) | **GET** /api/v1/analytics/readiness | 
+*AnalyticsApi* | [**getRiderCard**](doc//AnalyticsApi.md#getridercard) | **GET** /api/v1/analytics/rider-card | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
 *AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
+*AnalyticsApi* | [**listHeartRateSuggestions**](doc//AnalyticsApi.md#listheartratesuggestions) | **GET** /api/v1/analytics/heart-rate-suggestions | 
+*AnalyticsApi* | [**snoozeFtpCheck**](doc//AnalyticsApi.md#snoozeftpcheck) | **POST** /api/v1/analytics/ftp-check/snooze | 
 *AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
 *BikesApi* | [**applyTemplate**](doc//BikesApi.md#applytemplate) | **POST** /api/v1/bikes/{bikeId}/templates/{id} | 
 *BikesApi* | [**completeReminder**](doc//BikesApi.md#completereminder) | **POST** /api/v1/bikes/{bikeId}/reminders/{id}/done | 
@@ -176,6 +192,7 @@ Class | Method | HTTP request | Description
 *ClubApi* | [**startClub**](doc//ClubApi.md#startclub) | **POST** /api/v1/club | 
 *ClubApi* | [**updateClubRide**](doc//ClubApi.md#updateclubride) | **PUT** /api/v1/club/rides/{id} | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
+*ClubsApi* | [**coachGetCoachPlan**](doc//ClubsApi.md#coachgetcoachplan) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/plan | 
 *ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
 *ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
 *ClubsApi* | [**coachGetCoachRideLaps**](doc//ClubsApi.md#coachgetcoachridelaps) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/laps | 
@@ -193,7 +210,9 @@ Class | Method | HTTP request | Description
 *PrivacyApi* | [**deletePrivacyZone**](doc//PrivacyApi.md#deleteprivacyzone) | **DELETE** /api/v1/privacy/zones/{id} | 
 *PrivacyApi* | [**getPrivacy**](doc//PrivacyApi.md#getprivacy) | **GET** /api/v1/privacy | 
 *PrivacyApi* | [**updatePrivacy**](doc//PrivacyApi.md#updateprivacy) | **PUT** /api/v1/privacy/settings | 
+*RidesApi* | [**createRideFileLink**](doc//RidesApi.md#createridefilelink) | **POST** /api/v1/rides/{id}/file-link | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
+*RidesApi* | [**downloadRideFile**](doc//RidesApi.md#downloadridefile) | **GET** /api/v1/rides/{id}/file/{token} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
 *RidesApi* | [**getRideImport**](doc//RidesApi.md#getrideimport) | **GET** /api/v1/rides/imports/{id} | 
 *RidesApi* | [**getRideLaps**](doc//RidesApi.md#getridelaps) | **GET** /api/v1/rides/{id}/laps | 
@@ -226,6 +245,20 @@ Class | Method | HTTP request | Description
 *SupporterApi* | [**activateSupporter**](doc//SupporterApi.md#activatesupporter) | **POST** /api/v1/supporter/activate | 
 *SupporterApi* | [**getSupporterStatus**](doc//SupporterApi.md#getsupporterstatus) | **GET** /api/v1/supporter | 
 *SupporterApi* | [**setSupporterHidden**](doc//SupporterApi.md#setsupporterhidden) | **PUT** /api/v1/supporter/hidden | 
+*TrainingApi* | [**addEvent**](doc//TrainingApi.md#addevent) | **POST** /api/v1/training/events | 
+*TrainingApi* | [**backToTrainingPlan**](doc//TrainingApi.md#backtotrainingplan) | **DELETE** /api/v1/training/sessions/{id}/easy | 
+*TrainingApi* | [**deleteEvent**](doc//TrainingApi.md#deleteevent) | **DELETE** /api/v1/training/events/{id} | 
+*TrainingApi* | [**getTrainingPlan**](doc//TrainingApi.md#gettrainingplan) | **GET** /api/v1/training/plan | 
+*TrainingApi* | [**getTrainingWeek**](doc//TrainingApi.md#gettrainingweek) | **GET** /api/v1/training/week | 
+*TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
+*TrainingApi* | [**makeSessionEasy**](doc//TrainingApi.md#makesessioneasy) | **POST** /api/v1/training/sessions/{id}/easy | 
+*TrainingApi* | [**matchTrainingSession**](doc//TrainingApi.md#matchtrainingsession) | **POST** /api/v1/training/sessions/{id}/match | 
+*TrainingApi* | [**moveTrainingSession**](doc//TrainingApi.md#movetrainingsession) | **POST** /api/v1/training/sessions/{id}/move | 
+*TrainingApi* | [**saveTrainingPlan**](doc//TrainingApi.md#savetrainingplan) | **PUT** /api/v1/training/plan | 
+*TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
+*TrainingApi* | [**skipTrainingSession**](doc//TrainingApi.md#skiptrainingsession) | **POST** /api/v1/training/sessions/{id}/skip | 
+*TrainingApi* | [**turnOffTrainingPlan**](doc//TrainingApi.md#turnofftrainingplan) | **DELETE** /api/v1/training/plan | 
+*TrainingApi* | [**updateEvent**](doc//TrainingApi.md#updateevent) | **PUT** /api/v1/training/events/{id} | 
 *WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
 *WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
 *WellbeingApi* | [**listCheckIns**](doc//WellbeingApi.md#listcheckins) | **GET** /api/v1/wellbeing/check-ins | 
@@ -243,6 +276,7 @@ Class | Method | HTTP request | Description
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
  - [BikeTemplateResponse](doc//BikeTemplateResponse.md)
+ - [BlockTarget](doc//BlockTarget.md)
  - [CalendarFeedAddressResponse](doc//CalendarFeedAddressResponse.md)
  - [CalendarFeedStatusResponse](doc//CalendarFeedStatusResponse.md)
  - [CatalogueAdminResponse](doc//CatalogueAdminResponse.md)
@@ -261,6 +295,8 @@ Class | Method | HTTP request | Description
  - [ClubSupporterResponse](doc//ClubSupporterResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
+ - [CoachPlanResponse](doc//CoachPlanResponse.md)
+ - [CoachPlanSession](doc//CoachPlanSession.md)
  - [CoachRpeResponse](doc//CoachRpeResponse.md)
  - [CoachWellbeingResponse](doc//CoachWellbeingResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)
@@ -271,16 +307,28 @@ Class | Method | HTTP request | Description
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [CreatePrivacyZoneRequest](doc//CreatePrivacyZoneRequest.md)
  - [CreateReminderRequest](doc//CreateReminderRequest.md)
+ - [CreateRideFileLinkRequest](doc//CreateRideFileLinkRequest.md)
  - [CreateRouteRequest](doc//CreateRouteRequest.md)
  - [CreateServiceEntryRequest](doc//CreateServiceEntryRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
+ - [CriticalPowerEstimate](doc//CriticalPowerEstimate.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
+ - [EfficiencyWeek](doc//EfficiencyWeek.md)
  - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
+ - [EventRequest](doc//EventRequest.md)
+ - [EventResponse](doc//EventResponse.md)
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
+ - [FtpCheckResponse](doc//FtpCheckResponse.md)
  - [FtpEstimate](doc//FtpEstimate.md)
+ - [FtpHistoryEntry](doc//FtpHistoryEntry.md)
+ - [FtpHistoryResponse](doc//FtpHistoryResponse.md)
+ - [FtpSuggestionResponse](doc//FtpSuggestionResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
+ - [HeartRateSuggestionResponse](doc//HeartRateSuggestionResponse.md)
+ - [IntensityResponse](doc//IntensityResponse.md)
+ - [IntensityWeek](doc//IntensityWeek.md)
  - [JoinClubRequest](doc//JoinClubRequest.md)
  - [JoinCodeResponse](doc//JoinCodeResponse.md)
  - [JoinRequestResponse](doc//JoinRequestResponse.md)
@@ -289,7 +337,9 @@ Class | Method | HTTP request | Description
  - [ListAdminUsersResponse](doc//ListAdminUsersResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
+ - [ListEventsResponse](doc//ListEventsResponse.md)
  - [ListGoalsResponse](doc//ListGoalsResponse.md)
+ - [ListHeartRateSuggestionsResponse](doc//ListHeartRateSuggestionsResponse.md)
  - [ListNotificationsResponse](doc//ListNotificationsResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
  - [ListServiceEntriesResponse](doc//ListServiceEntriesResponse.md)
@@ -297,10 +347,14 @@ Class | Method | HTTP request | Description
  - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [LoginTwoFactorRequest](doc//LoginTwoFactorRequest.md)
+ - [MainSetTarget](doc//MainSetTarget.md)
  - [MaintenanceJob](doc//MaintenanceJob.md)
  - [MaintenanceReminderResponse](doc//MaintenanceReminderResponse.md)
  - [MarkReminderDoneRequest](doc//MarkReminderDoneRequest.md)
+ - [MatchTrainingSessionRequest](doc//MatchTrainingSessionRequest.md)
  - [MeResponse](doc//MeResponse.md)
+ - [MoveDay](doc//MoveDay.md)
+ - [MoveTrainingSessionRequest](doc//MoveTrainingSessionRequest.md)
  - [MyClubResponse](doc//MyClubResponse.md)
  - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
  - [NearbyClubResponse](doc//NearbyClubResponse.md)
@@ -316,6 +370,7 @@ Class | Method | HTTP request | Description
  - [PlanClubRideRequest](doc//PlanClubRideRequest.md)
  - [PowerCurvePoint](doc//PowerCurvePoint.md)
  - [PowerCurveResponse](doc//PowerCurveResponse.md)
+ - [PowerRecord](doc//PowerRecord.md)
  - [PrivacyResponse](doc//PrivacyResponse.md)
  - [PrivacyStreamsResponse](doc//PrivacyStreamsResponse.md)
  - [PrivacyZoneResponse](doc//PrivacyZoneResponse.md)
@@ -331,10 +386,13 @@ Class | Method | HTTP request | Description
  - [ResendVerificationRequest](doc//ResendVerificationRequest.md)
  - [ResetPasswordRequest](doc//ResetPasswordRequest.md)
  - [RideFeelResponse](doc//RideFeelResponse.md)
+ - [RideFileLinkResponse](doc//RideFileLinkResponse.md)
  - [RideImportResponse](doc//RideImportResponse.md)
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
+ - [RiderCardBest](doc//RiderCardBest.md)
+ - [RiderCardResponse](doc//RiderCardResponse.md)
  - [RiderLicenceResponse](doc//RiderLicenceResponse.md)
  - [RouteDetailResponse](doc//RouteDetailResponse.md)
  - [RouteDownloadLinkResponse](doc//RouteDownloadLinkResponse.md)
@@ -344,16 +402,22 @@ Class | Method | HTTP request | Description
  - [SaveBikeAsTemplateRequest](doc//SaveBikeAsTemplateRequest.md)
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
+ - [SaveTrainingPlanRequest](doc//SaveTrainingPlanRequest.md)
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
+ - [SessionNote](doc//SessionNote.md)
  - [SessionResponse](doc//SessionResponse.md)
+ - [SessionResult](doc//SessionResult.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
  - [SetClubPlanRequest](doc//SetClubPlanRequest.md)
+ - [SetEventRideRequest](doc//SetEventRideRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)
+ - [SetHeartRateRequest](doc//SetHeartRateRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
+ - [SetMyRiderModeRequest](doc//SetMyRiderModeRequest.md)
  - [SetMyUnitsRequest](doc//SetMyUnitsRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetRideDetailsRequest](doc//SetRideDetailsRequest.md)
@@ -361,10 +425,12 @@ Class | Method | HTTP request | Description
  - [SetSupporterHiddenRequest](doc//SetSupporterHiddenRequest.md)
  - [SetTelemetryRequest](doc//SetTelemetryRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
+ - [SetZonesRequest](doc//SetZonesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
  - [ShareViewResponse](doc//ShareViewResponse.md)
  - [ShareViewsResponse](doc//ShareViewsResponse.md)
  - [SharingResponse](doc//SharingResponse.md)
+ - [SkipTrainingSessionRequest](doc//SkipTrainingSessionRequest.md)
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
@@ -377,7 +443,14 @@ Class | Method | HTTP request | Description
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
  - [TrainingDay](doc//TrainingDay.md)
+ - [TrainingNote](doc//TrainingNote.md)
+ - [TrainingPlanResponse](doc//TrainingPlanResponse.md)
  - [TrainingResponse](doc//TrainingResponse.md)
+ - [TrainingRideMatch](doc//TrainingRideMatch.md)
+ - [TrainingSessionNotice](doc//TrainingSessionNotice.md)
+ - [TrainingWeek](doc//TrainingWeek.md)
+ - [TrainingWeekSession](doc//TrainingWeekSession.md)
+ - [TrainingWeeksResponse](doc//TrainingWeeksResponse.md)
  - [TwoFactorRequiredResponse](doc//TwoFactorRequiredResponse.md)
  - [TwoFactorSetup](doc//TwoFactorSetup.md)
  - [TwoFactorState](doc//TwoFactorState.md)
@@ -385,6 +458,7 @@ Class | Method | HTTP request | Description
  - [UpdateClubRequest](doc//UpdateClubRequest.md)
  - [UpdateClubRideRequest](doc//UpdateClubRideRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
+ - [UpdateEventRequest](doc//UpdateEventRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdatePrivacyRequest](doc//UpdatePrivacyRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
@@ -400,7 +474,9 @@ Class | Method | HTTP request | Description
  - [Vo2MaxEstimate](doc//Vo2MaxEstimate.md)
  - [WellbeingConsentRequest](doc//WellbeingConsentRequest.md)
  - [WellbeingResponse](doc//WellbeingResponse.md)
+ - [ZoneSetResponse](doc//ZoneSetResponse.md)
  - [ZoneTime](doc//ZoneTime.md)
+ - [ZonesResponse](doc//ZonesResponse.md)
 
 
 ## Documentation For Authorization

@@ -6,7 +6,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/l10n.dart';
 import 'auth_page.dart';
 import '../../core/server_config.dart';
-import '../../core/tokens.dart';
+import '../../core/widgets/app_text_field.dart';
 
 part 'server_setup_screen.g.dart';
 
@@ -83,6 +83,10 @@ class ServerSetupViewModel extends _$ServerSetupViewModel {
   }
 }
 
+/// Whether the typed address is heading for plain http, which the server does not encrypt.
+bool isInsecureAddress(String input) =>
+    input.trim().toLowerCase().startsWith('http:');
+
 /// The first screen on a phone: which Velomine server does this member belong to?
 class ServerSetupScreen extends ConsumerStatefulWidget {
   const ServerSetupScreen({super.key, this.initialUrl = ''});
@@ -116,32 +120,30 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       SetupProblem.saveFailed => l10n.setupSaveFailed,
     };
     return AuthPage(
-      eyebrow: l10n.authEyebrowServer,
       title: l10n.setupTitle,
+      caption: l10n.setupCaption,
       help: l10n.setupHelp,
       primaryLabel: l10n.setupConnect,
       primaryKey: const Key('server-save'),
       onPrimary: _save,
       primaryBusy: s.busy,
       children: [
-        TextField(
-          key: const Key('server-url'),
+        AppTextField(
+          fieldKey: const Key('server-url'),
           controller: _url,
+          label: l10n.setupServerAddress,
+          hint: l10n.setupServerHint,
           keyboardType: TextInputType.url,
           autocorrect: false,
           enableSuggestions: false,
           textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            labelText: l10n.setupServerAddress,
-            hintText: l10n.setupServerHint,
-          ),
           onChanged: (_) => setState(() {}),
-          onSubmitted: (_) {
+          onDone: (_) {
             if (!s.busy) _save();
           },
         ),
-        if (_url.text.trim().toLowerCase().startsWith('http://')) ...[
-          const SizedBox(height: AppSpacing.sm),
+        // Said as soon as the address is written as http, before the rest of it is typed.
+        if (isInsecureAddress(_url.text)) ...[
           Text(
             l10n.setupInsecure,
             key: const Key('server-insecure'),
@@ -149,7 +151,6 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
           ),
         ],
         if (error != null) ...[
-          const SizedBox(height: AppSpacing.md),
           AuthFailure(keyName: 'server-error', message: error),
         ],
       ],

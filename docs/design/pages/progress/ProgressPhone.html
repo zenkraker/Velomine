@@ -1,0 +1,102 @@
+<!doctype html>
+<!-- ProgressPhone: Progress overview on a phone: tabs for the detail pages, one column, the glass pill. Guideline: ProgressPhone.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Progress, phone</title>
+<style>
+  .phone { width: 390px; max-width: 100%; margin: 0 auto; padding: var(--space-lg) var(--space-lg) var(--space-md); display: flex; flex-direction: column; gap: var(--space-lg); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); padding-top: var(--space-sm); }
+  .head h1 { margin: 0; }
+  .head .tools { display: flex; align-items: center; gap: var(--space-xs); }
+  .tabs { display: flex; gap: var(--space-sm); overflow-x: auto; margin: 0 calc(-1 * var(--space-lg)); padding: 0 var(--space-lg); scrollbar-width: none; }
+  .tabs .vm-chip { flex: none; text-decoration: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-md); }
+  .two .vm-card { padding: var(--space-lg); }
+  .two .kpi { font-size: 32px; line-height: 36px; }
+  svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+  .chart { display: block; width: 100%; height: auto; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .val { fill: var(--ink-muted); font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .val.now { fill: var(--ink); text-anchor: end; }
+  .s-now { stop-color: var(--accent-strong); }
+  .s-past { stop-color: var(--bar-muted); }
+  .pill-wrap { position: sticky; bottom: var(--space-md); padding-top: var(--space-sm); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="head">
+    <h1 class="page-title">Progress</h1>
+    <div class="tools">
+      <button class="vm-chip" type="button" aria-label="Sport: Road">Road ▾</button>
+      <button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Progress pages">
+    <a class="vm-chip" href="#" aria-current="page">Overview</a><a class="vm-chip" href="#">Fitness</a><a class="vm-chip" href="#">Power</a><a class="vm-chip" href="#">Totals</a><a class="vm-chip" href="#">Wellbeing</a>
+  </nav>
+
+  <a class="vm-card today-strip" href="#" style="flex-direction:row;align-items:center;gap:var(--space-md);text-decoration:none;color:inherit;padding:var(--space-lg) var(--space-xl)"><span class="caption vm-muted">Today</span><span class="body"><strong>Strong and steady 3×10</strong> · 1 h 15</span><span class="vm-spacer"></span><span class="vm-link body">Training →</span></a>
+
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Readiness</h3>
+    <div class="vm-number"><span class="kpi">50</span><span class="vm-state">Go easy</span></div>
+    <p class="vm-sentence body">Keep it easy: endurance pace, no hard efforts.</p>
+    <a class="vm-link caption" href="#">Wellbeing <span aria-hidden="true">→</span></a>
+  </article>
+
+  <div class="two">
+    <article class="vm-card">
+      <h3 class="vm-card-title card-title">Form</h3>
+      <div class="vm-number"><span class="kpi">−4</span></div>
+      <p class="vm-sentence caption">Building: fitness 18, fatigue 22</p>
+    </article>
+    <article class="vm-card">
+      <h3 class="vm-card-title card-title">This week</h3>
+      <div class="vm-number"><span class="kpi">69.7</span><span class="vm-unit">km</span></div>
+      <p class="vm-sentence caption">Average 45.3 km</p>
+    </article>
+  </div>
+
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Next event</h3>
+    <div class="vm-number"><span class="kpi">23</span><span class="vm-unit">days</span></div>
+    <p class="vm-sentence body">Gran Fondo delle Colline, Saturday 13 December.</p>
+    <a class="vm-link caption" href="#">Goals and events <span aria-hidden="true">→</span></a>
+  </article>
+
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Distance per week</h3>
+    <div class="vm-seg" role="group" aria-label="Period"><button type="button" aria-pressed="true">Weeks</button><button type="button" aria-pressed="false">Months</button><button type="button" aria-pressed="false">Years</button></div>
+    <svg class="chart" viewBox="0 0 344 214" role="img" aria-label="Distance per week for 12 weeks. Peak 101 km; this week 69.7 km.">
+      <defs>
+        <linearGradient id="pNow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-now"/><stop offset="1" class="s-now" stop-opacity="0.55"/></linearGradient>
+        <linearGradient id="pPast" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-past"/><stop offset="1" class="s-past" stop-opacity="0.55"/></linearGradient>
+        <clipPath id="pPlot"><rect x="0" y="0" width="344" height="184"/></clipPath>
+      </defs>
+      <g class="grid"><line x1="30" y1="16" x2="340" y2="16"/><line x1="30" y1="72" x2="340" y2="72"/><line x1="30" y1="128" x2="340" y2="128"/><line x1="30" y1="184" x2="340" y2="184"/></g>
+      <text class="ylab" x="24" y="20">120</text><text class="ylab" x="24" y="76">80</text><text class="ylab" x="24" y="132">40</text><text class="ylab" x="24" y="188">0</text>
+      <g clip-path="url(#pPlot)" fill="url(#pPast)">
+        <rect x="35.8" y="79" width="14" height="113" rx="6"/><rect x="61.3" y="158.8" width="14" height="33.2" rx="6"/><rect x="86.8" y="97.2" width="14" height="94.8" rx="6"/><rect x="112.3" y="143.4" width="14" height="48.6" rx="6"/><rect x="137.8" y="143.7" width="14" height="48.3" rx="6"/><rect x="163.3" y="141" width="14" height="51" rx="6"/><rect x="188.8" y="127" width="14" height="65" rx="6"/><rect x="214.3" y="42.6" width="14" height="149.4" rx="6"/><rect x="239.8" y="143.7" width="14" height="48.3" rx="6"/><rect x="265.3" y="124.9" width="14" height="67.1" rx="6"/><rect x="290.8" y="159.4" width="14" height="32.6" rx="6"/>
+        <rect x="316.3" y="86.4" width="14" height="105.6" rx="6" fill="url(#pNow)"/>
+      </g>
+      <text class="val" x="221.3" y="34">101 km</text><text class="val now" x="340" y="78">69.7 km</text>
+      <text class="xlab" x="42.8" y="206">31 Aug</text><text class="xlab" x="144.8" y="206">28 Sep</text><text class="xlab" x="246.8" y="206">26 Oct</text>
+    </svg>
+    <a class="vm-link caption" href="#">Totals <span aria-hidden="true">→</span></a>
+  </article>
+
+  <div class="pill-wrap">
+    <nav class="vm-pill vm-glass" aria-label="Main">
+      <a href="#"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l-1-2H7M15 9l-2 7"/></svg>Rides</a>
+      <a href="#" aria-current="page"><svg class="i" viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>Progress</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Goals</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c2.8 0 5 2.2 5 5"/></svg>Club</a>
+    </nav>
+  </div>
+</div>
+</body>
+</html>

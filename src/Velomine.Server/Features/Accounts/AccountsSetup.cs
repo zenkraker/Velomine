@@ -29,10 +29,13 @@ public static class AccountsSetup
         services.AddHttpClient("sso-userinfo", client => client.Timeout = TimeSpan.FromSeconds(10));
         services.AddScoped<AccountDeletion>();
         services.AddScoped<AccountExport>();
+        services.AddScoped<SetFtpValue>();
+        services.AddScoped<SetHeartRateValue>();
         services.AddScoped<UserSessions>();
         services.AddScoped<SessionSignIn>();
         services.AddSingleton<TwoFactorChallenges>();
         services.AddSingleton<ExportTokens>();
+        services.AddSingleton<RideFileTokens>();
         services.AddScoped<PasswordResetLinks>();
         services.AddScoped<EmailVerificationLinks>();
         services.AddSingleton<PasswordResetThrottle>();
@@ -130,6 +133,9 @@ public sealed class AccountsStartup(IServiceProvider services, ILogger<AccountsS
             Email = admin.Email,
             DisplayName = "Admin",
             IsApproved = true,
+            // The operator typed this address into the server's own settings, and with email on, an unconfirmed admin
+            // could never sign in to fix anything.
+            EmailConfirmed = true,
             CreatedAt = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow(),
         };
         var created = await users.CreateAsync(user, admin.Password);

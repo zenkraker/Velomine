@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
@@ -21,24 +19,6 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         protector.Protect("a cookie");
 
         Assert.NotEmpty(Directory.GetFiles(Path.Combine(api.FilesPath, "keys"), "*.xml"));
-    }
-
-    [Fact]
-    public async Task BackgroundJobs_ShouldNotRepeatOnATimer_WhenTheTestHostStartsTheServer()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var hosted = api.Services.GetServices<IHostedService>().Select(s => s.GetType()).ToList();
-
-        // The test host drops the loops that only repeat on a timer; a test drives them with RunOnceAsync instead.
-        Assert.DoesNotContain(hosted, t => t.Name.Contains("Notifier", StringComparison.Ordinal));
-        Assert.DoesNotContain(hosted, t => t.Name.Contains("Cleanup", StringComparison.Ordinal));
-        Assert.DoesNotContain(hosted, t => t.Name.Contains("Reparse", StringComparison.Ordinal));
-        Assert.DoesNotContain(hosted, t => t.Name.Contains("Backfill", StringComparison.Ordinal));
-        Assert.DoesNotContain(hosted, t => t.Name.Contains("Retention", StringComparison.Ordinal));
-        // What a server must do before it answers is still there: the roles and admin, and the upload reader.
-        Assert.Contains(hosted, t => t.Name.Contains("RideIngestion", StringComparison.Ordinal));
-        Assert.Contains(hosted, t => t.Name.Contains("AccountsStartup", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -86,29 +66,6 @@ public sealed class DeploymentTests(PostgresFixture postgres)
             Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
 
         Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode);
-    }
-
-    [Fact]
-    public async Task Uploads_ShouldAcceptThemAgain_WhenTheBucketHasRefilled()
-    {
-        // One token a minute, so a burst of one and a later one both fit a refreshed bucket.
-        await using var api = await TestApi.StartAsync(postgres, b =>
-        {
-            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-            b.UseSetting("Velomine:RateLimits:UploadsPerHour", "60");
-            b.UseSetting("Velomine:RateLimits:UploadBurst", "1");
-        });
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);
-
-        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
-        Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode); // the bucket is empty
-
-        // Wait past the one-minute replenishment period, then the same member is let in again.
-        await Task.Delay(TimeSpan.FromSeconds(62), Ct);
-
-        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

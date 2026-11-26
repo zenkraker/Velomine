@@ -14,6 +14,7 @@ using Velomine.Server.Features.Rides.Import;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Sharing;
 using Velomine.Server.Features.Supporter;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Features.Wellbeing;
 
 namespace Velomine.Server.Data;
@@ -93,6 +94,20 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<Licence> SupporterLicences => Set<Licence>();
 
+    public DbSet<FtpHistory> FtpHistory => Set<FtpHistory>();
+
+    public DbSet<FtpSuggestion> FtpSuggestions => Set<FtpSuggestion>();
+
+    public DbSet<HeartRateSuggestion> HeartRateSuggestions => Set<HeartRateSuggestion>();
+
+    public DbSet<HeartRateHistory> HeartRateHistory => Set<HeartRateHistory>();
+
+    public DbSet<TrainingEvent> Events => Set<TrainingEvent>();
+
+    public DbSet<TrainingPlan> TrainingPlans => Set<TrainingPlan>();
+
+    public DbSet<TrainingSession> TrainingSessions => Set<TrainingSession>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -104,12 +119,32 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
             t.HasCheckConstraint("ck_users_weight_kg", "weight_kg BETWEEN 20 AND 300");
             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
+            t.HasCheckConstraint("ck_users_max_heart_rate_bpm", "max_heart_rate_bpm BETWEEN 120 AND 230");
+            t.HasCheckConstraint("ck_users_threshold_heart_rate_bpm", "threshold_heart_rate_bpm BETWEEN 90 AND 220");
+            // A number has a source exactly when it has a value, and only a measured number names a ride.
+            t.HasCheckConstraint("ck_users_max_heart_rate_source", "(max_heart_rate_bpm IS NULL) = (max_heart_rate_source IS NULL)");
+            t.HasCheckConstraint("ck_users_max_heart_rate_source_value", "max_heart_rate_source IN ('manual', 'measured')");
+            t.HasCheckConstraint("ck_users_max_heart_rate_ride", "max_heart_rate_ride_id IS NULL OR max_heart_rate_source = 'measured'");
+            t.HasCheckConstraint("ck_users_threshold_heart_rate_source", "(threshold_heart_rate_bpm IS NULL) = (threshold_heart_rate_source IS NULL)");
+            t.HasCheckConstraint("ck_users_threshold_heart_rate_source_value", "threshold_heart_rate_source IN ('manual', 'measured')");
+            t.HasCheckConstraint("ck_users_threshold_heart_rate_ride", "threshold_heart_rate_ride_id IS NULL OR threshold_heart_rate_source = 'measured'");
             t.HasCheckConstraint("ck_users_birth_year", "birth_year IS NULL OR birth_year BETWEEN 1900 AND 2200");
             t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
+            t.HasCheckConstraint("ck_users_rider_mode", "rider_mode IS NULL OR rider_mode IN ('just_riding', 'with_goals', 'training')");
+            // Custom bounds are all there or none: six of the FTP, four of a heart-rate reference.
+            t.HasCheckConstraint("ck_users_power_zone_bounds", "power_zone_bounds IS NULL OR cardinality(power_zone_bounds) = 6");
+            t.HasCheckConstraint("ck_users_heart_rate_max_zone_bounds", "heart_rate_max_zone_bounds IS NULL OR cardinality(heart_rate_max_zone_bounds) = 4");
+            t.HasCheckConstraint("ck_users_heart_rate_threshold_zone_bounds", "heart_rate_threshold_zone_bounds IS NULL OR cardinality(heart_rate_threshold_zone_bounds) = 4");
         });
         builder.Entity<User>().Property(u => u.TimeZone).HasMaxLength(64);
         builder.Entity<User>().Property(u => u.Language).HasMaxLength(8);
         builder.Entity<User>().Property(u => u.Units).HasMaxLength(8).HasDefaultValue("metric");
+        builder.Entity<User>().Property(u => u.RiderMode).HasMaxLength(16);
+        // A ride can be deleted: the number stays measured and loses the ride that showed it.
+        builder.Entity<User>().HasOne<Ride>().WithMany()
+            .HasForeignKey(u => u.MaxHeartRateRideId).OnDelete(DeleteBehavior.SetNull);
+        builder.Entity<User>().HasOne<Ride>().WithMany()
+            .HasForeignKey(u => u.ThresholdHeartRateRideId).OnDelete(DeleteBehavior.SetNull);
         builder.Entity<IdentityRole<Guid>>().ToTable("roles");
         builder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
         builder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");

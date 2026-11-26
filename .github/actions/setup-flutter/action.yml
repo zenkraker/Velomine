@@ -4,7 +4,7 @@ description: >
   FLUTTER_SHA256) from Flutter's own release bucket, verified by checksum the
   same way the Dockerfile installs it, and restores the SDK and pub caches. The
   app/Dockerfile is the one place CI reads the version from; tools/check-versions.sh
-  keeps flake.nix in step with it. No community action in the chain.
+  keeps .devcontainer/Dockerfile in step with it. No community action in the chain.
 
 outputs:
   version:

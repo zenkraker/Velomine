@@ -15,18 +15,41 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Bikes;
 
-public sealed class MaintenanceTests(PostgresFixture postgres)
+/// <summary>
+/// One server for the whole class. Every test makes its own member and its own bike and only reads or changes those, so
+/// they do not need a server each; a test that changes something global (the clock, a setting) does not belong here.
+/// </summary>
+public sealed class MaintenanceHost(PostgresFixture postgres) : IAsyncLifetime
+{
+    /// <summary>Wednesday 4 November 2026, 12:00 UTC.</summary>
+    internal static readonly DateTimeOffset Now = new(2026, 11, 4, 12, 0, 0, TimeSpan.Zero);
+
+    public TestApi Api { get; private set; } = null!;
+
+    /// <summary>The member the tests that only touch their own bike share. A test that reads anything of the whole member
+    /// (notifications, the bike list, export, deletion) or needs a second member makes its own.</summary>
+    public TestMember Member { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync()
+    {
+        Api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            // Tests sign members in from the same address; one server per test gave each a fresh budget.
+            b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "100000");
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(Now)));
+        });
+        Member = await Api.NewMemberAsync();
+    }
+
+    public ValueTask DisposeAsync() => Api.DisposeAsync();
+}
+
+public sealed class MaintenanceTests(MaintenanceHost host) : IClassFixture<MaintenanceHost>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    /// <summary>Wednesday 4 November 2026, 12:00 UTC.</summary>
-    private static readonly DateTimeOffset Now = new(2026, 11, 4, 12, 0, 0, TimeSpan.Zero);
-
-    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
-    {
-        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(Now)));
-    });
+    private static readonly DateTimeOffset Now = MaintenanceHost.Now;
 
     private static async Task<(HttpClient Client, Guid Id)> NewMemberAsync(TestApi api)
     {
@@ -104,8 +127,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldShowProgressFromTheRides_WhenRidesFollowTheDoneDay()
     {
-        await using var api = await StartAsync();
-        var (member, userId) = await NewMemberAsync(api);
+        var api = host.Api;
+        var (member, userId) = (host.Member.Client, host.Member.Id);
         var bike = await AddBikeAsync(member);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-09-30T08:00:00", 100); // before the done day: the last cycle's
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-02T08:00:00", 210, hours: 7);
@@ -123,8 +146,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldCountTheRidesOnTheMembersCalendar_WhenTheRideStartedNearMidnight()
     {
-        await using var api = await StartAsync();
-        var (member, userId) = await NewMemberAsync(api);
+        var api = host.Api;
+        var (member, userId) = (host.Member.Client, host.Member.Id);
         var bike = await AddBikeAsync(member);
         // 23:30 UTC on 30 September is already 1 October in Rome (UTC+2); the file says so.
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-09-30T23:30:00", 80, offsetMinutes: 120);
@@ -139,8 +162,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldRestartTheCountAndWriteTheLog_WhenMarkedDone()
     {
-        await using var api = await StartAsync();
-        var (member, userId) = await NewMemberAsync(api);
+        var api = host.Api;
+        var (member, userId) = (host.Member.Client, host.Member.Id);
         var bike = await AddBikeAsync(member, initialM: 4_000_000);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-02T08:00:00", 250);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-20T08:00:00", 62);
@@ -163,8 +186,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldRefuseAFutureDay_WhenMarkedDoneOrCreated()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var reminderId = Assert.Single((await AddReminderAsync(member, bike.Bike.Id, LubeChain())).Reminders).Id;
 
@@ -184,8 +207,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [InlineData("Lube", null, null, 0)]
     public async Task Reminders_ShouldBeRefused_WhenTheNameOrIntervalsAreInvalid(string name, double? distance, double? hours, int? months)
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
 
         var response = await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/reminders",
@@ -197,8 +220,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldBeEditedPausedAndDeleted_WhenManagedByTheOwner()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var reminderId = Assert.Single((await AddReminderAsync(member, bike.Bike.Id, LubeChain())).Reminders).Id;
 
@@ -217,8 +240,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldListTheMostUrgentFirst_WhenSeveralExist()
     {
-        await using var api = await StartAsync();
-        var (member, userId) = await NewMemberAsync(api);
+        var api = host.Api;
+        var (member, userId) = (host.Member.Client, host.Member.Id);
         var bike = await AddBikeAsync(member);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-02T08:00:00", 250);
         await AddReminderAsync(member, bike.Bike.Id, new CreateReminderRequest { Name = "Fine", IntervalDistanceM = 1_000_000, LastDoneOn = new DateOnly(2026, 10, 1) });
@@ -231,7 +254,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldMarkTheBikeInTheList_WhenSomethingIsDueOrNearlyDue()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, userId) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-02T08:00:00", 250);
@@ -251,7 +274,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldWarnOncePerLevel_WhenRidesTakeThemToSoonAndDue()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);
         // Each test ride is 952 m, so a 1 km job is "soon" after one ride and due after two.
@@ -272,7 +295,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldWarnAgain_WhenMarkedDoneAndWornAgain()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, userId) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-02T08:00:00", 400);
@@ -293,7 +316,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldFireByMonths_WhenTheBikeIsNotRidden()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);
         // Last done on 1 July: four months ago, so a 3-month job is due; no ride ever happened.
@@ -310,7 +333,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldStayQuiet_WhenTheBikeIsArchivedOrTheReminderPaused()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await NewMemberAsync(api);
         var retired = await AddBikeAsync(member);
         var paused = await AddBikeAsync(member);
@@ -332,7 +355,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Reminders_ShouldNotBeVisibleOrChangeable_WhenTheyBelongToAnotherMember()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (mine, _) = await NewMemberAsync(api);
         var (other, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(mine);
@@ -364,8 +387,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldRefuseLinksToAnotherBikesPartOrReminder_WhenSaving()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var second = await AddBikeAsync(member);
         var part = Assert.Single((await (await member.PostAsJsonAsync($"/api/v1/bikes/{second.Bike.Id}/components",
@@ -384,8 +407,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldKeepTheEntryAndNotRewindTheReminder_WhenAnEntryFromDoneIsDeleted()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var reminderId = Assert.Single((await AddReminderAsync(member, bike.Bike.Id, LubeChain())).Reminders).Id;
         await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/reminders/{reminderId}/done", new MarkReminderDoneRequest { DoneOn = new DateOnly(2026, 10, 10) }, Ct);
@@ -401,8 +424,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldKeepTheEntryWithoutTheLink_WhenItsReminderIsDeleted()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var reminderId = Assert.Single((await AddReminderAsync(member, bike.Bike.Id, LubeChain())).Reminders).Id;
         await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/reminders/{reminderId}/done", new MarkReminderDoneRequest(), Ct);
@@ -417,8 +440,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldStoreTheCostAndEditEntries_WhenManagedByTheOwner()
     {
-        await using var api = await StartAsync();
-        var (member, userId) = await NewMemberAsync(api);
+        var api = host.Api;
+        var (member, userId) = (host.Member.Client, host.Member.Id);
         var bike = await AddBikeAsync(member, initialM: 1_000_000);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-02T08:00:00", 100);
         await AddRideAsync(api, userId, bike.Bike.Id, "2026-10-12T08:00:00", 50);
@@ -455,8 +478,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [InlineData(10.0, "EURO")]
     public async Task ServiceLog_ShouldRefuseTheEntry_WhenTheCostIsIncomplete(double? amount, string? currency)
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
 
         var response = await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/service",
@@ -468,8 +491,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceEntries_ShouldRejectACurrencyWithoutAnAmount_WhenWrittenStraightToTheDatabase()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
 
         await using var scope = api.Services.CreateAsyncScope();
@@ -491,8 +514,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldRefuseTheEntry_WhenTheDateIsInTheFutureOrTheTitleIsEmpty()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
 
         var future = await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/service", new CreateServiceEntryRequest { Date = new DateOnly(2026, 11, 5), Title = "Service" }, Ct);
@@ -505,8 +528,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldListNewestFirstFilterByPartAndPage_WhenReading()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var part = Assert.Single((await (await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/components",
             new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 1, 1) }, Ct)).Content.ReadFromJsonAsync<BikeDetailResponse>(Ct))!.Components);
@@ -533,8 +556,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldWriteAnEntry_WhenAPartIsReplaced()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var old = Assert.Single((await (await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/components",
             new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 1, 1), ExpectedDistanceM = 4_000_000 }, Ct)).Content.ReadFromJsonAsync<BikeDetailResponse>(Ct))!.Components);
@@ -563,8 +586,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldUseTheTitleTheAppSends_WhenAPartIsReplaced()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var old = Assert.Single((await (await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/components",
             new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 1, 1) }, Ct)).Content.ReadFromJsonAsync<BikeDetailResponse>(Ct))!.Components);
@@ -583,7 +606,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task ServiceLog_ShouldRefuseTheReplacement_WhenThePartIsNotFittedOrIsAnotherMembers()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (mine, _) = await NewMemberAsync(api);
         var (other, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(mine);
@@ -604,8 +627,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [InlineData("track", "sealant_top_up", false)]
     public async Task ServiceJobs_ShouldFollowTheBikeKind_WhenListed(string kind, string job, bool offered)
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member, kind);
 
         var jobs = (await member.GetFromJsonAsync<ListServiceJobsResponse>($"/api/v1/bikes/{bike.Bike.Id}/service/jobs", Ct))!.Jobs;
@@ -618,8 +641,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task Bikes_ShouldRemoveRemindersAndLog_WhenTheBikeIsDeleted()
     {
-        await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
+        var api = host.Api;
+        var member = host.Member.Client;
         var bike = await AddBikeAsync(member);
         var reminderId = Assert.Single((await AddReminderAsync(member, bike.Bike.Id, LubeChain())).Reminders).Id;
         await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/reminders/{reminderId}/done", new MarkReminderDoneRequest(), Ct);
@@ -635,7 +658,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task AccountExport_ShouldContainRemindersAndLog_WhenTheMemberHasThem()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, userId) = await NewMemberAsync(api);
         var (other, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);
@@ -648,7 +671,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
         await using var scope = api.Services.CreateAsyncScope();
         var export = ActivatorUtilities.CreateInstance<AccountExport>(scope.ServiceProvider);
         using var stream = new MemoryStream();
-        await export.WriteAsync(userId, stream, Ct);
+        await export.WriteAsync(userId, stream, scope.ServiceProvider.GetRequiredService<TimeProvider>(), Ct);
         stream.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(stream);
         using var reader = new StreamReader(zip.GetEntry("bikes.json")!.Open());
@@ -664,7 +687,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Fact]
     public async Task AccountDeletion_ShouldRemoveRemindersAndLog_WhenTheMemberDeletesTheAccount()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await NewMemberAsync(api);
         var (other, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);

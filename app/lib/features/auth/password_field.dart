@@ -1,8 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/l10n.dart';
+import '../../core/widgets/app_text_field.dart';
 
-/// A password box with the eye that shows what was typed, so a typo can be seen before the form is sent.
+/// A password box with the word that shows what was typed, so a typo can be seen before the form is sent.
+/// The design draws a text button at the end of the box (`docs/design/pages/sign-in/SignInPage.html`), not an eye.
 class PasswordField extends StatefulWidget {
   const PasswordField({
     super.key,
@@ -11,7 +13,6 @@ class PasswordField extends StatefulWidget {
     this.fieldKey,
     this.visibilityKey,
     this.helperText,
-    this.helperMaxLines,
     this.autofillHints,
     this.textInputAction,
     this.onSubmitted,
@@ -24,7 +25,6 @@ class PasswordField extends StatefulWidget {
   final Key? fieldKey;
   final Key? visibilityKey;
   final String? helperText;
-  final int? helperMaxLines;
   final Iterable<String>? autofillHints;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
@@ -39,9 +39,11 @@ class _PasswordFieldState extends State<PasswordField> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return TextField(
-      key: widget.fieldKey,
+    return AppTextField(
+      fieldKey: widget.fieldKey,
       controller: widget.controller,
+      label: widget.label,
+      helper: widget.helperText,
       obscureText: !_visible,
       autocorrect: false,
       enableSuggestions: false,
@@ -50,20 +52,15 @@ class _PasswordFieldState extends State<PasswordField> {
       textInputAction:
           widget.textInputAction ??
           (widget.onSubmitted == null ? null : TextInputAction.done),
-      onSubmitted: widget.onSubmitted,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        helperText: widget.helperText,
-        helperMaxLines: widget.helperMaxLines,
-        suffixIcon: IconButton(
+      onDone: widget.onSubmitted,
+      // The word is the control; the sentence is what a screen reader reads, as the mock-up shows
+      // only the word.
+      suffixIcon: Tooltip(
+        message: _visible ? l10n.hidePassword : l10n.showPassword,
+        child: TextButton(
           key: widget.visibilityKey,
-          tooltip: _visible ? l10n.hidePassword : l10n.showPassword,
-          icon: Icon(
-            _visible
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-          ),
           onPressed: () => setState(() => _visible = !_visible),
+          child: Text(_visible ? l10n.passwordHide : l10n.passwordShow),
         ),
       ),
     );

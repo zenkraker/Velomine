@@ -19,6 +19,9 @@ void main() {
 
   Future<void> openForgot(WidgetTester tester) async {
     await startApp(tester, server.session(useCookies: false));
+    // The link follows the fields, so on the default window it sits below the fold.
+    await tester.ensureVisible(find.byKey(const Key('forgot-password')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('forgot-password')));
     await tester.pumpAndSettle();
   }
@@ -54,21 +57,36 @@ void main() {
   });
 
   testWidgets(
-    'ForgotPasswordScreen_ShouldConfirmWithoutNamingTheAccount_WhenSubmitted',
+    'ForgotPasswordScreen_ShouldSayTheSame_WhenTheAddressIsUnknownOrKnown',
     (tester) async {
       server.smtpConfigured = true;
+      server.add('rider@example.com');
       await openForgot(tester);
 
-      await tester.enterText(
-        find.byKey(const Key('forgot-email')),
-        'rider@example.com',
-      );
-      await tester.tap(find.byKey(const Key('forgot-submit')));
-      await tester.pumpAndSettle();
+      Future<void> ask(String address) async {
+        await tester.enterText(find.byKey(const Key('forgot-email')), address);
+        await tester.tap(find.byKey(const Key('forgot-submit')));
+        await tester.pumpAndSettle();
+      }
 
+      // An address with no account shows the same words as one with an account, so the form
+      // never tells a visitor whether somebody is registered here.
+      await ask('stranger@example.com');
       expect(find.byKey(const Key('forgot-sent')), findsOneWidget);
-      expect(find.textContaining('If an account exists'), findsOneWidget);
-      expect(server.passwordResetEmails, ['rider@example.com']);
+      final unknown = find
+          .textContaining('If an account exists')
+          .evaluate()
+          .single;
+
+      await tester.enterText(find.byKey(const Key('forgot-email')), '');
+      await ask('rider@example.com');
+      final known = find
+          .textContaining('If an account exists')
+          .evaluate()
+          .single;
+
+      expect((known.widget as Text).data, (unknown.widget as Text).data);
+      expect(server.passwordResetEmails, contains('rider@example.com'));
     },
   );
 
@@ -152,4 +170,75 @@ void main() {
       expect(find.byKey(const Key('reset-done')), findsNothing);
     },
   );
+
+  testWidgets('ForgotPasswordScreen_ShouldShowItsCaption_WhenTheFormOpens', (
+    tester,
+  ) async {
+    await openForgot(tester);
+
+    expect(find.text('Password help'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Password help')).dy,
+      lessThan(tester.getTopLeft(find.text('Reset your password')).dy),
+    );
+  });
+
+  testWidgets(
+    'ForgotPasswordScreen_ShouldOfferTheWayBack_WhenNothingHasBeenSent',
+    (tester) async {
+      await openForgot(tester);
+
+      final back = find.byKey(const Key('forgot-back'));
+      expect(back, findsOneWidget);
+      expect(find.text('Back to sign in'), findsOneWidget);
+
+      await tester.ensureVisible(back);
+      await tester.pump();
+      await tester.tap(back);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sign-in')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ResetPasswordScreen_ShouldShowOneButtonAndItsCaption_WhenTheLinkOpens',
+    (tester) async {
+      await pumpReset(tester);
+
+      expect(
+        tester.getTopLeft(find.text('New password').first).dy,
+        lessThan(tester.getTopLeft(find.text('Choose a new password')).dy),
+      );
+      // The form ends at the pinned Set new password button: no way back to asking again.
+      expect(find.text('Forgot password?'), findsNothing);
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'ForgotPasswordScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await openForgot(tester);
+
+        expect(find.byKey(const Key('forgot-submit')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'ResetPasswordScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pumpReset(tester);
+
+        expect(find.byKey(const Key('reset-submit')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

@@ -1,0 +1,211 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:velomine_api/api.dart';
+
+import '../../core/format.dart';
+import '../../core/heart_rate_zones.dart';
+import '../../core/l10n.dart';
+import '../../core/theme.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bar_chart.dart';
+import '../../core/widgets/source_note.dart';
+import '../../l10n/generated/app_localizations.dart';
+
+/// How the riding in a range splits into easy, moderate and hard (Seiler's three zones), with the
+/// label that split earns, and one small bar per week behind it.
+class IntensityCard extends StatelessWidget {
+  const IntensityCard({
+    super.key,
+    required this.intensity,
+    this.weeks = const [],
+  });
+
+  final IntensityResponse intensity;
+
+  /// The same split week by week; a range shorter than a week has one bar, and none when empty.
+  final List<IntensityWeek> weeks;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final small = text.bodySmall!;
+    final scheme = Theme.of(context).colorScheme;
+    final palette = VelomineColors.of(context);
+    // The design draws the three shares as rows in ink-muted, bar-muted and accent-strong, not as the
+    // scheme's primary/tertiary/error.
+    final colors = (
+      easy: scheme.onSurfaceVariant,
+      moderate: palette.barMuted,
+      hard: palette.accentStrong,
+    );
+    final label = intensityLabel(l10n, intensity.label);
+    final shares = l10n.intensityShares(
+      '${intensity.easyPct}',
+      '${intensity.moderatePct}',
+      '${intensity.hardPct}',
+    );
+    final rows = [
+      (label: l10n.intensityEasy, share: intensity.easyPct, color: colors.easy),
+      (
+        label: l10n.intensityModerate,
+        share: intensity.moderatePct,
+        color: colors.moderate,
+      ),
+      (label: l10n.intensityHard, share: intensity.hardPct, color: colors.hard),
+    ];
+    // One share as the design draws it: its name and its percentage on one line, the bar under them.
+    Widget shareRow(String label, double share, Color color) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.xs,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(label, style: small)),
+            Text(
+              // `goalPercent` takes a whole percent; the bar under the name carries the rest.
+              l10n.goalPercent(share.round()),
+              style: small.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+        ShareBar(share: share, color: color),
+      ],
+    );
+
+    return AppCard(
+      key: const Key('intensity-card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(l10n.intensityTitle, style: text.titleMedium),
+          Semantics(
+            container: true,
+            label: label == null ? shares : '$label. $shares',
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpacing.md,
+                children: [
+                  if (label != null) Text(label, style: text.bodyMedium),
+                  for (final row in rows)
+                    shareRow(row.label, row.share, row.color),
+                ],
+              ),
+            ),
+          ),
+          if (weeks.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            for (final week in weeks)
+              _WeekBar(week: week, colors: colors, style: small),
+          ],
+          SourceNote(l10n.intensitySource),
+          // Only when a heart-rate ride was counted: a range read from power has no heart-rate model.
+          if (heartRateZonesSource(
+                l10n,
+                intensity.heartRateZoneModel.orElse(null),
+                intensity.heartRateZoneReferenceBpm.orElse(null),
+                intensity.heartRateZoneReferenceSource.orElse(null),
+              )
+              case final note?)
+            SourceNote(note),
+        ],
+      ),
+    );
+  }
+}
+
+/// One stacked bar: easy, moderate and hard left to right. A share of 0 takes no room.
+class _Bar extends StatelessWidget {
+  const _Bar({
+    required this.easyPct,
+    required this.moderatePct,
+    required this.hardPct,
+    required this.colors,
+    required this.height,
+  });
+
+  final double easyPct;
+  final double moderatePct;
+  final double hardPct;
+  final ({Color easy, Color moderate, Color hard}) colors;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(height / 2),
+      child: Container(
+        height: height,
+        color: scheme.surfaceContainerHighest,
+        child: Row(
+          children: [
+            for (final (share, color) in [
+              (easyPct, colors.easy),
+              (moderatePct, colors.moderate),
+              (hardPct, colors.hard),
+            ])
+              if (share > 0)
+                Expanded(
+                  flex: (share * 10).round().clamp(1, 1000),
+                  child: ColoredBox(color: color),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One week: the same three shares, a little smaller, under the last seven days' date.
+class _WeekBar extends StatelessWidget {
+  const _WeekBar({
+    required this.week,
+    required this.colors,
+    required this.style,
+  });
+
+  final IntensityWeek week;
+  final ({Color easy, Color moderate, Color hard}) colors;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = week.easyS + week.moderateS + week.hardS;
+    double pct(double seconds) => total <= 0 ? 0 : seconds / total * 100;
+    return Row(
+      spacing: AppSpacing.sm,
+      children: [
+        SizedBox(
+          width: AppProgress.dateWidth,
+          child: Text(
+            '${dayNumber(week.weekStart)} ${monthShort(week.weekStart)}',
+            style: style,
+          ),
+        ),
+        Expanded(
+          child: _Bar(
+            easyPct: pct(week.easyS),
+            moderatePct: pct(week.moderateS),
+            hardPct: pct(week.hardS),
+            colors: colors,
+            height: AppSpacing.xs,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The label in words, as the story words it. Null for a label this build does not know.
+String? intensityLabel(AppLocalizations l10n, String label) => switch (label) {
+  'polarised' => l10n.intensityLabelPolarised,
+  'pyramidal' => l10n.intensityLabelPyramidal,
+  'threshold' => l10n.intensityLabelThreshold,
+  'hiit' => l10n.intensityLabelHiit,
+  'base' => l10n.intensityLabelBase,
+  'mixed' => l10n.intensityLabelMixed,
+  _ => null,
+};

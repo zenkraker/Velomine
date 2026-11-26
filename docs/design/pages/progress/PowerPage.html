@@ -1,0 +1,91 @@
+<!doctype html>
+<!-- PowerPage: Progress → Power: FTP and the models on top, the power curve and best efforts below. Guideline: PowerPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Power page</title>
+<style>
+  main { max-width: 1160px; margin: 0 auto; padding: var(--space-xxl) var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+  .head h1 { margin: 0; }
+  .crumb { color: var(--ink-muted); margin: 0 0 var(--space-xs); }
+  .r3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-lg); }
+  .r21 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); }
+  .r11 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-lg); }
+  @media (max-width: 900px) { .r3, .r21, .r11 { grid-template-columns: 1fr; } }
+  .chart { display: block; width: 100%; height: auto; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .zero { stroke: var(--ink-muted); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .lab { fill: var(--ink-muted); font-size: 12px; font-weight: 600; }
+  .lab.ink { fill: var(--ink); }
+  .legend { display: flex; gap: var(--space-lg); flex-wrap: wrap; color: var(--ink-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md) var(--space-lg); margin-top: var(--space-sm); }
+  .stats dt { color: var(--ink-muted); }
+  .stats dd { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink-muted); font-weight: 500; padding: 0 var(--space-sm) var(--space-sm); }
+  td { padding: var(--space-md) var(--space-sm); border-top: 1px solid var(--hairline); }
+  th.n, td.n { text-align: right; }
+  tr.now td { background: var(--accent-soft); color: var(--on-accent-soft); font-weight: 600; }
+  tr.now td:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  tr.now td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .scroll { overflow-x: auto; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+
+  .s-a { stop-color: var(--accent-strong); }
+  .curve { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; }
+  .pt { fill: var(--accent-strong); stroke: var(--card); stroke-width: 2; }
+  .ftp { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 4 4; }
+  .suggest { display: flex; gap: var(--space-md); align-items: center; justify-content: space-between; flex-wrap: wrap; padding: var(--space-md) var(--space-lg); border-radius: var(--radius-md); background: var(--card-raised); margin-top: var(--space-sm); }
+  .vm-btn.small { min-height: 40px; padding: 0 var(--space-lg); }
+
+</style>
+</head>
+<body>
+<main>
+<div class="head"><div><p class="crumb caption">Progress</p><h1 class="page-title">Power</h1></div><div style="display:flex;gap:var(--space-sm);align-items:center"><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div></div>
+<section class="r3">
+  <article class="vm-card"><div class="vm-card-head"><h3 class="vm-card-title card-title">Your numbers</h3></div><div class="vm-facts"><div><span class="l caption vm-muted">Maximum heart rate</span><span class="v body">186 bpm</span><span class="caption vm-muted">Measured on your ride of 19 Oct</span></div><div><span class="l caption vm-muted">Threshold heart rate</span><span class="v body">166 bpm</span><span class="caption vm-muted">Estimated as 89 % of your maximum</span></div><div><span class="l caption vm-muted">FTP per kilo</span><span class="v body">3.5 W/kg</span><span class="caption vm-muted">211 W at 60 kg</span></div><div><span class="l caption vm-muted">Peak power</span><span class="v body">812 W</span><span class="caption vm-muted">Best 5 seconds, last 90 days</span></div></div><a class="vm-link body" href="#">Whole rider card →</a></article>
+<article class="vm-card">
+    <h3 class="vm-card-title card-title">FTP</h3>
+    <div class="vm-number"><span class="kpi">211</span><span class="vm-unit">W · 3.5 W/kg</span></div>
+    <p class="vm-sentence body">Set from your estimate on 20 Nov.</p>
+    <div class="suggest caption"><span>Estimate today: 211 W, 95 % of your best 20 minutes.</span></div>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Critical power</h3>
+    <div class="vm-number"><span class="kpi">212</span><span class="vm-unit">W · W′ 8.1 kJ</span></div>
+    <p class="vm-sentence body">The power you can hold for a long time, and the reserve above it for short attacks.</p>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">VO2max estimate</h3>
+    <div class="vm-number"><span class="kpi">49.1</span><span class="vm-unit">ml/kg/min</span></div>
+    <p class="vm-sentence body">From your best 5 minutes on 25 Oct and your weight.</p>
+  </article>
+</section>
+<section class="r21">
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Power curve</h3><div class="vm-seg" role="group" aria-label="Period"><button type="button" aria-pressed="false">30 days</button><button type="button" aria-pressed="true">90 days</button><button type="button" aria-pressed="false">1 year</button></div>
+    <p class="vm-sentence body">Your best power for every duration in the last 90 days.</p>
+    <svg class="chart" viewBox="0 0 760 266" role="img" aria-label="Power curve over 90 days: 283 W for 1 second, 234 W for 5 minutes, 222 W for 20 minutes, 220 W for an hour. FTP 211 W.">
+  <defs><linearGradient id="pa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-a" stop-opacity="0.3"/><stop offset="1" class="s-a" stop-opacity="0"/></linearGradient></defs>
+  <g class="grid"><line x1="48" y1="236.0" x2="744" y2="236.0"/><line x1="48" y1="162.7" x2="744" y2="162.7"/><line x1="48" y1="89.3" x2="744" y2="89.3"/><line x1="48" y1="16.0" x2="744" y2="16.0"/></g><text class="ylab" x="40" y="240.0">0</text><text class="ylab" x="40" y="166.7">100</text><text class="ylab" x="40" y="93.3">200</text><text class="ylab" x="40" y="20.0">300</text>
+  <line class="ftp" x1="48" y1="81.3" x2="744" y2="81.3"/><text class="lab" x="56" y="97.3">FTP 211 W</text>
+  <path fill="url(#pa)" d="M48.0 28.5 L184.8 29.2 L278.2 29.2 L337.1 29.2 L396.0 29.2 L454.9 29.9 L532.8 64.4 L591.7 70.3 L650.6 73.2 L685.1 73.9 L744.0 74.7 L744.0 236 L48.0 236 Z"/>
+  <path class="curve" d="M48.0 28.5 L184.8 29.2 L278.2 29.2 L337.1 29.2 L396.0 29.2 L454.9 29.9 L532.8 64.4 L591.7 70.3 L650.6 73.2 L685.1 73.9 L744.0 74.7"/>
+  <circle class="pt" cx="48.0" cy="28.5" r="3.5"/><circle class="pt" cx="184.8" cy="29.2" r="3.5"/><circle class="pt" cx="278.2" cy="29.2" r="3.5"/><circle class="pt" cx="337.1" cy="29.2" r="3.5"/><circle class="pt" cx="396.0" cy="29.2" r="3.5"/><circle class="pt" cx="454.9" cy="29.9" r="3.5"/><circle class="pt" cx="532.8" cy="64.4" r="3.5"/><circle class="pt" cx="591.7" cy="70.3" r="3.5"/><circle class="pt" cx="650.6" cy="73.2" r="3.5"/><circle class="pt" cx="685.1" cy="73.9" r="3.5"/><circle class="pt" cx="744.0" cy="74.7" r="3.5"/>
+  <text class="xlab" x="48.0" y="258">1s</text><text class="xlab" x="184.8" y="258">5s</text><text class="xlab" x="337.1" y="258">30s</text><text class="xlab" x="396.0" y="258">1m</text><text class="xlab" x="532.8" y="258">5m</text><text class="xlab" x="650.6" y="258">20m</text><text class="xlab" x="744.0" y="258">1h</text>
+</svg>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Best efforts</h3>
+    <div class="scroll"><table class="body"><thead><tr><th class="caption">Duration</th><th class="caption n">Power</th><th class="caption n">W/kg</th></tr></thead><tbody><tr><td>5 s</td><td class="n">282 W</td><td class="n">4.7</td></tr><tr><td>1 min</td><td class="n">282 W</td><td class="n">4.7</td></tr><tr><td>5 min</td><td class="n">234 W</td><td class="n">3.9</td></tr><tr><td>20 min</td><td class="n">222 W</td><td class="n">3.7</td></tr><tr><td>1 h</td><td class="n">220 W</td><td class="n">3.7</td></tr></tbody></table></div>
+    <span class="vm-spacer"></span><a class="vm-link caption" href="#">All durations <span aria-hidden="true">→</span></a>
+  </article>
+</section>
+</main>
+</body>
+</html>

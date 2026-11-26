@@ -11,12 +11,13 @@ import '../../core/units.dart';
 import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
 import 'bikes_view_models.dart';
-import 'service_marker.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/fact_grid.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
 
 class BikesScreen extends ConsumerWidget {
@@ -39,21 +40,13 @@ class BikesScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final notifier = ref.read(bikesViewModelProvider.notifier);
     final onAdd = s.action.running ? null : () => _add(context, ref);
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    // The one action, in the header at every width; on a phone a filled icon whose tooltip names it.
-    final add = wide
-        ? FilledButton.icon(
-            key: const Key('add-bike'),
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addBike),
-          )
-        : IconButton.filled(
-            key: const Key('add-bike'),
-            tooltip: l10n.addBike,
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-          );
+    // The one action, a filled pill in the header at every width.
+    final add = FilledButton.icon(
+      key: const Key('add-bike'),
+      onPressed: onAdd,
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addBike),
+    );
 
     listenUserMessages(
       ref,
@@ -63,8 +56,8 @@ class BikesScreen extends ConsumerWidget {
     );
 
     return PageScaffold(
-      eyebrow: l10n.eyebrowBikes,
       title: l10n.navBikes,
+      parent: l10n.profileTitle,
       subtitle: l10n.bikesSubtitle,
       primaryAction: add,
       children: [
@@ -119,73 +112,64 @@ class _BikeCard extends ConsumerWidget {
       (l10n.statRides, bike.rideCount.toString()),
       (l10n.statMovingTime, duration(bike.movingS)),
     ];
-    return Card(
+    return AppCard(
       key: Key('bike-${bike.id}'),
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => onOpen(bike.id),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: AppSpacing.sm,
-            children: [
-              Row(
-                spacing: AppSpacing.sm,
-                children: [
-                  Icon(
-                    Icons.directions_bike,
-                    color: bike.isActive ? scheme.primary : scheme.outline,
-                  ),
-                  Expanded(
-                    child: Text(
-                      bike.name,
-                      style: text.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
-                    ServiceMarker(due: bike.serviceDueCount > 0),
-                ],
-              ),
-              Text(
-                [
-                  bikeKindName(l10n, bike.kind),
-                  if (make.isNotEmpty) make,
-                ].join(' · '),
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-              if (bike.isDefault || !bike.isActive)
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    if (bike.isDefault)
-                      Chip(
-                        label: Text(l10n.defaultBike),
-                        backgroundColor: scheme.primaryContainer,
-                        side: BorderSide.none,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    if (!bike.isActive)
-                      Chip(
-                        label: Text(l10n.archived),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                  ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Row(
+              spacing: AppSpacing.sm,
+              children: [
+                Icon(
+                  Icons.directions_bike,
+                  color: bike.isActive ? scheme.primary : scheme.outline,
                 ),
-              const SizedBox(height: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    bike.name,
+                    style: text.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // The words, not colour alone: the mock-up's badge, as the profile's bike row draws it.
+                if (bike.serviceDueCount > 0)
+                  AppBadge(
+                    l10n.bikeServiceDue,
+                    key: const Key('service-due'),
+                    tone: AppBadgeTone.bad,
+                  )
+                else if (bike.serviceSoonCount > 0)
+                  AppBadge(
+                    l10n.bikeServiceSoon,
+                    key: const Key('service-soon'),
+                    tone: AppBadgeTone.care,
+                  ),
+              ],
+            ),
+            Text(
+              [
+                bikeKindName(l10n, bike.kind),
+                if (make.isNotEmpty) make,
+              ].join(' · '),
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            if (bike.isDefault || !bike.isActive)
               Wrap(
-                spacing: AppSpacing.xl,
-                runSpacing: AppSpacing.sm,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
                 children: [
-                  for (final (label, value) in facts)
-                    StatTile(label: label, value: value),
+                  if (bike.isDefault)
+                    AppBadge(l10n.defaultBike, tone: AppBadgeTone.good),
+                  if (!bike.isActive) AppBadge(l10n.archived),
                 ],
               ),
-            ],
-          ),
+            const SizedBox(height: AppSpacing.xs),
+            FactGrid(facts: facts),
+          ],
         ),
       ),
     );

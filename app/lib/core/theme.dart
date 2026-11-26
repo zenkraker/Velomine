@@ -4,28 +4,42 @@ import 'package:material_ui/material_ui.dart';
 import 'motion.dart';
 import 'tokens.dart';
 
-// Brand direction D, "Contour × Night Ride" (docs/design/brand-directions.html): the Contour palette by day,
-// the Night Ride palette at night.
+// The Velomine visual language (docs/design/pages/README.md). Every colour below is a token in
+// docs/design/tokens.json, Night first; test/design_tokens_test.dart keeps the two equal.
 
-// Contour (day).
-const cloudDancer = Color(0xFFF0EEE9);
-const gravel = Color(0xFFC9BFAE);
-const valleyTeal = Color(0xFF2E7D78);
-const deepTeal = Color(0xFF0F4C4A);
-const ironOxide = Color(0xFFB24A22);
-const forestInk = Color(0xFF18201E);
-
-// Night Ride.
+// Night.
 const asphalt = Color(0xFF0E0F0C);
 const graphite = Color(0xFF22241F);
 const volt = Color(0xFFD4F23A);
 const tailLight = Color(0xFFFF7A3D);
 const mist = Color(0xFFE9EBE4);
 
-/// Colours the app draws with itself (map, charts, wear), one set per theme, so they stay readable on either.
+// Day.
+const cloudDancer = Color(0xFFF0EEE9);
+const olive = Color(0xFF4E6300);
+const ironOxide = Color(0xFFB24A22);
+const forestInk = Color(0xFF18201E);
+
+/// Colours the app draws with itself (cards, charts, maps, wear), one set per theme, so they stay readable on
+/// either. Each field is the token of the same name in docs/design/tokens.json.
 @immutable
 class VelomineColors extends ThemeExtension<VelomineColors> {
   const VelomineColors({
+    required this.accent,
+    required this.onAccent,
+    required this.accentStrong,
+    required this.accentSoft,
+    required this.onAccentSoft,
+    required this.cardRaised,
+    required this.glass,
+    required this.track,
+    required this.barMuted,
+    required this.signal,
+    required this.signalSoft,
+    required this.warning,
+    required this.mapGround,
+    required this.mapRoad,
+    required this.routeGlow,
     required this.route,
     required this.finish,
     required this.halo,
@@ -34,11 +48,42 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
     required this.series,
   });
 
-  /// The route line, its start and the selected moment's ring.
+  /// Volt as a fill: the main action. Text on it is [onAccent].
+  final Color accent;
+  final Color onAccent;
+
+  /// The accent as text or a mark: links, the current bar, gauge arcs. Olive by day, so it reads on white.
+  final Color accentStrong;
+
+  /// The ground of a selected item and the text on it.
+  final Color accentSoft;
+  final Color onAccentSoft;
+
+  /// A hovered row or an inset block inside a card.
+  final Color cardRaised;
+
+  /// Floating elements only: the nav pill, sheets, the info card over a map.
+  final Color glass;
+
+  /// The empty part of a gauge or progress bar.
+  final Color track;
+
+  /// Past periods beside the current one in a bar chart.
+  final Color barMuted;
+
+  /// A state that asks for care (go easy); the ground of a chip that carries it.
+  final Color signal;
+  final Color signalSoft;
+  final Color warning;
+
+  /// The dimmed map and its roads, and the blurred stroke under the route.
+  final Color mapGround;
+  final Color mapRoad;
+  final Color routeGlow;
+
+  /// The route line, its finish and the pale edge around markers, so they stand out on any map tile.
   final Color route;
   final Color finish;
-
-  /// The pale edge around the route and markers, so they stand out on any map tile.
   final Color halo;
   final Color wearOk;
   final Color wearSoon;
@@ -53,22 +98,22 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
         (theme.brightness == Brightness.dark ? night : day);
   }
 
-  static const day = VelomineColors(
-    route: deepTeal,
-    finish: ironOxide,
-    halo: Colors.white,
-    wearOk: deepTeal,
-    wearSoon: Color(0xFF7A5C00),
-    series: {
-      'elevation': Color(0xFF6B7A7C),
-      'speed': deepTeal,
-      'power': ironOxide,
-      'heartrate': Color(0xFFB3261E),
-      'cadence': Color(0xFF7A5C00),
-    },
-  );
-
   static const night = VelomineColors(
+    accent: volt,
+    onAccent: asphalt,
+    accentStrong: volt,
+    accentSoft: Color(0xFF3A3D34),
+    onAccentSoft: volt,
+    cardRaised: Color(0xFF2C2F28),
+    glass: Color(0xD122241F),
+    track: Color(0xFF2C2F28),
+    barMuted: Color(0xFF6E7F25),
+    signal: tailLight,
+    signalSoft: Color(0xFF3D2416),
+    warning: Color(0xFFFFC94D),
+    mapGround: Color(0xFF15170F),
+    mapRoad: Color(0xFF2E3128),
+    routeGlow: Color(0x73D4F23A),
     route: volt,
     finish: tailLight,
     halo: asphalt,
@@ -78,8 +123,42 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
       'elevation': Color(0xFFA6AA9E),
       'speed': volt,
       'power': tailLight,
+      'estimatedpower': Color(0xFFFFB98C),
       'heartrate': Color(0xFFFF6F4F),
       'cadence': Color(0xFF9CC3E6),
+      'wprime': Color(0xFFC792EA),
+    },
+  );
+
+  static const day = VelomineColors(
+    accent: volt,
+    onAccent: asphalt,
+    accentStrong: olive,
+    accentSoft: Color(0xFFEEF6CC),
+    onAccentSoft: Color(0xFF2E3A00),
+    cardRaised: Color(0xFFF7F5F1),
+    glass: Color(0xC7FFFFFF),
+    track: Color(0xFFECEAE4),
+    barMuted: Color(0xFF8A9A55),
+    signal: ironOxide,
+    signalSoft: Color(0xFFFBE6DC),
+    warning: Color(0xFF7A5C00),
+    mapGround: Color(0xFFE4E1D9),
+    mapRoad: Colors.white,
+    routeGlow: Color(0xD9D4F23A),
+    route: olive,
+    finish: ironOxide,
+    halo: Colors.white,
+    wearOk: olive,
+    wearSoon: Color(0xFF7A5C00),
+    series: {
+      'elevation': Color(0xFF6B7A7C),
+      'speed': Color(0xFF0F4C4A),
+      'power': ironOxide,
+      'estimatedpower': Color(0xFFC98A6B),
+      'heartrate': Color(0xFFB3261E),
+      'cadence': Color(0xFF7A5C00),
+      'wprime': Color(0xFF8E44AD),
     },
   );
 
@@ -91,26 +170,107 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
       t < 0.5 || other == null ? this : other;
 }
 
+/// The `fontFeatures` that make a number sit in its column: a table cell, a stat, a clock. Every style the
+/// theme builds carries them, and a style built by hand adds them with `copyWith(fontFeatures: tabularFigures)`.
+const tabularFigures = <FontFeature>[FontFeature.tabularFigures()];
+
+/// The styles the text theme has no slot for: a stat card's one big number, a secondary number, the
+/// navigation label, which is not Material's `labelLarge` 14 (`docs/design/tokens.json`, *nav-label*), the
+/// auth wordmark, and the code of a join code or a setup key.
+@immutable
+class VelomineText extends ThemeExtension<VelomineText> {
+  const VelomineText({
+    required this.kpi,
+    required this.stat,
+    required this.navLabel,
+    required this.wordmark,
+    required this.code,
+  });
+
+  /// The one big number of a stat card: regular weight, size makes it stand out.
+  final TextStyle kpi;
+
+  /// A secondary number: a gauge's centre, a value in a list row.
+  final TextStyle stat;
+
+  /// A nav pill and sidebar label: 15, medium, never squeezed.
+  final TextStyle navLabel;
+
+  /// The wordmark above an auth form: display 28/32 in ink, never the accent.
+  final TextStyle wordmark;
+
+  /// A join code or a setup key: 22, semibold, its characters spaced apart the way the mock-up's
+  /// monospace code face does it.
+  final TextStyle code;
+
+  static VelomineText of(BuildContext context) =>
+      Theme.of(context).extension<VelomineText>() ?? _fallback;
+
+  static const _fallback = VelomineText(
+    kpi: TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w400),
+    stat: TextStyle(fontSize: 24, height: 28 / 24, fontWeight: FontWeight.w500),
+    navLabel: TextStyle(
+      fontSize: 15,
+      height: 20 / 15,
+      fontWeight: FontWeight.w500,
+    ),
+    wordmark: TextStyle(
+      fontSize: 28,
+      height: 32 / 28,
+      fontWeight: FontWeight.w400,
+    ),
+    code: TextStyle(
+      fontSize: 22,
+      height: 28 / 22,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 22 * 0.08,
+      fontFeatures: tabularFigures,
+    ),
+  );
+
+  @override
+  VelomineText copyWith({
+    TextStyle? kpi,
+    TextStyle? stat,
+    TextStyle? navLabel,
+    TextStyle? wordmark,
+    TextStyle? code,
+  }) => VelomineText(
+    kpi: kpi ?? this.kpi,
+    stat: stat ?? this.stat,
+    navLabel: navLabel ?? this.navLabel,
+    wordmark: wordmark ?? this.wordmark,
+    code: code ?? this.code,
+  );
+
+  @override
+  VelomineText lerp(VelomineText? other, double t) =>
+      t < 0.5 || other == null ? this : other;
+}
+
 ThemeData dayTheme() {
   final scheme =
       ColorScheme.fromSeed(
-        seedColor: deepTeal,
+        seedColor: olive,
         brightness: Brightness.light,
       ).copyWith(
-        primary: deepTeal,
+        primary: olive,
         onPrimary: Colors.white,
-        primaryContainer: const Color(0xFFBFE3DE),
-        onPrimaryContainer: const Color(0xFF062C2A),
-        secondary: valleyTeal,
+        primaryContainer: VelomineColors.day.accentSoft,
+        onPrimaryContainer: VelomineColors.day.onAccentSoft,
+        secondary: const Color(0xFF5C625E),
         surface: cloudDancer,
         onSurface: forestInk,
+        onSurfaceVariant: const Color(0xFF5C625E),
         surfaceContainerLowest: Colors.white,
-        surfaceContainerLow: const Color(0xFFF7F5F1),
-        surfaceContainer: const Color(0xFFE8E5DE),
-        surfaceContainerHigh: const Color(0xFFE0DDD5),
-        surfaceContainerHighest: const Color(0xFFD8D4CB),
+        surfaceContainerLow: VelomineColors.day.cardRaised,
+        surfaceContainer: Colors.white,
+        surfaceContainerHigh: VelomineColors.day.cardRaised,
+        surfaceContainerHighest: VelomineColors.day.track,
         tertiary: ironOxide,
-        outlineVariant: gravel,
+        error: const Color(0xFFB3261E),
+        outline: const Color(0xFF8A8F8A),
+        outlineVariant: const Color(0xFFE0DDD5),
       );
   return _theme(scheme, VelomineColors.day);
 }
@@ -123,8 +283,8 @@ ThemeData nightTheme() {
       ).copyWith(
         primary: volt,
         onPrimary: asphalt,
-        primaryContainer: const Color(0xFF3A3D34),
-        onPrimaryContainer: volt,
+        primaryContainer: VelomineColors.night.accentSoft,
+        onPrimaryContainer: VelomineColors.night.onAccentSoft,
         secondary: mist,
         surface: asphalt,
         onSurface: mist,
@@ -133,7 +293,7 @@ ThemeData nightTheme() {
         surfaceContainerLow: const Color(0xFF181A15),
         surfaceContainer: graphite,
         surfaceContainerHigh: graphite,
-        surfaceContainerHighest: const Color(0xFF2C2F28),
+        surfaceContainerHighest: VelomineColors.night.cardRaised,
         tertiary: tailLight,
         error: const Color(0xFFFF6F4F),
         outline: const Color(0xFF6B6F63),
@@ -152,27 +312,86 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
   );
   final baseText = base.textTheme.apply(fontFamily: sans);
   TextStyle? tabular(TextStyle? style) =>
-      style?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
-  // Numbers line up in columns in every stat, table and clock.
+      style?.copyWith(fontFeatures: tabularFigures);
+  // Numbers line up in columns in every stat, table and clock. Sizes follow the type scale in tokens.json:
+  // card-title 17, body 15, caption 13, axis 12. titleSmall is Material's 14, a size the scale has no slot
+  // for, so it carries `body-strong` (15/600): the weight a row's main line and a chart's title read at.
   final text = baseText.copyWith(
     displayLarge: tabular(baseText.displayLarge),
     displayMedium: tabular(baseText.displayMedium),
     displaySmall: tabular(baseText.displaySmall),
     headlineLarge: tabular(baseText.headlineLarge),
     headlineMedium: tabular(baseText.headlineMedium),
-    headlineSmall: tabular(baseText.headlineSmall),
-    titleLarge: tabular(baseText.titleLarge),
-    titleMedium: tabular(baseText.titleMedium),
-    titleSmall: tabular(baseText.titleSmall),
-    bodyLarge: tabular(baseText.bodyLarge),
-    bodyMedium: tabular(baseText.bodyMedium),
-    bodySmall: tabular(baseText.bodySmall),
-    labelLarge: tabular(baseText.labelLarge),
-    labelMedium: tabular(baseText.labelMedium),
-    labelSmall: tabular(baseText.labelSmall),
+    headlineSmall: tabular(baseText.headlineSmall)
+        ?.copyWith(fontSize: 24, height: 28 / 24, fontWeight: FontWeight.w500),
+    // Material's titleLarge is 22 and labelLarge 14 and labelMedium 12: the scale has no slot for the first
+    // two, so they carry card-title and body-strong, and labelMedium the axis weight.
+    titleLarge: tabular(baseText.titleLarge)
+        ?.copyWith(fontSize: 17, height: 24 / 17, fontWeight: FontWeight.w600),
+    titleMedium: tabular(baseText.titleMedium)
+        ?.copyWith(fontSize: 17, height: 24 / 17, fontWeight: FontWeight.w600),
+    titleSmall: tabular(baseText.titleSmall)
+        ?.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600),
+    bodyLarge: tabular(baseText.bodyLarge)
+        ?.copyWith(fontSize: 15, height: 22 / 15),
+    bodyMedium: tabular(baseText.bodyMedium)
+        ?.copyWith(fontSize: 15, height: 22 / 15),
+    bodySmall: tabular(baseText.bodySmall)
+        ?.copyWith(fontSize: 13, height: 18 / 13),
+    labelLarge: tabular(baseText.labelLarge)
+        ?.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600),
+    labelMedium: tabular(baseText.labelMedium)
+        ?.copyWith(fontSize: 12, height: 16 / 12, fontWeight: FontWeight.w500),
+    labelSmall: tabular(baseText.labelSmall)
+        ?.copyWith(fontSize: 12, height: 16 / 12, fontWeight: FontWeight.w500),
   );
   TextStyle displayStyle(TextStyle? style) => (style ?? const TextStyle())
       .copyWith(fontFamily: display, fontWeight: FontWeight.w400);
+  final numbers = VelomineText(
+    kpi: TextStyle(
+      fontFamily: sans,
+      fontSize: 40,
+      height: 44 / 40,
+      fontWeight: FontWeight.w400,
+      letterSpacing: -0.8,
+      color: scheme.onSurface,
+      fontFeatures: tabularFigures,
+    ),
+    stat: TextStyle(
+      fontFamily: sans,
+      fontSize: 24,
+      height: 28 / 24,
+      fontWeight: FontWeight.w500,
+      letterSpacing: -0.24,
+      color: scheme.onSurface,
+      fontFeatures: tabularFigures,
+    ),
+    navLabel: TextStyle(
+      fontFamily: sans,
+      fontSize: 15,
+      height: 20 / 15,
+      fontWeight: FontWeight.w500,
+      color: scheme.onSurface,
+    ),
+    wordmark: TextStyle(
+      fontFamily: display,
+      fontSize: 28,
+      height: 32 / 28,
+      fontWeight: FontWeight.w400,
+      color: scheme.onSurface,
+    ),
+    // 0.08em apart, as `vm-code` draws it, and tabular so two codes line up under each other.
+    // shortcut: no monospace family is bundled, so a code keeps the sans face; add one with the font.
+    code: TextStyle(
+      fontFamily: sans,
+      fontSize: 22,
+      height: 28 / 22,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 22 * 0.08,
+      color: scheme.onSurface,
+      fontFeatures: tabularFigures,
+    ),
+  );
   final buttonShape = WidgetStatePropertyAll<OutlinedBorder>(
     const StadiumBorder(),
   );
@@ -188,6 +407,9 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     useMaterial3: true,
     colorScheme: scheme,
     fontFamily: sans,
+    // Without this, Flutter resolves the tap target to `shrinkWrap` on linux/macOS/windows, which is what
+    // the web build reports, and a 32 dp chip has a 32 dp tap area under the design's 48 dp minimum.
+    materialTapTargetSize: MaterialTapTargetSize.padded,
     scaffoldBackgroundColor: scheme.surface,
     // The web has no snapshotting, so the platform's zoom keeps the old page on screen; fade instead.
     pageTransitionsTheme: kIsWeb ? webPageTransitions : null,
@@ -197,7 +419,7 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
       displaySmall: displayStyle(text.displaySmall).copyWith(fontSize: 44),
       headlineLarge: displayStyle(text.headlineLarge).copyWith(fontSize: 40),
       headlineMedium: text.headlineMedium?.copyWith(fontSize: 34),
-      headlineSmall: text.headlineSmall?.copyWith(fontSize: 28),
+      headlineSmall: text.headlineSmall?.copyWith(fontSize: 24),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: scheme.surface,
@@ -217,27 +439,24 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
       ),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
-      style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? scheme.primaryContainer
-              : null,
-        ),
-        foregroundColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? scheme.onPrimaryContainer
-              : null,
-        ),
-        textStyle: buttonLabel,
-      ),
+      style: ButtonStyle(textStyle: buttonLabel),
     ),
     inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
     ),
+    // The one main action of a screen is volt in both themes, with dark text on it.
     filledButtonTheme: FilledButtonThemeData(
       style: pill().copyWith(
-        backgroundColor: WidgetStatePropertyAll(scheme.primary),
-        foregroundColor: WidgetStatePropertyAll(scheme.onPrimary),
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? scheme.onSurface.withValues(alpha: 0.12)
+              : colors.accent,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? scheme.onSurface.withValues(alpha: 0.38)
+              : colors.onAccent,
+        ),
         minimumSize: const WidgetStatePropertyAll(Size(48, 52)),
         textStyle: const WidgetStatePropertyAll(
           TextStyle(fontFamily: sans, fontWeight: FontWeight.w700),
@@ -246,20 +465,40 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(style: pill()),
     textButtonTheme: TextButtonThemeData(style: pill()),
+    // Cards stand out from the page by their fill alone: no border, no shadow. The gap between
+    // them is the page's own spacing.
     cardTheme: CardThemeData(
       elevation: 0,
+      margin: EdgeInsets.zero,
       color: scheme.surfaceContainer,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.large),
       ),
     ),
+    // A chip is a hairline outline when it is off, and soft accent ground with no outline when it is on.
     chipTheme: ChipThemeData(
       shape: const StadiumBorder(),
-      side: BorderSide(color: scheme.outlineVariant),
-      selectedColor: scheme.primaryContainer,
-      labelStyle: TextStyle(color: scheme.onSurface),
-      secondaryLabelStyle: TextStyle(color: scheme.onPrimaryContainer),
+      color: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? scheme.primaryContainer
+            : Colors.transparent,
+      ),
+      side: WidgetStateBorderSide.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? BorderSide.none
+            : BorderSide(color: scheme.outlineVariant),
+      ),
+      labelStyle: TextStyle(
+        fontSize: 13,
+        height: 18 / 13,
+        fontWeight: FontWeight.w500,
+        color: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurfaceVariant,
+        ),
+      ),
     ),
     navigationBarTheme: NavigationBarThemeData(
       indicatorColor: scheme.primaryContainer,
@@ -278,6 +517,6 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
         borderRadius: BorderRadius.circular(AppRadius.large),
       ),
     ),
-    extensions: [colors],
+    extensions: [colors, numbers],
   );
 }

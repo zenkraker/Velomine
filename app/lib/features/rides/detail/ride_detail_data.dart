@@ -11,11 +11,21 @@ part 'ride_detail_data.g.dart';
 
 /// The ride detail endpoints as values: the ViewModel never sees an exception.
 class RideDetailData {
-  RideDetailData(this._rides, this._bikes, this._sharing);
+  RideDetailData(
+    this._rides,
+    this._bikes,
+    this._sharing,
+    this._analytics,
+    this._accounts,
+    this._training,
+  );
 
   final RidesApi _rides;
   final BikesApi _bikes;
   final SharingApi _sharing;
+  final AnalyticsApi _analytics;
+  final AccountsApi _accounts;
+  final TrainingApi _training;
 
   Future<Result<RideResponse?>> ride(String id) =>
       _rides.getRide(id).guard(FailureAction.loadRide);
@@ -103,10 +113,56 @@ class RideDetailData {
 
   Future<Result<void>> deleteRide(String id) =>
       _rides.deleteRide(id).guard(FailureAction.deleteRide);
+
+  /// Answers the auto-training session's question about this ride: yes ticks it, no leaves it open.
+  Future<Result<void>> answerSession(
+    String sessionId,
+    String rideId, {
+    required bool yes,
+  }) => _training
+      .matchTrainingSession(
+        sessionId,
+        MatchTrainingSessionRequest(rideId: rideId, answer: yes ? 'yes' : 'no'),
+      )
+      .guard(FailureAction.matchTrainingSession);
+
+  /// Adopts the ride's suggestion: the server sets the FTP and records this ride as where it came from.
+  Future<Result<ProfileResponse?>> acceptFtpSuggestion(String id) =>
+      _analytics.acceptFtpSuggestion(id).guard(FailureAction.setFtp);
+
+  Future<Result<void>> dismissFtpSuggestion(String id) =>
+      _analytics.dismissFtpSuggestion(id).guard(FailureAction.setFtp);
+
+  /// The member's profile, for the value a heart-rate note measured or the one a suggestion is above.
+  Future<Result<ProfileResponse?>> profile() =>
+      _accounts.getProfile().guard(FailureAction.loadRide);
+
+  /// The member's open heart-rate suggestions, to find the one this ride caused.
+  Future<Result<List<HeartRateSuggestionResponse>>>
+  heartRateSuggestions() async =>
+      (await _analytics.listHeartRateSuggestions().guard(
+        FailureAction.loadRide,
+      )).map(
+        (list) => list?.suggestions ?? const <HeartRateSuggestionResponse>[],
+      );
+
+  Future<Result<ProfileResponse?>> acceptHeartRateSuggestion(String id) =>
+      _analytics.acceptHeartRateSuggestion(id).guard(FailureAction.saveProfile);
+
+  Future<Result<void>> dismissHeartRateSuggestion(String id) => _analytics
+      .dismissHeartRateSuggestion(id)
+      .guard(FailureAction.saveProfile);
 }
 
 @Riverpod(keepAlive: true)
 RideDetailData rideDetailData(Ref ref) {
   final session = ref.watch(sessionProvider);
-  return RideDetailData(session.rides, session.bikes, session.sharing);
+  return RideDetailData(
+    session.rides,
+    session.bikes,
+    session.sharing,
+    session.analytics,
+    session.accounts,
+    session.training,
+  );
 }

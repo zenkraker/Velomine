@@ -56,8 +56,6 @@ class BulkUploadViewModel extends _$BulkUploadViewModel {
     return const BulkUploadState();
   }
 
-  bool get supported => ref.read(dropSourceProvider).supported;
-
   /// Opens the folder chooser. Call it straight from the button press: the browser allows it only then.
   Future<void> chooseFolder() {
     if (state.busy) return Future.value();

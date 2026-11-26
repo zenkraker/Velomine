@@ -36,6 +36,18 @@ public sealed class ServerInfoTests(PostgresFixture postgres) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ServerInfo_ShouldSayWhetherAutoTrainingIsOn_WhenTheOperatorSetsIt()
+    {
+        await using var off = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Training:AutoEnabled", "false"));
+        var server = await off.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
+
+        Assert.False(server!.AutoTrainingEnabled);
+        await using var on = await TestApi.StartAsync(postgres);
+        var byDefault = await on.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
+        Assert.True(byDefault!.AutoTrainingEnabled);
+    }
+
+    [Fact]
     public async Task ServerInfo_ShouldOfferTelemetry_WhenTheOperatorEnabledIt()
     {
         await using var api = await TestApi.StartAsync(postgres, b =>

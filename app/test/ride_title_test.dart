@@ -95,7 +95,7 @@ void main() {
   test('RideTitle_ShouldFollowTheShownLanguage_WhenTheNameIsMadeUp', () {
     expect(
       rideTitle(it, ride(discipline: 'gravel', utcOffsetMinutes: 0)),
-      'Uscita gravel del mattino',
+      'Giro gravel del mattino',
     );
   });
 }

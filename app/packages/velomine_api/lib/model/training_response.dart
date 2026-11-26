@@ -23,6 +23,17 @@ class TrainingResponse {
     required this.tss,
     required this.trimp,
     this.days = const [],
+    required this.intensity,
+    this.intensityWeeks = const [],
+    this.efficiency = const [],
+    this.heartRateLoadRides = const Optional.present(0),
+    this.monotony = const Optional.absent(),
+    this.strain = const Optional.absent(),
+    this.strainUsual = const Optional.absent(),
+    this.monotonous = const Optional.present(false),
+    this.heavyWeek = const Optional.present(false),
+    this.monotonyFrom = const Optional.absent(),
+    this.monotonyTo = const Optional.absent(),
   });
 
   final int dayCount;
@@ -45,6 +56,58 @@ class TrainingResponse {
 
   final List<TrainingDay> days;
 
+  final IntensityResponse? intensity;
+
+  final List<IntensityWeek> intensityWeeks;
+
+  final List<EfficiencyWeek> efficiency;
+
+  final Optional<int?> heartRateLoadRides;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> monotony;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> strain;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> strainUsual;
+
+  final Optional<bool?> monotonous;
+
+  final Optional<bool?> heavyWeek;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<DateTime?> monotonyFrom;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<DateTime?> monotonyTo;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is TrainingResponse &&
     other.dayCount == dayCount &&
@@ -56,7 +119,18 @@ class TrainingResponse {
     other.elevationGainM == elevationGainM &&
     other.tss == tss &&
     other.trimp == trimp &&
-    _deepEquality.equals(other.days, days);
+    _deepEquality.equals(other.days, days) &&
+    other.intensity == intensity &&
+    _deepEquality.equals(other.intensityWeeks, intensityWeeks) &&
+    _deepEquality.equals(other.efficiency, efficiency) &&
+    other.heartRateLoadRides == heartRateLoadRides &&
+    other.monotony == monotony &&
+    other.strain == strain &&
+    other.strainUsual == strainUsual &&
+    other.monotonous == monotonous &&
+    other.heavyWeek == heavyWeek &&
+    other.monotonyFrom == monotonyFrom &&
+    other.monotonyTo == monotonyTo;
 
   @override
   int get hashCode =>
@@ -70,10 +144,21 @@ class TrainingResponse {
     (elevationGainM.hashCode) +
     (tss.hashCode) +
     (trimp.hashCode) +
-    (days.hashCode);
+    (days.hashCode) +
+    (intensity == null ? 0 : intensity!.hashCode) +
+    (intensityWeeks.hashCode) +
+    (efficiency.hashCode) +
+    (heartRateLoadRides.hashCode) +
+    (monotony == null ? 0 : monotony!.hashCode) +
+    (strain == null ? 0 : strain!.hashCode) +
+    (strainUsual == null ? 0 : strainUsual!.hashCode) +
+    (monotonous.hashCode) +
+    (heavyWeek.hashCode) +
+    (monotonyFrom == null ? 0 : monotonyFrom!.hashCode) +
+    (monotonyTo == null ? 0 : monotonyTo!.hashCode);
 
   @override
-  String toString() => 'TrainingResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, days=$days]';
+  String toString() => 'TrainingResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, days=$days, intensity=$intensity, intensityWeeks=$intensityWeeks, efficiency=$efficiency, heartRateLoadRides=$heartRateLoadRides, monotony=$monotony, strain=$strain, strainUsual=$strainUsual, monotonous=$monotonous, heavyWeek=$heavyWeek, monotonyFrom=$monotonyFrom, monotonyTo=$monotonyTo]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -87,6 +172,45 @@ class TrainingResponse {
       json[r'tss'] = this.tss;
       json[r'trimp'] = this.trimp;
       json[r'days'] = this.days;
+    if (this.intensity != null) {
+      json[r'intensity'] = this.intensity;
+    } else {
+      json[r'intensity'] = null;
+    }
+      json[r'intensityWeeks'] = this.intensityWeeks;
+      json[r'efficiency'] = this.efficiency;
+    if (this.heartRateLoadRides.isPresent) {
+      final value = this.heartRateLoadRides.value;
+      json[r'heartRateLoadRides'] = value;
+    }
+    if (this.monotony.isPresent) {
+      final value = this.monotony.value;
+      json[r'monotony'] = value;
+    }
+    if (this.strain.isPresent) {
+      final value = this.strain.value;
+      json[r'strain'] = value;
+    }
+    if (this.strainUsual.isPresent) {
+      final value = this.strainUsual.value;
+      json[r'strainUsual'] = value;
+    }
+    if (this.monotonous.isPresent) {
+      final value = this.monotonous.value;
+      json[r'monotonous'] = value;
+    }
+    if (this.heavyWeek.isPresent) {
+      final value = this.heavyWeek.value;
+      json[r'heavyWeek'] = value;
+    }
+    if (this.monotonyFrom.isPresent) {
+      final value = this.monotonyFrom.value;
+      json[r'monotonyFrom'] = value == null ? null : _dateFormatter.format(value);
+    }
+    if (this.monotonyTo.isPresent) {
+      final value = this.monotonyTo.value;
+      json[r'monotonyTo'] = value == null ? null : _dateFormatter.format(value);
+    }
     return json;
   }
 
@@ -103,6 +227,18 @@ class TrainingResponse {
     double? tss,
     double? trimp,
     List<TrainingDay>? days,
+    IntensityResponse? intensity,
+    bool intensitySetToNull = false,
+    List<IntensityWeek>? intensityWeeks,
+    List<EfficiencyWeek>? efficiency,
+    Optional<int?>? heartRateLoadRides,
+    Optional<double?>? monotony,
+    Optional<double?>? strain,
+    Optional<double?>? strainUsual,
+    Optional<bool?>? monotonous,
+    Optional<bool?>? heavyWeek,
+    Optional<DateTime?>? monotonyFrom,
+    Optional<DateTime?>? monotonyTo,
   }) => TrainingResponse(
     dayCount: dayCount ?? this.dayCount,
     from: from ?? this.from,
@@ -114,6 +250,17 @@ class TrainingResponse {
     tss: tss ?? this.tss,
     trimp: trimp ?? this.trimp,
     days: days ?? this.days,
+    intensity: intensitySetToNull ? null : intensity ?? this.intensity,
+    intensityWeeks: intensityWeeks ?? this.intensityWeeks,
+    efficiency: efficiency ?? this.efficiency,
+    heartRateLoadRides: heartRateLoadRides ?? this.heartRateLoadRides,
+    monotony: monotony ?? this.monotony,
+    strain: strain ?? this.strain,
+    strainUsual: strainUsual ?? this.strainUsual,
+    monotonous: monotonous ?? this.monotonous,
+    heavyWeek: heavyWeek ?? this.heavyWeek,
+    monotonyFrom: monotonyFrom ?? this.monotonyFrom,
+    monotonyTo: monotonyTo ?? this.monotonyTo,
   );
 
   /// Returns a new [TrainingResponse] instance and imports its values from
@@ -147,6 +294,11 @@ class TrainingResponse {
         assert(json[r'trimp'] != null, 'Required key "TrainingResponse[trimp]" has a null value in JSON.');
         assert(json.containsKey(r'days'), 'Required key "TrainingResponse[days]" is missing from JSON.');
         assert(json[r'days'] != null, 'Required key "TrainingResponse[days]" has a null value in JSON.');
+        assert(json.containsKey(r'intensity'), 'Required key "TrainingResponse[intensity]" is missing from JSON.');
+        assert(json.containsKey(r'intensityWeeks'), 'Required key "TrainingResponse[intensityWeeks]" is missing from JSON.');
+        assert(json[r'intensityWeeks'] != null, 'Required key "TrainingResponse[intensityWeeks]" has a null value in JSON.');
+        assert(json.containsKey(r'efficiency'), 'Required key "TrainingResponse[efficiency]" is missing from JSON.');
+        assert(json[r'efficiency'] != null, 'Required key "TrainingResponse[efficiency]" has a null value in JSON.');
         return true;
       }());
 
@@ -161,6 +313,17 @@ class TrainingResponse {
         tss: mapValueOfType<double>(json, r'tss')!,
         trimp: mapValueOfType<double>(json, r'trimp')!,
         days: TrainingDay.listFromJson(json[r'days']),
+        intensity: IntensityResponse.fromJson(json[r'intensity']),
+        intensityWeeks: IntensityWeek.listFromJson(json[r'intensityWeeks']),
+        efficiency: EfficiencyWeek.listFromJson(json[r'efficiency']),
+        heartRateLoadRides: json.containsKey(r'heartRateLoadRides') ? Optional.present(json[r'heartRateLoadRides'] == null ? null : int.parse('${json[r'heartRateLoadRides']}')) : const Optional.absent(),
+        monotony: json.containsKey(r'monotony') ? Optional.present(mapValueOfType<double>(json, r'monotony')) : const Optional.absent(),
+        strain: json.containsKey(r'strain') ? Optional.present(mapValueOfType<double>(json, r'strain')) : const Optional.absent(),
+        strainUsual: json.containsKey(r'strainUsual') ? Optional.present(mapValueOfType<double>(json, r'strainUsual')) : const Optional.absent(),
+        monotonous: json.containsKey(r'monotonous') ? Optional.present(mapValueOfType<bool>(json, r'monotonous')) : const Optional.absent(),
+        heavyWeek: json.containsKey(r'heavyWeek') ? Optional.present(mapValueOfType<bool>(json, r'heavyWeek')) : const Optional.absent(),
+        monotonyFrom: json.containsKey(r'monotonyFrom') ? Optional.present(mapDateTime(json, r'monotonyFrom', r'')) : const Optional.absent(),
+        monotonyTo: json.containsKey(r'monotonyTo') ? Optional.present(mapDateTime(json, r'monotonyTo', r'')) : const Optional.absent(),
       );
     }
     return null;
@@ -218,6 +381,9 @@ class TrainingResponse {
     'tss',
     'trimp',
     'days',
+    'intensity',
+    'intensityWeeks',
+    'efficiency',
   };
 }
 

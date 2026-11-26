@@ -17,10 +17,16 @@ abstract interface class RideFileEntry {
 /// (settings, workouts, notes) is skipped.
 const rideFileExtensions = ['fit', 'gpx', 'tcx'];
 
+/// Zwift keeps the ride it is recording right now in this file, next to the finished ones. It is half a ride, so
+/// a folder import leaves it out.
+const _zwiftInProgressFile = 'inprogressactivity.fit';
+
 /// Whether [name] looks like a ride file: `.fit`, `.gpx` or `.tcx`, or the same with `.gz`, in any letter case.
+/// Zwift's `inProgressActivity.fit` is not one.
 bool isRideFileName(String name) {
   var lower = name.toLowerCase();
   if (lower.endsWith('.gz')) lower = lower.substring(0, lower.length - 3);
+  if (lower.split(RegExp(r'[\\/]')).last == _zwiftInProgressFile) return false;
   for (final extension in rideFileExtensions) {
     if (lower.endsWith('.$extension') && lower.length > extension.length + 1) {
       return true;

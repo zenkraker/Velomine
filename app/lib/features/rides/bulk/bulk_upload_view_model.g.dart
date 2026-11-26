@@ -45,7 +45,7 @@ final class BulkUploadViewModelProvider
 }
 
 String _$bulkUploadViewModelHash() =>
-    r'cfb9cecc31a09912fdb5eab22241dff2d56a36a2';
+    r'8aed71951f01be1c0942d455a4815db9dea7d1f6';
 
 /// A folder or several files dropped on the page, sent a few at a time and summed up once.
 

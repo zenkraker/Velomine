@@ -49,6 +49,27 @@ class RideResponse {
     required this.version,
     this.heartRateZones = const Optional.present(const []),
     this.powerZones = const Optional.present(const []),
+    this.powerRecords = const Optional.present(const []),
+    this.ftpSuggestionW = const Optional.absent(),
+    this.ftpSuggestionEffortW = const Optional.absent(),
+    this.ftpSuggestionMethod = const Optional.absent(),
+    this.ftpSuggestionId = const Optional.absent(),
+    this.heartRateNote = const Optional.absent(),
+    this.minWPrimeBalanceJ = const Optional.absent(),
+    this.wPrimeJ = const Optional.absent(),
+    this.efficiencyFactor = const Optional.absent(),
+    this.decouplingPct = const Optional.absent(),
+    this.steady = const Optional.absent(),
+    this.heartRateMaxNote = const Optional.absent(),
+    this.heartRateThresholdNote = const Optional.absent(),
+    this.heartRateZoneModel = const Optional.absent(),
+    this.heartRateZoneReferenceBpm = const Optional.absent(),
+    this.heartRateZoneReferenceSource = const Optional.absent(),
+    this.hrTss = const Optional.absent(),
+    this.effortScore = const Optional.absent(),
+    this.effortSource = const Optional.absent(),
+    this.estimatedAvgPowerW = const Optional.absent(),
+    this.training = const Optional.absent(),
   });
 
   final String id;
@@ -123,6 +144,168 @@ class RideResponse {
 
   final Optional<List<ZoneTime>?> powerZones;
 
+  final Optional<List<PowerRecord>?> powerRecords;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> ftpSuggestionW;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> ftpSuggestionEffortW;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> ftpSuggestionMethod;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> ftpSuggestionId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateNote;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> minWPrimeBalanceJ;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> wPrimeJ;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> efficiencyFactor;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> decouplingPct;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> steady;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateMaxNote;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateThresholdNote;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateZoneModel;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> heartRateZoneReferenceBpm;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateZoneReferenceSource;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> hrTss;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> effortScore;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> effortSource;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> estimatedAvgPowerW;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<TrainingRideMatch?> training;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -160,7 +343,28 @@ class RideResponse {
     other.description == description &&
     other.version == version &&
     _deepEquality.equals(other.heartRateZones, heartRateZones) &&
-    _deepEquality.equals(other.powerZones, powerZones);
+    _deepEquality.equals(other.powerZones, powerZones) &&
+    _deepEquality.equals(other.powerRecords, powerRecords) &&
+    other.ftpSuggestionW == ftpSuggestionW &&
+    other.ftpSuggestionEffortW == ftpSuggestionEffortW &&
+    other.ftpSuggestionMethod == ftpSuggestionMethod &&
+    other.ftpSuggestionId == ftpSuggestionId &&
+    other.heartRateNote == heartRateNote &&
+    other.minWPrimeBalanceJ == minWPrimeBalanceJ &&
+    other.wPrimeJ == wPrimeJ &&
+    other.efficiencyFactor == efficiencyFactor &&
+    other.decouplingPct == decouplingPct &&
+    other.steady == steady &&
+    other.heartRateMaxNote == heartRateMaxNote &&
+    other.heartRateThresholdNote == heartRateThresholdNote &&
+    other.heartRateZoneModel == heartRateZoneModel &&
+    other.heartRateZoneReferenceBpm == heartRateZoneReferenceBpm &&
+    other.heartRateZoneReferenceSource == heartRateZoneReferenceSource &&
+    other.hrTss == hrTss &&
+    other.effortScore == effortScore &&
+    other.effortSource == effortSource &&
+    other.estimatedAvgPowerW == estimatedAvgPowerW &&
+    other.training == training;
 
   @override
   int get hashCode =>
@@ -200,10 +404,31 @@ class RideResponse {
     (description == null ? 0 : description!.hashCode) +
     (version.hashCode) +
     (heartRateZones.hashCode) +
-    (powerZones.hashCode);
+    (powerZones.hashCode) +
+    (powerRecords.hashCode) +
+    (ftpSuggestionW == null ? 0 : ftpSuggestionW!.hashCode) +
+    (ftpSuggestionEffortW == null ? 0 : ftpSuggestionEffortW!.hashCode) +
+    (ftpSuggestionMethod == null ? 0 : ftpSuggestionMethod!.hashCode) +
+    (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode) +
+    (heartRateNote == null ? 0 : heartRateNote!.hashCode) +
+    (minWPrimeBalanceJ == null ? 0 : minWPrimeBalanceJ!.hashCode) +
+    (wPrimeJ == null ? 0 : wPrimeJ!.hashCode) +
+    (efficiencyFactor == null ? 0 : efficiencyFactor!.hashCode) +
+    (decouplingPct == null ? 0 : decouplingPct!.hashCode) +
+    (steady == null ? 0 : steady!.hashCode) +
+    (heartRateMaxNote == null ? 0 : heartRateMaxNote!.hashCode) +
+    (heartRateThresholdNote == null ? 0 : heartRateThresholdNote!.hashCode) +
+    (heartRateZoneModel == null ? 0 : heartRateZoneModel!.hashCode) +
+    (heartRateZoneReferenceBpm == null ? 0 : heartRateZoneReferenceBpm!.hashCode) +
+    (heartRateZoneReferenceSource == null ? 0 : heartRateZoneReferenceSource!.hashCode) +
+    (hrTss == null ? 0 : hrTss!.hashCode) +
+    (effortScore == null ? 0 : effortScore!.hashCode) +
+    (effortSource == null ? 0 : effortSource!.hashCode) +
+    (estimatedAvgPowerW == null ? 0 : estimatedAvgPowerW!.hashCode) +
+    (training == null ? 0 : training!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionEffortW=$ftpSuggestionEffortW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource, hrTss=$hrTss, effortScore=$effortScore, effortSource=$effortSource, estimatedAvgPowerW=$estimatedAvgPowerW, training=$training]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -365,6 +590,90 @@ class RideResponse {
       final value = this.powerZones.value;
       json[r'powerZones'] = value;
     }
+    if (this.powerRecords.isPresent) {
+      final value = this.powerRecords.value;
+      json[r'powerRecords'] = value;
+    }
+    if (this.ftpSuggestionW.isPresent) {
+      final value = this.ftpSuggestionW.value;
+      json[r'ftpSuggestionW'] = value;
+    }
+    if (this.ftpSuggestionEffortW.isPresent) {
+      final value = this.ftpSuggestionEffortW.value;
+      json[r'ftpSuggestionEffortW'] = value;
+    }
+    if (this.ftpSuggestionMethod.isPresent) {
+      final value = this.ftpSuggestionMethod.value;
+      json[r'ftpSuggestionMethod'] = value;
+    }
+    if (this.ftpSuggestionId.isPresent) {
+      final value = this.ftpSuggestionId.value;
+      json[r'ftpSuggestionId'] = value;
+    }
+    if (this.heartRateNote.isPresent) {
+      final value = this.heartRateNote.value;
+      json[r'heartRateNote'] = value;
+    }
+    if (this.minWPrimeBalanceJ.isPresent) {
+      final value = this.minWPrimeBalanceJ.value;
+      json[r'minWPrimeBalanceJ'] = value;
+    }
+    if (this.wPrimeJ.isPresent) {
+      final value = this.wPrimeJ.value;
+      json[r'wPrimeJ'] = value;
+    }
+    if (this.efficiencyFactor.isPresent) {
+      final value = this.efficiencyFactor.value;
+      json[r'efficiencyFactor'] = value;
+    }
+    if (this.decouplingPct.isPresent) {
+      final value = this.decouplingPct.value;
+      json[r'decouplingPct'] = value;
+    }
+    if (this.steady.isPresent) {
+      final value = this.steady.value;
+      json[r'steady'] = value;
+    }
+    if (this.heartRateMaxNote.isPresent) {
+      final value = this.heartRateMaxNote.value;
+      json[r'heartRateMaxNote'] = value;
+    }
+    if (this.heartRateThresholdNote.isPresent) {
+      final value = this.heartRateThresholdNote.value;
+      json[r'heartRateThresholdNote'] = value;
+    }
+    if (this.heartRateZoneModel.isPresent) {
+      final value = this.heartRateZoneModel.value;
+      json[r'heartRateZoneModel'] = value;
+    }
+    if (this.heartRateZoneReferenceBpm.isPresent) {
+      final value = this.heartRateZoneReferenceBpm.value;
+      json[r'heartRateZoneReferenceBpm'] = value;
+    }
+    if (this.heartRateZoneReferenceSource.isPresent) {
+      final value = this.heartRateZoneReferenceSource.value;
+      json[r'heartRateZoneReferenceSource'] = value;
+    }
+    if (this.hrTss.isPresent) {
+      final value = this.hrTss.value;
+      json[r'hrTss'] = value;
+    }
+    if (this.effortScore.isPresent) {
+      final value = this.effortScore.value;
+      json[r'effortScore'] = value;
+    }
+    if (this.effortSource.isPresent) {
+      final value = this.effortSource.value;
+      json[r'effortSource'] = value;
+    }
+    if (this.estimatedAvgPowerW.isPresent) {
+      final value = this.estimatedAvgPowerW.value;
+      json[r'estimatedAvgPowerW'] = value;
+    }
+    if (this.training.isPresent) {
+      final value = this.training.value;
+      json[r'training'] = value;
+    }
     return json;
   }
 
@@ -436,6 +745,27 @@ class RideResponse {
     int? version,
     Optional<List<ZoneTime>?>? heartRateZones,
     Optional<List<ZoneTime>?>? powerZones,
+    Optional<List<PowerRecord>?>? powerRecords,
+    Optional<int?>? ftpSuggestionW,
+    Optional<int?>? ftpSuggestionEffortW,
+    Optional<String?>? ftpSuggestionMethod,
+    Optional<String?>? ftpSuggestionId,
+    Optional<String?>? heartRateNote,
+    Optional<int?>? minWPrimeBalanceJ,
+    Optional<int?>? wPrimeJ,
+    Optional<double?>? efficiencyFactor,
+    Optional<double?>? decouplingPct,
+    Optional<bool?>? steady,
+    Optional<String?>? heartRateMaxNote,
+    Optional<String?>? heartRateThresholdNote,
+    Optional<String?>? heartRateZoneModel,
+    Optional<int?>? heartRateZoneReferenceBpm,
+    Optional<String?>? heartRateZoneReferenceSource,
+    Optional<double?>? hrTss,
+    Optional<double?>? effortScore,
+    Optional<String?>? effortSource,
+    Optional<int?>? estimatedAvgPowerW,
+    Optional<TrainingRideMatch?>? training,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -473,6 +803,27 @@ class RideResponse {
     version: version ?? this.version,
     heartRateZones: heartRateZones ?? this.heartRateZones,
     powerZones: powerZones ?? this.powerZones,
+    powerRecords: powerRecords ?? this.powerRecords,
+    ftpSuggestionW: ftpSuggestionW ?? this.ftpSuggestionW,
+    ftpSuggestionEffortW: ftpSuggestionEffortW ?? this.ftpSuggestionEffortW,
+    ftpSuggestionMethod: ftpSuggestionMethod ?? this.ftpSuggestionMethod,
+    ftpSuggestionId: ftpSuggestionId ?? this.ftpSuggestionId,
+    heartRateNote: heartRateNote ?? this.heartRateNote,
+    minWPrimeBalanceJ: minWPrimeBalanceJ ?? this.minWPrimeBalanceJ,
+    wPrimeJ: wPrimeJ ?? this.wPrimeJ,
+    efficiencyFactor: efficiencyFactor ?? this.efficiencyFactor,
+    decouplingPct: decouplingPct ?? this.decouplingPct,
+    steady: steady ?? this.steady,
+    heartRateMaxNote: heartRateMaxNote ?? this.heartRateMaxNote,
+    heartRateThresholdNote: heartRateThresholdNote ?? this.heartRateThresholdNote,
+    heartRateZoneModel: heartRateZoneModel ?? this.heartRateZoneModel,
+    heartRateZoneReferenceBpm: heartRateZoneReferenceBpm ?? this.heartRateZoneReferenceBpm,
+    heartRateZoneReferenceSource: heartRateZoneReferenceSource ?? this.heartRateZoneReferenceSource,
+    hrTss: hrTss ?? this.hrTss,
+    effortScore: effortScore ?? this.effortScore,
+    effortSource: effortSource ?? this.effortSource,
+    estimatedAvgPowerW: estimatedAvgPowerW ?? this.estimatedAvgPowerW,
+    training: training ?? this.training,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -565,6 +916,27 @@ class RideResponse {
         version: mapValueOfType<int>(json, r'version')!,
         heartRateZones: json.containsKey(r'heartRateZones') ? Optional.present(ZoneTime.listFromJson(json[r'heartRateZones'])) : const Optional.absent(),
         powerZones: json.containsKey(r'powerZones') ? Optional.present(ZoneTime.listFromJson(json[r'powerZones'])) : const Optional.absent(),
+        powerRecords: json.containsKey(r'powerRecords') ? Optional.present(PowerRecord.listFromJson(json[r'powerRecords'])) : const Optional.absent(),
+        ftpSuggestionW: json.containsKey(r'ftpSuggestionW') ? Optional.present(json[r'ftpSuggestionW'] == null ? null : int.parse('${json[r'ftpSuggestionW']}')) : const Optional.absent(),
+        ftpSuggestionEffortW: json.containsKey(r'ftpSuggestionEffortW') ? Optional.present(json[r'ftpSuggestionEffortW'] == null ? null : int.parse('${json[r'ftpSuggestionEffortW']}')) : const Optional.absent(),
+        ftpSuggestionMethod: json.containsKey(r'ftpSuggestionMethod') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionMethod')) : const Optional.absent(),
+        ftpSuggestionId: json.containsKey(r'ftpSuggestionId') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionId')) : const Optional.absent(),
+        heartRateNote: json.containsKey(r'heartRateNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateNote')) : const Optional.absent(),
+        minWPrimeBalanceJ: json.containsKey(r'minWPrimeBalanceJ') ? Optional.present(json[r'minWPrimeBalanceJ'] == null ? null : int.parse('${json[r'minWPrimeBalanceJ']}')) : const Optional.absent(),
+        wPrimeJ: json.containsKey(r'wPrimeJ') ? Optional.present(json[r'wPrimeJ'] == null ? null : int.parse('${json[r'wPrimeJ']}')) : const Optional.absent(),
+        efficiencyFactor: json.containsKey(r'efficiencyFactor') ? Optional.present(mapValueOfType<double>(json, r'efficiencyFactor')) : const Optional.absent(),
+        decouplingPct: json.containsKey(r'decouplingPct') ? Optional.present(mapValueOfType<double>(json, r'decouplingPct')) : const Optional.absent(),
+        steady: json.containsKey(r'steady') ? Optional.present(mapValueOfType<bool>(json, r'steady')) : const Optional.absent(),
+        heartRateMaxNote: json.containsKey(r'heartRateMaxNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateMaxNote')) : const Optional.absent(),
+        heartRateThresholdNote: json.containsKey(r'heartRateThresholdNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateThresholdNote')) : const Optional.absent(),
+        heartRateZoneModel: json.containsKey(r'heartRateZoneModel') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneModel')) : const Optional.absent(),
+        heartRateZoneReferenceBpm: json.containsKey(r'heartRateZoneReferenceBpm') ? Optional.present(json[r'heartRateZoneReferenceBpm'] == null ? null : int.parse('${json[r'heartRateZoneReferenceBpm']}')) : const Optional.absent(),
+        heartRateZoneReferenceSource: json.containsKey(r'heartRateZoneReferenceSource') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneReferenceSource')) : const Optional.absent(),
+        hrTss: json.containsKey(r'hrTss') ? Optional.present(mapValueOfType<double>(json, r'hrTss')) : const Optional.absent(),
+        effortScore: json.containsKey(r'effortScore') ? Optional.present(mapValueOfType<double>(json, r'effortScore')) : const Optional.absent(),
+        effortSource: json.containsKey(r'effortSource') ? Optional.present(mapValueOfType<String>(json, r'effortSource')) : const Optional.absent(),
+        estimatedAvgPowerW: json.containsKey(r'estimatedAvgPowerW') ? Optional.present(json[r'estimatedAvgPowerW'] == null ? null : int.parse('${json[r'estimatedAvgPowerW']}')) : const Optional.absent(),
+        training: json.containsKey(r'training') ? Optional.present(TrainingRideMatch.fromJson(json[r'training'])) : const Optional.absent(),
       );
     }
     return null;

@@ -18,7 +18,7 @@ public sealed class SettingsReader(VelomineDbContext db, IOptions<AccountsOption
         var saved = await SavedAsync(ct);
         return new EffectiveSettings(
             saved?.SignUpEnabled ?? accounts.Value.SignUpEnabled,
-            saved?.RequireAdminApproval ?? accounts.Value.RequireAdminApproval,
+            !accounts.Value.Cloud && (saved?.RequireAdminApproval ?? accounts.Value.RequireAdminApproval),
             saved?.ClubCreationEnabled ?? accounts.Value.ClubCreationEnabled);
     }
 }

@@ -8,23 +8,19 @@ import '../../core/l10n.dart';
 import '../../core/motion.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
-import '../../l10n/generated/app_localizations.dart';
+import '../../core/widgets/page_scaffold.dart';
 import 'supporter_badge.dart';
 
-// The celebration is a 390 × 844 artboard, scaled to the device width; every
-// number below is on that artboard. It is decorative: the climb's shape and its
-// peak do not come from a ride.
+// The decoration is a 390 x 844 artboard, scaled to the window; every number in the painter is on that
+// artboard. It is decorative: the climb's shape and its peak do not come from a ride.
 // shortcut: the summit's ride is decoration, query the member's hardest climb when the server offers it.
-
-/// The verified chip is this tall on the artboard; its corners are half of it.
-const _chipHeight = 40.0;
 
 const _effort = EffortCurve();
 const _soft = Cubic(0.16, 1, 0.3, 1);
 const _out = Cubic(0.2, 0.8, 0.2, 1);
 const _spring = SpringCurve();
 
-/// The timeline runs 5.1 s, one [AnimationController] driving the painter and the texts.
+/// The timeline runs 5.1 s, one animation driving the painter and the texts.
 const _totalMs = 5100;
 
 /// A window in the timeline: before it nothing, inside it the curve, after it done.
@@ -80,7 +76,7 @@ class EffortCurve extends Curve {
 }
 
 /// Soft, with a little overshoot: it peaks at about 1.08 a third of the way,
-/// then settles on 1. The badge's pop and the summit dot.
+/// then settles on 1. The summit dot.
 class SpringCurve extends Curve {
   const SpringCurve();
 
@@ -93,9 +89,10 @@ class SpringCurve extends Curve {
   }
 }
 
-/// The licence activated: the full-screen moment, played once when the licence
-/// arrives and again on a replay. Reduced motion jumps to its last frame.
-class SupporterCelebrationScreen extends StatefulWidget {
+/// The licence activated: the moment, played once when the licence arrives and again on a replay. It is a
+/// [PageScaffold] like every other screen, with the climb drawn behind its content; reduced motion jumps
+/// to the last frame.
+class SupporterCelebrationScreen extends StatelessWidget {
   const SupporterCelebrationScreen({
     super.key,
     required this.licence,
@@ -108,132 +105,19 @@ class SupporterCelebrationScreen extends StatefulWidget {
   /// Leaves the celebration for the profile.
   final VoidCallback? onContinue;
 
-  @override
-  State<SupporterCelebrationScreen> createState() =>
-      _SupporterCelebrationScreenState();
-}
-
-class _SupporterCelebrationScreenState extends State<SupporterCelebrationScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: _totalMs),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    // The frame is needed to know whether the system asks to reduce motion.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) replay();
-    });
-  }
-
-  /// Plays the moment from the start, or shows its last frame when motion is reduced.
-  void replay() {
-    if (reduceMotion(context)) {
-      _controller.value = 1;
-    } else {
-      _controller.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final licence = widget.licence;
-    return Scaffold(
-      backgroundColor: asphalt,
-      body: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          final time = _controller.value * _totalMs;
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              // The artboard is drawn for a 390 dp phone: it grows a little on a bigger window and
-              // then stops, instead of becoming a blown-up phone screen.
-              final scale = (constraints.maxWidth / 390).clamp(1.0, 1.35);
-              // The artboard is centred in what is left.
-              final top = (constraints.maxHeight / scale - 844) / 2;
-              return Center(
-                child: SizedBox(
-                  width: 390 * scale,
-                  height: constraints.maxHeight,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _CelebrationPainter(time, scale, top),
-                        ),
-                      ),
-                      _Overlay(
-                        time: time,
-                        scale: scale,
-                        top: top,
-                        l10n: l10n,
-                        licence: licence,
-                        onContinue: widget.onContinue,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// The texts and the button, over the painter's geometry.
-class _Overlay extends StatelessWidget {
-  const _Overlay({
-    required this.time,
-    required this.scale,
-    required this.top,
-    required this.l10n,
-    required this.licence,
-    required this.onContinue,
-  });
-
-  final double time;
-  final double scale;
-  final double top;
-  final AppLocalizations l10n;
-  final RiderLicenceResponse licence;
-  final VoidCallback? onContinue;
-
-  static const _chipIn = Span(250, 800, _soft);
-  static const _chipOut = Span(2400, 2650, _out);
-  static const _eyebrow = Span(2500, 3000, _soft);
+  static const _mark = Span(250, 800, _soft);
   static const _headline = Span(2700, 3300, _soft);
   static const _body = Span(3100, 3700, _soft);
-  // The serial follows the body once it has landed.
-  static const _serial = Span(3300, 3900, _soft);
   static const _badge = Span(3700, 4150, _spring);
   static const _button = Span(4300, 4800, _soft);
 
-  Widget _placed(double x, double y, double width, Widget child) => Positioned(
-    left: x * scale,
-    top: (top + y) * scale,
-    width: width * scale,
-    child: child,
-  );
-
   /// A block of the moment: it rises a little as it fades in.
-  Widget _enter(Span span, Widget child) {
-    final eased = span.at(time);
+  static Widget _enter(Span span, double time, Widget child) {
+    final eased = span.at(time).clamp(0.0, 1.0);
     return Opacity(
-      opacity: eased.clamp(0, 1),
+      opacity: eased,
       child: Transform.translate(
-        offset: Offset(0, (1 - eased) * 10 * scale),
+        offset: Offset(0, (1 - eased) * AppSpacing.sm),
         child: child,
       ),
     );
@@ -241,202 +125,113 @@ class _Overlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final text = theme.textTheme;
-    final chipIn = _chipIn.at(time);
-    final chipOut = _chipOut.at(time);
-    final badgeIn = _badge.at(time);
-    final buttonIn = _button.at(time);
-    // The serif headline: the app's display font, or the system's serif when a screen stands alone.
-    final serif = theme.textTheme.headlineMedium?.fontFamily ?? 'serif';
-
-    return Stack(
-      children: [
-        _placed(
-          0,
-          84,
-          390,
-          Center(
-            child: Opacity(
-              opacity: (chipIn * (1 - chipOut)).clamp(0, 1),
-              child: Transform.scale(
-                scale: 0.9 + 0.1 * chipIn,
-                child: Container(
-                  key: const Key('supporter-chip'),
-                  height: _chipHeight * scale,
-                  padding: EdgeInsets.symmetric(horizontal: 18 * scale),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: cloudDancer.withValues(alpha: 0.18),
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      _chipHeight / 2 * scale,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 8 * scale,
-                    children: [
-                      CustomPaint(
-                        size: Size.square(13 * scale),
-                        painter: const _CheckPainter(),
-                      ),
-                      Text(
-                        l10n.supporterKeyVerified.toUpperCase(),
-                        style: text.labelSmall?.copyWith(
-                          color: cloudDancer.withValues(alpha: 0.8),
-                          letterSpacing: 1.8,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+    final scheme = theme.colorScheme;
+    final colors = theme.extension<VelomineColors>()!;
+    final size = MediaQuery.sizeOf(context);
+    // The decoration grows a little on a bigger window and then stops, instead of becoming a blown-up
+    // phone screen.
+    final scale = (size.width / 390).clamp(1.0, 1.35);
+    final top = math.max(0.0, (size.height / scale - 844) / 2);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: motionDuration(context, const Duration(milliseconds: _totalMs)),
+      builder: (context, value, _) {
+        final time = value * _totalMs;
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _CelebrationPainter(
+                    time,
+                    scale,
+                    top,
+                    line: colors.accentStrong,
+                    ink: scheme.onSurface,
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        _placed(
-          0,
-          380,
-          390,
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32 * scale),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 14 * scale,
+            PageScaffold(
+              maxWidth: AppLayout.contentNarrow,
               children: [
                 _enter(
-                  _eyebrow,
-                  Text(
-                    l10n.supporterActivated.toUpperCase(),
-                    key: const Key('supporter-eyebrow'),
-                    textAlign: TextAlign.center,
-                    style: text.labelMedium?.copyWith(
-                      color: volt,
-                      letterSpacing: 3.2,
-                      fontWeight: FontWeight.w600,
+                  _mark,
+                  time,
+                  Align(
+                    child: Container(
+                      key: const Key('supporter-mark'),
+                      width: AppSpacing.xxxl + AppSpacing.xl,
+                      height: AppSpacing.xxxl + AppSpacing.xl,
+                      decoration: BoxDecoration(
+                        color: colors.accent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.star_rounded,
+                        size: AppSpacing.xxl,
+                        color: colors.onAccent,
+                      ),
                     ),
                   ),
                 ),
                 _enter(
                   _headline,
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: l10n.supporterThanksName('')),
-                        TextSpan(
-                          text: licence.holder,
-                          style: const TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                        const TextSpan(text: '.'),
-                      ],
-                    ),
+                  time,
+                  Text(
+                    l10n.supporterThanksName(licence.holder),
                     key: const Key('supporter-headline'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: serif,
-                      fontSize: 34 * scale,
-                      height: 1.1,
-                      color: cloudDancer,
+                    style: text.headlineLarge?.copyWith(
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
                 _enter(
                   _body,
+                  time,
                   Text(
                     l10n.supporterBody,
                     key: const Key('supporter-body'),
                     textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(
-                      color: cloudDancer.withValues(alpha: 0.66),
-                      height: 1.5,
+                    style: text.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                 ),
                 _enter(
-                  _serial,
-                  Text(
-                    l10n.supporterSerialNumber(
-                      licence.serial,
-                      dateOnly(licence.activatedAt),
+                  _badge,
+                  time,
+                  Align(
+                    child: SupporterBadge(
+                      key: const Key('supporter-celebration-badge'),
+                      label: l10n.supporterSerialNumber(
+                        licence.serial,
+                        dateOnly(licence.activatedAt),
+                      ),
                     ),
-                    key: const Key('supporter-serial'),
-                    textAlign: TextAlign.center,
-                    style: text.labelSmall?.copyWith(
-                      color: cloudDancer.withValues(alpha: 0.5),
-                      letterSpacing: 1.2,
+                  ),
+                ),
+                _enter(
+                  _button,
+                  time,
+                  SizedBox(
+                    height: AppBottomBar.buttonHeight,
+                    child: FilledButton(
+                      key: const Key('supporter-continue'),
+                      onPressed: onContinue,
+                      child: Text(l10n.supporterContinue),
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          top: (top + 650) * scale,
-          child: Opacity(
-            opacity: badgeIn.clamp(0, 1),
-            child: Transform.scale(
-              scale: (0.85 + 0.15 * badgeIn).clamp(0.5, 1.2),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 8 * scale,
-                children: [
-                  SupporterBadge(
-                    key: const Key('supporter-celebration-badge'),
-                    label: l10n.supporter,
-                    style: text.labelLarge?.copyWith(color: cloudDancer),
-                    background: volt.withValues(alpha: 0.12),
-                  ),
-                  Text(
-                    l10n.supporterAppearsOnProfile,
-                    style: text.labelSmall?.copyWith(
-                      color: cloudDancer.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 24 * scale,
-          right: 24 * scale,
-          bottom: 28 * scale,
-          child: Opacity(
-            opacity: buttonIn.clamp(0, 1),
-            child: Transform.translate(
-              offset: Offset(0, (1 - buttonIn) * 24 * scale),
-              child: SizedBox(
-                height: 56 * scale,
-                child: FilledButton(
-                  key: const Key('supporter-continue'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: volt,
-                    foregroundColor: asphalt,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppRadius.large * scale,
-                      ),
-                    ),
-                  ),
-                  onPressed: buttonIn > 0 ? onContinue : null,
-                  child: Text(
-                    l10n.supporterContinue,
-                    style: text.labelLarge?.copyWith(
-                      color: asphalt,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -444,11 +239,21 @@ class _Overlay extends StatelessWidget {
 /// Everything the moment draws: the contour ellipses, the climb, the summit
 /// burst and the mark. It repaints from the timeline, not from a rebuild.
 class _CelebrationPainter extends CustomPainter {
-  _CelebrationPainter(this.time, this.scale, this.top);
+  _CelebrationPainter(
+    this.time,
+    this.scale,
+    this.top, {
+    required this.line,
+    required this.ink,
+  });
 
   final double time;
   final double scale;
   final double top;
+
+  /// The accent of the climb and the rings, and the ink of the route and the chevrons: the theme's.
+  final Color line;
+  final Color ink;
 
   static const _contours = Span(0, 1800, _soft);
   static const _turn = Span(1800, _totalMs, _soft);
@@ -503,7 +308,7 @@ class _CelebrationPainter extends CustomPainter {
           height: 2 * (34 + (324 - 34) * i / 7) * scale * eased,
         ),
         Paint()
-          ..color = volt.withValues(alpha: 0.08 * eased)
+          ..color = line.withValues(alpha: 0.08 * eased)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1,
       );
@@ -522,7 +327,7 @@ class _CelebrationPainter extends CustomPainter {
     canvas.drawPath(
       climb.extractPath(0, climb.length * effort.clamp(0, 1)),
       Paint()
-        ..color = cloudDancer.withValues(alpha: 0.75 * _profile.raw(time))
+        ..color = ink.withValues(alpha: 0.75 * _profile.raw(time))
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..strokeCap = StrokeCap.round,
@@ -536,9 +341,9 @@ class _CelebrationPainter extends CustomPainter {
         ..drawCircle(
           dot.position,
           26 * pop,
-          Paint()..color = volt.withValues(alpha: 0.16),
+          Paint()..color = line.withValues(alpha: 0.16),
         )
-        ..drawCircle(dot.position, 7 * pop, Paint()..color = volt);
+        ..drawCircle(dot.position, 7 * pop, Paint()..color = line);
     }
 
     final descent = _descent.at(time);
@@ -546,7 +351,7 @@ class _CelebrationPainter extends CustomPainter {
       final line = _descentLine.computeMetrics().first;
       final length = line.length * descent;
       final paint = Paint()
-        ..color = cloudDancer.withValues(alpha: 0.28)
+        ..color = ink.withValues(alpha: 0.28)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5;
       // Dash 2, gap 6.
@@ -578,9 +383,7 @@ class _CelebrationPainter extends CustomPainter {
             Offset(0, -radius),
             Offset(0, -radius - 14 * scale * (1.5 - .85 * burst)),
             Paint()
-              ..color = (i.isEven ? volt : cloudDancer).withValues(
-                alpha: 1 - burst,
-              )
+              ..color = (i.isEven ? line : ink).withValues(alpha: 1 - burst)
               ..strokeWidth = 3 * scale
               ..strokeCap = StrokeCap.round,
           )
@@ -595,7 +398,7 @@ class _CelebrationPainter extends CustomPainter {
       canvas.drawOval(
         Rect.fromCenter(center: Offset.zero, width: width, height: width * .7),
         Paint()
-          ..color = volt.withValues(alpha: 1 - ring)
+          ..color = line.withValues(alpha: 1 - ring)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5,
       );
@@ -619,8 +422,8 @@ class _CelebrationPainter extends CustomPainter {
           box.top + box.height * 20 / 120,
         );
       for (final (path, color) in [
-        (chevron(12, 12), cloudDancer),
-        (chevron(36, 36), volt),
+        (chevron(12, 12), ink),
+        (chevron(36, 36), line),
       ]) {
         final line = path.computeMetrics().first;
         canvas.drawPath(
@@ -640,26 +443,4 @@ class _CelebrationPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CelebrationPainter old) =>
       old.time != time || old.scale != scale || old.top != top;
-}
-
-/// The small check beside "key verified".
-class _CheckPainter extends CustomPainter {
-  const _CheckPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) => canvas.drawPath(
-    Path()
-      ..moveTo(size.width * .08, size.height * .55)
-      ..lineTo(size.width * .38, size.height * .88)
-      ..lineTo(size.width * .96, size.height * .12),
-    Paint()
-      ..color = volt
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round,
-  );
-
-  @override
-  bool shouldRepaint(_CheckPainter old) => false;
 }

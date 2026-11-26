@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- RouteMap: The route glows on a dimmed map; ride facts float on glass. Guideline: RouteMap.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Route map</title>
+<style>
+  .wrap { padding: var(--space-xl); max-width: 760px; }
+  .map { position: relative; border-radius: var(--radius-lg); overflow: hidden; background: var(--map-ground); aspect-ratio: 16 / 9; max-width: 100%; }
+  .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .road { fill: none; stroke: var(--map-road); stroke-linecap: round; }
+  .water { fill: var(--card-raised); }
+  .glow { fill: none; stroke: var(--route-glow); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+  .route { fill: none; stroke: var(--accent-strong); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .start { fill: var(--accent); stroke: var(--card); stroke-width: 3; }
+  .finish { fill: var(--signal); stroke: var(--card); stroke-width: 3; }
+  .info { position: absolute; left: var(--space-lg); right: var(--space-lg); bottom: var(--space-lg); border-radius: var(--radius-xl); padding: var(--space-lg) var(--space-xl); display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-xs) var(--space-lg); }
+  .facts { display: flex; gap: var(--space-lg); flex-wrap: wrap; }
+  .facts b { font-weight: 600; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="map" role="img" aria-label="Map of the Sunday ride on 2 November: 42.2 km, 1 h 35, 945 m climbed.">
+  <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><filter id="blur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="6"/></filter></defs>
+    <path class="water" d="M640 0 L640 120 C600 140 560 110 520 70 C490 40 470 20 470 0 Z"/>
+    <path class="road" stroke-width="6" d="M0 240 C120 230 220 260 320 250 S520 210 640 230"/>
+    <path class="road" stroke-width="4" d="M150 0 C160 90 130 180 170 360"/>
+    <path class="road" stroke-width="4" d="M380 0 C360 100 420 200 400 360"/>
+    <path class="road" stroke-width="3" d="M0 90 C100 110 250 80 380 120 S560 160 640 150"/>
+    <path class="road" stroke-width="2" d="M240 360 C260 300 300 280 290 200 S250 100 270 0"/>
+    <path class="road" stroke-width="2" d="M520 360 C500 300 540 260 600 240"/>
+    <path class="glow" filter="url(#blur)" d="M70 300 C120 250 140 210 200 200 S300 230 340 170 S420 60 500 90 S600 200 560 280"/>
+    <path class="route" d="M70 300 C120 250 140 210 200 200 S300 230 340 170 S420 60 500 90 S600 200 560 280"/>
+    <circle class="start" cx="70" cy="300" r="7"/>
+    <circle class="finish" cx="560" cy="280" r="7"/>
+  </svg>
+  <div class="info vm-glass">
+    <span class="body-strong">Sunday ride · 2 Nov</span>
+    <span class="facts caption vm-muted"><span><b>42.2</b> km</span><span><b>1 h 35</b></span><span><b>945</b> m</span></span>
+  </div>
+</div>
+</div>
+</body>
+</html>

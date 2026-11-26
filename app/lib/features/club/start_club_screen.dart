@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
-import '../../core/widgets/error_state.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
+import '../calendar/club_ride_widgets.dart';
 import 'location_picker.dart';
 import 'start_club_view_model.dart';
 
@@ -48,7 +48,6 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
         initial: initial,
         tileUrl: widget.tileUrl,
         attribution: widget.attribution,
-        locationService: ref.read(locationServiceProvider),
       ),
     ),
   );
@@ -88,8 +87,8 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
     final point = state.point;
     final failure = state.create.failure;
     return PageScaffold(
-      eyebrow: l10n.eyebrowClub,
       title: l10n.startClubTitle,
+      parent: l10n.navClub,
       subtitle: l10n.startClubIntro,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
@@ -99,56 +98,68 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
         onPressed: _start,
       ),
       children: [
-        AppTextField(
-          fieldKey: const Key('start-club-name'),
-          controller: _name,
-          label: l10n.startClubName,
-        ),
-        if (_showProblem && _name.text.trim().isEmpty) ...[
-          const SizedBox(height: AppSpacing.sm),
-          InlineError(
-            l10n.startClubNameRequired,
-            key: const Key('start-club-name-error'),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.lg),
-        Text(l10n.clubLocation, style: Theme.of(context).textTheme.titleMedium),
-        Text(
-          l10n.clubLocationHelp,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          point == null ? l10n.clubLocationNone : l10n.clubLocationOnMap,
-          key: const Key('start-club-location'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            key: const Key('start-club-pick-location'),
-            onPressed: state.create.running ? null : _choosePlace,
-            icon: const Icon(Icons.place),
-            label: Text(
-              point == null ? l10n.clubLocationSet : l10n.clubLocationChange,
+        SectionCard(
+          key: const Key('start-club-name-card'),
+          title: l10n.startClubNameCard,
+          children: [
+            AppTextField(
+              fieldKey: const Key('start-club-name'),
+              controller: _name,
+              label: l10n.startClubName,
             ),
-          ),
+            if (_showProblem && _name.text.trim().isEmpty)
+              InlineError(
+                l10n.startClubNameRequired,
+                key: const Key('start-club-name-error'),
+              ),
+          ],
         ),
-        SwitchListTile(
-          key: const Key('start-club-discoverable'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.clubDiscoverable),
-          subtitle: Text(l10n.clubDiscoverableHelp),
-          value: state.isDiscoverable && point != null,
-          onChanged: state.create.running ? null : _toggleDiscoverable,
+        SectionCard(
+          key: const Key('start-club-location-card'),
+          title: l10n.clubLocation,
+          description: l10n.clubLocationHelp,
+          children: [
+            // The point the club is found by, drawn where a person reads it.
+            if (point != null)
+              MeetingMap(
+                latitude: point.latitude,
+                longitude: point.longitude,
+                tileUrl: widget.tileUrl,
+                attribution: widget.attribution,
+              )
+            else
+              Text(
+                l10n.clubLocationNone,
+                key: const Key('start-club-location'),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                key: const Key('start-club-pick-location'),
+                onPressed: state.create.running ? null : _choosePlace,
+                icon: const Icon(Icons.place),
+                label: Text(
+                  point == null
+                      ? l10n.clubLocationSet
+                      : l10n.clubLocationChange,
+                ),
+              ),
+            ),
+            SwitchListTile(
+              key: const Key('start-club-discoverable'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.clubDiscoverable),
+              subtitle: Text(l10n.clubDiscoverableHelp),
+              value: state.isDiscoverable && point != null,
+              onChanged: state.create.running ? null : _toggleDiscoverable,
+            ),
+          ],
         ),
-        if (failure != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          ErrorState(
-            message: failureText(l10n, failure),
-            actionKey: const Key('start-club-error'),
+        if (failure != null)
+          InlineError(
+            failureText(l10n, failure),
+            key: const Key('start-club-error'),
           ),
-        ],
       ],
     );
   }

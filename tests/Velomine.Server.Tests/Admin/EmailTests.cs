@@ -366,6 +366,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     [InlineData(NotificationTypes.PartWorn, "morning.fit is worn out. Time to replace it.", true)]
     [InlineData(NotificationTypes.ReminderSoon, "Maintenance nearly due: morning.fit.", true)]
     [InlineData(NotificationTypes.ReminderDue, "Maintenance due: morning.fit.", true)]
+    [InlineData(NotificationTypes.TrainingSessionQuestion, "A ride of yours might be your morning.fit session. Answer in Velomine.", true)]
     // Someone waits on the member, or an answer came: always mailed.
     [InlineData(NotificationTypes.SignUpWaiting, "morning.fit signed up and is waiting for approval.", false)]
     [InlineData(NotificationTypes.ClubJoinRequest, "morning.fit asked to join your club.", false)]

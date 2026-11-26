@@ -1,0 +1,6 @@
+{
+  "packages": [
+    "git:github.com/DietrichGebert/ponytail@v5.3.3",
+    "npm:pi-claude-tether@0.12.1"
+  ]
+}

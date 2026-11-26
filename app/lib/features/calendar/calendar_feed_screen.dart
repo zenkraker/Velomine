@@ -11,9 +11,10 @@ import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/toolbar_row.dart';
+import '../../core/widgets/section_card.dart';
 import 'club_rides_view_model.dart';
 
 /// The member's private calendar address: shown once, replaceable, and stopped when they leave the club.
@@ -34,15 +35,47 @@ class CalendarFeedScreen extends ConsumerWidget {
     );
 
     final busy = s.action.running;
+    // Until the status has arrived there is nothing to act on: neither the address nor the fact that
+    // there is none.
+    final loaded = !s.load.running && !s.load.idle;
     return PageScaffold(
-      eyebrow: l10n.clubRidesEyebrow,
       title: l10n.calendarTitle,
+      parent: l10n.clubCalendarCaption,
       subtitle: l10n.calendarHelp,
       maxWidth: AppLayout.contentNarrow,
+      // The one action that makes the address is the page's main action; replace and stop live in the
+      // menu once there is one.
+      primaryAction: !loaded || (s.active && s.address != null)
+          ? null
+          : FilledButton.icon(
+              key: const Key('create-calendar-address'),
+              onPressed: busy ? null : notifier.create,
+              icon: const Icon(Icons.add_link),
+              label: Text(l10n.calendarCreate),
+            ),
       menu: s.active
           ? PageMenu(
               buttonKey: const Key('calendar-actions'),
               entries: [
+                PageMenuEntry(
+                  key: const Key('replace-calendar-address'),
+                  icon: Icons.refresh,
+                  label: l10n.calendarReplace,
+                  onSelected: busy
+                      ? () {}
+                      : () => scheduleMicrotask(() async {
+                          if (!context.mounted) return;
+                          if (await confirmDestructive(
+                            context,
+                            title: l10n.calendarReplaceConfirmTitle,
+                            body: l10n.calendarReplaceConfirmBody,
+                            action: l10n.calendarReplace,
+                            key: const Key('confirm-replace-calendar'),
+                          )) {
+                            await notifier.create();
+                          }
+                        }),
+                ),
                 PageMenuEntry(
                   key: const Key('stop-calendar-address'),
                   icon: Icons.link_off,
@@ -67,87 +100,48 @@ class CalendarFeedScreen extends ConsumerWidget {
             )
           : null,
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.sm,
-              children: [
-                if (s.load.failure case final failure?)
-                  ErrorState(
-                    message: failureText(l10n, failure),
-                    actionKey: const Key('calendar-feed-error'),
-                  )
-                else if (s.address != null) ...[
-                  SelectableText(
-                    s.address!,
-                    key: const Key('calendar-address'),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  Text(
-                    l10n.calendarShownOnce,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Row(
-                    children: [
-                      FilledButton.tonalIcon(
-                        key: const Key('copy-calendar-address'),
-                        onPressed: () async {
-                          await Clipboard.setData(
-                            ClipboardData(text: s.address!),
-                          );
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.calendarAddressCopied)),
-                          );
-                        },
-                        icon: const Icon(Icons.copy),
-                        label: Text(l10n.calendarCopy),
-                      ),
-                    ],
-                  ),
-                ] else
-                  Text(
-                    s.active
-                        ? [
-                            l10n.calendarActive,
-                            if (s.createdAt != null) dateTime(s.createdAt),
-                          ].join(' · ')
-                        : l10n.calendarInactive,
-                    key: const Key('calendar-status'),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        ToolbarRow(
+        SectionCard(
+          key: const Key('calendar-address-card'),
+          title: l10n.calendarAddressTitle,
           children: [
-            if (!s.active || s.address == null)
-              FilledButton.icon(
-                key: const Key('create-calendar-address'),
-                onPressed: busy ? null : notifier.create,
-                icon: const Icon(Icons.add_link),
-                label: Text(l10n.calendarCreate),
+            if (s.load.running)
+              const LoadingState()
+            else if (s.load.failure case final failure?)
+              ErrorState(
+                message: failureText(l10n, failure),
+                actionKey: const Key('calendar-feed-error'),
+              )
+            else if (s.address != null) ...[
+              SelectableText(
+                s.address!,
+                key: const Key('calendar-address'),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-            if (s.active)
-              OutlinedButton.icon(
-                key: const Key('replace-calendar-address'),
-                onPressed: busy
-                    ? null
-                    : () async {
-                        if (await confirmDestructive(
-                          context,
-                          title: l10n.calendarReplaceConfirmTitle,
-                          body: l10n.calendarReplaceConfirmBody,
-                          action: l10n.calendarReplace,
-                          key: const Key('confirm-replace-calendar'),
-                        )) {
-                          await notifier.create();
-                        }
-                      },
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.calendarReplace),
+              Text(
+                l10n.calendarShownOnce,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.tonalIcon(
+                  key: const Key('copy-calendar-address'),
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: s.address!));
+                    notifier.copied();
+                  },
+                  icon: const Icon(Icons.copy),
+                  label: Text(l10n.calendarCopy),
+                ),
+              ),
+            ] else
+              Text(
+                s.active
+                    ? [
+                        l10n.calendarActive,
+                        if (s.createdAt != null) dateTime(s.createdAt),
+                      ].join(' · ')
+                    : l10n.calendarInactive,
+                key: const Key('calendar-status'),
               ),
           ],
         ),

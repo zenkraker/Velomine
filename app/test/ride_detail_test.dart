@@ -1,27 +1,47 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/providers.dart';
+import 'package:velomine/core/rider_mode.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
+import 'package:velomine/core/widgets/badge.dart';
+import 'package:velomine/core/widgets/stat_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
 
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/core/theme.dart';
+import 'package:velomine/features/rides/detail/series_chart.dart';
 
-Widget _detailApp(Session session, String id) => ProviderScope(
-  overrides: [
-    sessionProvider.overrideWith((ref) => session),
-    ridePollIntervalProvider.overrideWithValue(
-      const Duration(milliseconds: 10),
-    ),
-  ],
-  child: MaterialApp(
-    localizationsDelegates: appLocalizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: Scaffold(
-      body: RideDetailScreen(id: id, onDeleted: () {}),
+Future<void> _pumpDetail(
+  WidgetTester tester,
+  Session session,
+  String id, {
+  RiderModeLayout layout = RiderModeLayout.full,
+  List<Uri>? opened,
+}) => tester.pumpWidget(
+  ProviderScope(
+    overrides: [
+      sessionProvider.overrideWith((ref) => session),
+      ridePollIntervalProvider.overrideWithValue(
+        const Duration(milliseconds: 10),
+      ),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: RideDetailScreen(
+          id: id,
+          layout: layout,
+          onDeleted: () {},
+          serverUrl: 'https://velomine.test',
+          openLink: (uri) async => opened?.add(uri),
+        ),
+      ),
     ),
   ),
 );
@@ -72,11 +92,19 @@ void main() {
     ];
   });
 
-  Future<void> open(WidgetTester tester, {String id = 'r1'}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    String id = 'r1',
+    LinkOpener? openLink,
+  }) async {
     tester.view.physicalSize = const Size(1000, 2800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await startApp(tester, server.session(useCookies: true));
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      openLink: openLink,
+    );
     await tester.tap(find.byKey(Key('ride-$id')));
     await tester.pumpAndSettle();
   }
@@ -86,7 +114,7 @@ void main() {
     (tester) async {
       await open(tester);
 
-      expect(find.text('sunday.gpx'), findsOneWidget);
+      expect(find.byKey(const Key('route-map')), findsOneWidget);
       for (final text in [
         '42.3 km',
         '1 h 30 min',
@@ -99,7 +127,6 @@ void main() {
       ]) {
         expect(find.text(text), findsOneWidget, reason: text);
       }
-      expect(find.byKey(const Key('route-map')), findsOneWidget);
       for (final chart in ['elevation', 'speed', 'power', 'heartrate']) {
         expect(find.byKey(Key('chart-$chart')), findsOneWidget, reason: chart);
       }
@@ -111,13 +138,256 @@ void main() {
     },
   );
 
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheDateAndSurfaceInTheHeader_WhenTheRideIsOpened',
+    (tester) async {
+      server.rides[0]['discipline'] = 'road';
+      await open(tester);
+
+      // The one line under the title carries when it was and what it was; the body does not repeat it.
+      expect(find.textContaining(' · Road'), findsOneWidget);
+      // Neither the file, the device, nor a placeholder for words the rider never wrote.
+      expect(find.text('sunday.gpx'), findsNothing);
+      expect(find.byKey(const Key('add-ride-description')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheEventAsABadge_WhenTheRideWasAnEvent',
+    (tester) async {
+      server.events.add({
+        'id': 'event-1',
+        'name': 'Gran Fondo delle Colline',
+        'date': '2026-11-01',
+        'kind': 'race',
+        'distanceM': 120000,
+        'elevationGainM': 1800,
+        'notes': null,
+        'rideId': 'r1',
+        'createdAt': '2026-11-02T09:00:00Z',
+      });
+      await open(tester);
+
+      final badge = find.byKey(const Key('ride-event'));
+      expect(badge, findsOneWidget);
+      expect(tester.widget(badge), isA<AppBadge>());
+      expect(find.text('Your event: Gran Fondo delle Colline'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldPutEveryChartInOneCard_WhenTheRideHasSeries',
+    (tester) async {
+      await open(tester);
+
+      final card = find.byKey(const Key('ride-charts'));
+      expect(card, findsOneWidget);
+      for (final chart in ['elevation', 'speed', 'power', 'heartrate']) {
+        expect(
+          find.descendant(of: card, matching: find.byKey(Key('chart-$chart'))),
+          findsOneWidget,
+          reason: chart,
+        );
+      }
+      // The sentence about the cursor is the card's own, above the charts.
+      expect(
+        find.descendant(of: card, matching: find.byKey(const Key('moment'))),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldNameTheZoneAndShowTheTotalOnce_WhenTheZonesCardIsShown',
+    (tester) async {
+      await open(tester);
+
+      final zones = find.byKey(const Key('zones'));
+      await tester.scrollUntilVisible(
+        zones,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      // The design names each zone in words beside its number.
+      expect(
+        find.descendant(of: zones, matching: find.text('Z2 Endurance')),
+        findsOneWidget,
+      );
+      // 600 + 1200 + 900 + 300 + 60 seconds: once, under the rows it is the sum of.
+      expect(
+        find.descendant(of: zones, matching: find.text('51 min')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'LapTable_ShouldListDistanceMovingTimeAndPower_WhenTheRideHasLaps',
+    (tester) async {
+      await open(tester);
+
+      final laps = find.byKey(const Key('laps'));
+      await tester.scrollUntilVisible(
+        laps,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      double x(String label) => tester
+          .getTopLeft(find.descendant(of: laps, matching: find.text(label)))
+          .dx;
+      // The mock-up's column order: the lap, then distance, moving time and average power.
+      expect(x('Distance'), lessThan(x('Moving time')));
+      expect(x('Moving time'), lessThan(x('Average power')));
+      expect(
+        find.descendant(of: laps, matching: find.text('Average speed')),
+        findsNothing,
+      );
+
+      // The caption row is a size under the numbers it names.
+      final theme = Theme.of(tester.element(laps));
+      final head = tester.widget<Text>(
+        find.descendant(of: laps, matching: find.text('Distance')),
+      );
+      expect(head.style?.fontSize, theme.textTheme.bodySmall?.fontSize);
+      final cell = tester.widget<Text>(
+        find.descendant(of: laps, matching: find.text('21.0 km')),
+      );
+      expect(cell.style?.fontSize, theme.textTheme.bodyMedium?.fontSize);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheBikeAsACardAndChangeIt_WhenTheRideHasOne',
+    (tester) async {
+      server.bikes.add({
+        'id': 'bike-1',
+        'name': 'Canyon Endurace',
+        'kind': 'road',
+        'wheelCircumferenceMm': 2105,
+        'initialDistanceM': 4812000.0,
+        'isDefault': true,
+      });
+      server.rides[0]['bikeId'] = 'bike-1';
+      await open(tester);
+
+      final card = find.byKey(const Key('ride-bike'));
+      await tester.scrollUntilVisible(
+        card,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: card, matching: find.text('Canyon Endurace')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Default · 4812 km')),
+        findsOneWidget,
+      );
+
+      // The one way out of the card: a sheet that lists the bikes.
+      await tester.tap(find.byKey(const Key('ride-bike-change')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('ride-bike-option-none')));
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('PUT /api/v1/rides/r1/bike'));
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowEstimatedWatts_WhenTheRideHasNoPowerMeter',
+    (tester) async {
+      server.rides.add(
+        rideJson(
+          'r2',
+          'ready',
+          distanceM: 30000,
+          movingS: 3600,
+          avgHeartRate: 140,
+          estimatedAvgPowerW: 142,
+          fileName: 'commute.fit',
+        ),
+      );
+      server.streams['r2'] = streamsJson(power: false, estimatedPower: true);
+      await open(tester, id: 'r2');
+
+      // Always said as an estimate, with what it was made from.
+      expect(
+        find.byKey(const Key('stat-estimated-average-power')),
+        findsOneWidget,
+      );
+      expect(find.text('142 W'), findsOneWidget);
+      expect(find.byKey(const Key('estimated-power-source')), findsOneWidget);
+      expect(find.byKey(const Key('chart-estimatedpower')), findsOneWidget);
+      expect(find.byKey(const Key('chart-power')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheNumbersAsOneCard_WhenTheRideIsOpened',
+    (tester) async {
+      await open(tester);
+
+      final card = find.byKey(const Key('ride-numbers'));
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('stat-distance')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.byKey(const Key('stat-tss'))),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Numbers')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldPutTheChartsAboveTheZones_WhenTheRideHasBoth',
+    (tester) async {
+      await open(tester);
+
+      final charts = tester.getTopLeft(find.byKey(const Key('chart-power'))).dy;
+      final zones = tester.getTopLeft(find.byKey(const Key('zones'))).dy;
+      expect(charts, lessThan(zones));
+    },
+  );
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'RideDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await open(tester);
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('RideDetailScreen_ShouldShowZonesAndLoad_WhenProfileHasThem', (
     tester,
   ) async {
     await open(tester);
 
-    expect(find.byKey(const Key('heart-rate-zones')), findsOneWidget);
-    expect(find.byKey(const Key('power-zones')), findsOneWidget);
+    // One zones card: the heart-rate zones first, the power zones behind its switch.
+    expect(find.byKey(const Key('zones')), findsOneWidget);
+    expect(find.byKey(const Key('zone-switch')), findsOneWidget);
+    expect(find.text('Heart rate zones'), findsWidgets);
     expect(
       find.descendant(
         of: find.byKey(const Key('stat-intensity')),
@@ -139,10 +409,172 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Heart rate zones'), findsOneWidget);
-    expect(find.text('Power zones'), findsOneWidget);
+    expect(find.text('Heart rate zones'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('zone-switch')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('zone-switch')),
+        matching: find.text('Power'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Power zones'), findsWidgets);
+    expect(find.text('Heart rate zones'), findsNothing);
     expect(find.textContaining('TSS uses your FTP'), findsOneWidget);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTwoCards_WhenTheRideMovedBothHeartRateNumbers',
+    (tester) async {
+      // A ride raised both numbers: one card each, in the rider's language.
+      server.rides.first['heartRateMaxNote'] = 'max_measured';
+      server.rides.first['heartRateThresholdNote'] = 'threshold_measured';
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 192,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r1',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(find.byKey(const Key('heart-rate-note-max')), findsOneWidget);
+      expect(
+        find.byKey(const Key('heart-rate-note-threshold')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('New maximum heart rate: 192 bpm. Your zones now use it.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('New threshold heart rate: 165 bpm. Your zones now use it.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetail_ShouldNotSayZonesChanged_WhenANewMaxIsMeasuredAndZonesComeFromTheThreshold',
+    (tester) async {
+      // Zones built on the threshold: a new maximum does not move them, so the card promises nothing.
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateMaxNote': 'max_measured',
+        'heartRateZoneModel': 'threshold',
+      };
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 192,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r1',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(find.text('New maximum heart rate: 192 bpm.'), findsOneWidget);
+      expect(
+        find.text('New maximum heart rate: 192 bpm. Your zones now use it.'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetail_ShouldSayZonesChanged_WhenANewMaxIsMeasuredAndZonesComeFromTheMax',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateMaxNote': 'max_measured',
+        'heartRateZoneModel': 'max',
+      };
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 192,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r1',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(
+        find.text('New maximum heart rate: 192 bpm. Your zones now use it.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldHideTheMeasuredCard_WhenTheNumberCameFromAnotherRide',
+    (tester) async {
+      // The profile carries the ride that set the number: this ride moved the maximum, but a later ride now holds it,
+      // so calling this ride's number "measured" here would name a number this ride no longer set.
+      server.rides.first['heartRateMaxNote'] = 'max_measured';
+      server.rides.first['heartRateThresholdNote'] = 'threshold_measured';
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 195,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r2',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(find.byKey(const Key('heart-rate-note-max')), findsNothing);
+      expect(
+        find.byKey(const Key('heart-rate-note-threshold')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('RideDetailScreen_ShouldShowMilesAndFeet_WhenUnitsAreImperial', (
     tester,
@@ -285,7 +717,7 @@ void main() {
     tester,
   ) async {
     final session = server.session(useCookies: true);
-    await tester.pumpWidget(_detailApp(session, 'nobody-has-this-ride'));
+    await _pumpDetail(tester, session, 'nobody-has-this-ride');
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('not-found')), findsOneWidget);
@@ -297,7 +729,7 @@ void main() {
   ) async {
     server.rides.add(rideJson('r3', 'processing', fileName: 'big.fit'));
     final session = server.session(useCookies: true);
-    await tester.pumpWidget(_detailApp(session, 'r3'));
+    await _pumpDetail(tester, session, 'r3');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 5));
     expect(find.byKey(const Key('processing')), findsOneWidget);
@@ -415,6 +847,27 @@ void main() {
     );
   });
 
+  testWidgets(
+    'RouteMap_ShouldDrawTheLineWithoutTilesAndSayWhy_WhenTheRideIsVirtual',
+    (tester) async {
+      server.rides.add(
+        rideJson('v1', 'ready', distanceM: 20000, environment: 'virtual'),
+      );
+      server.streams['v1'] = streamsJson();
+      await open(tester, id: 'v1');
+
+      expect(find.byKey(const Key('route-map')), findsOneWidget);
+      expect(find.byKey(const Key('map-virtual-caption')), findsOneWidget);
+      expect(find.byKey(const Key('map-attribution')), findsNothing);
+      final tiles = find.byWidgetPredicate(
+        (w) =>
+            w.key is ValueKey<String> &&
+            (w.key! as ValueKey<String>).value.startsWith('tile-'),
+      );
+      expect(tiles, findsNothing);
+    },
+  );
+
   testWidgets('RouteMap_ShouldOpenFullScreenAndClose_WhenTheMapIsTapped', (
     tester,
   ) async {
@@ -524,7 +977,8 @@ void main() {
       server.rides[0]['description'] = 'Cold start, warm finish.';
       await open(tester);
 
-      expect(find.text('Dawn patrol'), findsOneWidget);
+      // The page title and the map's glass card both name the ride.
+      expect(find.text('Dawn patrol'), findsWidgets);
       expect(find.text('Cold start, warm finish.'), findsOneWidget);
     },
   );
@@ -552,7 +1006,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.requests, contains('PUT /api/v1/rides/r1/details'));
-    expect(find.text('Dawn patrol'), findsOneWidget);
+    expect(find.text('Dawn patrol'), findsWidgets);
     expect(find.text('Cold start'), findsOneWidget);
   });
 
@@ -606,4 +1060,323 @@ void main() {
     );
     expect(find.byKey(const Key('ride-views-empty')), findsOneWidget);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowPowerRecordChips_WhenTheRideSetRecords',
+    (tester) async {
+      server.rides[0]['powerRecords'] = [
+        powerRecordJson(300, 312, 'all_time'),
+        powerRecordJson(1200, 268, '90_days'),
+      ];
+      await open(tester);
+
+      expect(find.text('Best 5 min ever: 312 W'), findsOneWidget);
+      expect(find.text('Best 20 min in 90 days: 268 W'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheFtpSuggestionAtTheTop_WhenTheRideSuggestsOne',
+    (tester) async {
+      server.rides[0]['ftpSuggestionW'] = 266;
+      server.rides[0]['ftpSuggestionMethod'] = '20min';
+      server.rides[0]['ftpSuggestionId'] = 'suggestion-1';
+      server.ftpSuggestions['rider@example.com'] = {
+        'id': 'suggestion-1',
+        'rideId': 'r1',
+        'watts': 266,
+        'method': '20min',
+        'effortWatts': 280,
+        'createdAt': '2026-11-01T09:00:00Z',
+      };
+      await open(tester);
+
+      expect(find.text('This ride suggests an FTP of 266 W'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('ftp-suggestion-use')));
+      await tester.pumpAndSettle();
+
+      expect(server.acceptedSuggestions, ['suggestion-1']);
+      // The accepted suggestion is gone from the server; the ride is read again and the card with it.
+      server.rides[0]['ftpSuggestionW'] = null;
+      server.rides[0]['ftpSuggestionMethod'] = null;
+      server.rides[0]['ftpSuggestionId'] = null;
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheEffortWatts_WhenTheRideSuggestsAnFtp',
+    (tester) async {
+      server.rides[0]['ftpSuggestionW'] = 266;
+      server.rides[0]['ftpSuggestionEffortW'] = 263;
+      server.rides[0]['ftpSuggestionMethod'] = '20min';
+      server.rides[0]['ftpSuggestionId'] = 'suggestion-1';
+      await open(tester);
+
+      // The effort the number came from is the server's; the card never guesses it.
+      expect(find.text('95 % of your best 20 minutes (263 W)'), findsOneWidget);
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldHaveNoSuggestion_WhenTheRideHasNone', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldChartTheWPrimeBalanceInKj_WhenTheRideHasAFit',
+    (tester) async {
+      server.rides[0]['minWPrimeBalanceJ'] = 8137;
+      server.rides[0]['wPrimeJ'] = 20037;
+      server.streams['r1'] = streamsJson(
+        wPrimeBalance: [for (var i = 0; i < 60; i++) 20000 - i * 100],
+      );
+      await open(tester);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('chart-wprime')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const Key('chart-wprime')), findsOneWidget);
+      expect(find.text('W′ balance'), findsOneWidget);
+      expect(find.text('Lowest W′ balance 8.1 kJ of 20.0 kJ'), findsOneWidget);
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldHideTheWPrimeBalance_WhenThereIsNoFit', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('chart-wprime')), findsNothing);
+    expect(find.byKey(const Key('wprime-lowest')), findsNothing);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldLeadWithTheRouteMap_WhenTheRideHasARoute',
+    (tester) async {
+      await open(tester);
+
+      final map = find.byKey(const Key('route-map'));
+      expect(map, findsOneWidget);
+      // The map is the first thing under the title, above the numbers.
+      final mapTop = tester.getTopLeft(map).dy;
+      final statsTop = tester
+          .getTopLeft(find.byKey(const Key('stat-distance')))
+          .dy;
+      expect(mapTop, lessThan(statsTop));
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheFactsOnTheMap_WhenTheRideHasARoute',
+    (tester) async {
+      server.rides[0]['title'] = 'Dawn patrol';
+      await open(tester);
+
+      final facts = find.byKey(const Key('map-facts'));
+      expect(facts, findsOneWidget);
+      expect(
+        find.descendant(of: facts, matching: find.text('Dawn patrol')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: facts, matching: find.textContaining('42.3 km')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: facts, matching: find.textContaining('612 m')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldHideTheRoute_WhenTheCallerHasNoRouteGrant',
+    (tester) async {
+      // What the server's privacy function sends a caller without the route grant: every signal but the
+      // position, so the page has numbers and no route.
+      server.streams['r1'] = streamsJson(position: false);
+      await open(tester);
+
+      expect(find.byKey(const Key('route-map')), findsNothing);
+      expect(find.byKey(const Key('map-facts')), findsNothing);
+      expect(find.byKey(const Key('stat-distance')), findsOneWidget);
+      expect(find.byKey(const Key('chart-power')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldOfferAFitDownload_WhenTheRideCameFromGpx',
+    (tester) async {
+      // The ride's own file is sunday.gpx, so the FIT copy is the one the server writes from it.
+      await open(tester);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('download-original')), findsOneWidget);
+      expect(find.byKey(const Key('download-fit')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldOfferOnlyTheOriginal_WhenTheRideIsAlreadyFit',
+    (tester) async {
+      server.rides[0]['fileName'] = 'ride.fit';
+      await open(tester);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('download-original')), findsOneWidget);
+      expect(find.byKey(const Key('download-fit')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldOpenTheDownloadLink_WhenTheRiderChoosesIt',
+    (tester) async {
+      Uri? opened;
+      await open(tester, openLink: (uri) async => opened = uri);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('download-fit')));
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('POST /api/v1/rides/r1/file-link'));
+      // The browser is sent to the server that made the link, with the format the rider asked for.
+      expect(
+        opened.toString(),
+        'http://server/api/v1/rides/r1/file/test-token?format=fit',
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldKeepMenuOrderAndDeleteLast_WhenTheMenuOpens',
+    (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      final text = tester
+          .getTopLeft(find.byKey(const Key('edit-ride-text')))
+          .dy;
+      final type = tester
+          .getTopLeft(find.byKey(const Key('edit-ride-type')))
+          .dy;
+      final delete = tester.getTopLeft(find.byKey(const Key('delete'))).dy;
+      expect(text, lessThan(type));
+      expect(type, lessThan(delete));
+
+      // Deleting is the red one, and it asks first.
+      final scheme = Theme.of(tester.element(find.byKey(const Key('delete'))))
+          .colorScheme;
+      final entry = tester.widget<MenuItemButton>(
+        find.byKey(const Key('delete')),
+      );
+      expect(entry.style?.foregroundColor?.resolve({}), scheme.error);
+      expect(
+        Theme.of(tester.element(find.byKey(const Key('delete')))),
+        isNotNull,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldSayTheZonesComeFromTheThreshold_WhenTheRideCarriesTheThresholdModel',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateZoneModel': 'threshold',
+        'heartRateZoneReferenceBpm': 160,
+        'heartRateZoneReferenceSource': 'measured',
+      };
+      await open(tester);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('zone-switch')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Zones from your threshold heart rate (160 bpm)'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldPaintPowerInSeriesPower_WhenTheChartShows',
+    (tester) async {
+      await open(tester);
+
+      final charts = tester.widgetList<SeriesChart>(find.byType(SeriesChart));
+      final power = charts.firstWhere((chart) => chart.series.id == 'power');
+      final heartRate = charts.firstWhere(
+        (chart) => chart.series.id == 'heartrate',
+      );
+      final colors = VelomineColors.of(
+        tester.element(find.byType(SeriesChart).first),
+      );
+      expect(power.color, colors.series['power']);
+      expect(heartRate.color, colors.series['heartrate']);
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldShowTheEffortScore_WhenTheRideHasOne', (
+    tester,
+  ) async {
+    server.rides[0] = {
+      ...server.rides[0],
+      'hrTss': 64.0,
+      'effortScore': 64.0,
+      'effortSource': 'heart_rate',
+    };
+    await open(tester);
+
+    expect(find.byKey(const Key('stat-effort-score')), findsOneWidget);
+    expect(
+      tester
+          .widget<StatFigure>(find.byKey(const Key('stat-effort-score')))
+          .value,
+      '64',
+    );
+    expect(find.text('From your heart rate'), findsOneWidget);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldSayTheEffortCameFromTheFeel_WhenTheRiderRatedTheRide',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'effortScore': 75.0,
+        'effortSource': 'feel',
+      };
+      await open(tester);
+
+      expect(find.text('From how hard it felt'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetail_ShouldSayFromEstimatedWatts_WhenTheEffortIsEstimated',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'estimatedAvgPowerW': 150,
+        'effortScore': 42.0,
+        'effortSource': 'estimated',
+      };
+      await open(tester);
+
+      expect(find.text('From estimated watts'), findsOneWidget);
+    },
+  );
 }

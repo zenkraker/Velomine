@@ -3,7 +3,6 @@ import 'dart:async' show scheduleMicrotask;
 import '../../core/confirm.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
-import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/inline_error.dart';
 
@@ -15,12 +14,14 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/units.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../club/location_picker.dart';
@@ -45,12 +46,6 @@ class PrivacyScreen extends ConsumerStatefulWidget {
 class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   final _trimStart = TextEditingController();
   final _trimEnd = TextEditingController();
-  bool _showHeartRate = true;
-  bool _showPower = true;
-  bool _showCadence = true;
-  bool _showSpeed = true;
-  bool _showElevation = true;
-  bool _showTemperature = true;
   bool _filled = false;
   String? _problem;
   late final ProviderSubscription<PrivacyResponse?> _privacySub;
@@ -69,12 +64,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     if (privacy == null || _filled || !mounted) return;
     setState(() {
       _filled = true;
-      _showHeartRate = !privacy.streams.hideHeartRate;
-      _showPower = !privacy.streams.hidePower;
-      _showCadence = !privacy.streams.hideCadence;
-      _showSpeed = !privacy.streams.hideSpeed;
-      _showElevation = !privacy.streams.hideElevation;
-      _showTemperature = !privacy.streams.hideTemperature;
       _trimStart.text = _trimText(privacy.trimStartM);
       _trimEnd.text = _trimText(privacy.trimEndM);
     });
@@ -122,16 +111,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     if (start == null || end == null) return;
     await ref
         .read(privacyViewModelProvider.notifier)
-        .saveSettings(
-          hideHeartRate: !_showHeartRate,
-          hidePower: !_showPower,
-          hideCadence: !_showCadence,
-          hideSpeed: !_showSpeed,
-          hideElevation: !_showElevation,
-          hideTemperature: !_showTemperature,
-          trimStartM: start,
-          trimEndM: end,
-        );
+        .saveSettings(trimStartM: start, trimEndM: end);
   }
 
   Future<void> _addZone(AppLocalizations l10n) async {
@@ -141,7 +121,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           initial: null,
           tileUrl: widget.tileUrl,
           attribution: widget.attribution,
-          locationService: ref.read(locationServiceProvider),
         ),
       ),
     );
@@ -192,9 +171,20 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     );
 
     return PageScaffold(
-      eyebrow: l10n.profileTitle,
       title: l10n.privacyTitle,
+      parent: l10n.profileTitle,
+      subtitle: l10n.privacyHelp,
       maxWidth: AppLayout.contentNarrow,
+      // One save for both cards, pinned where a form's action goes.
+      bottomAction: privacy == null
+          ? null
+          : BottomActionBar.button(
+              buttonKey: const Key('privacy-save'),
+              label: l10n.save,
+              busy: state.save.running,
+              onPressed: () => _save(l10n),
+              maxWidth: AppLayout.contentNarrow,
+            ),
       children: [
         privacy == null && state.load.running
             ? const LoadingState()
@@ -208,127 +198,92 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: AppSpacing.lg,
                 children: [
-                  Text(l10n.privacyHelp),
-                  const Divider(),
-                  SectionHeading(title: l10n.privacyOthersSee),
-                  _streamSwitch(
-                    'privacy-hide-heart-rate',
-                    _showHeartRate,
-                    l10n.privacyHideHeartRate,
-                    (v) => setState(() => _showHeartRate = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-power',
-                    _showPower,
-                    l10n.privacyHidePower,
-                    (v) => setState(() => _showPower = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-cadence',
-                    _showCadence,
-                    l10n.privacyHideCadence,
-                    (v) => setState(() => _showCadence = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-speed',
-                    _showSpeed,
-                    l10n.privacyHideSpeed,
-                    (v) => setState(() => _showSpeed = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-elevation',
-                    _showElevation,
-                    l10n.privacyHideElevation,
-                    (v) => setState(() => _showElevation = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-temperature',
-                    _showTemperature,
-                    l10n.privacyHideTemperature,
-                    (v) => setState(() => _showTemperature = v),
-                  ),
-                  const Divider(),
-                  SectionHeading(title: l10n.privacyTrimTitle),
-                  Row(
-                    spacing: AppSpacing.md,
+                  SectionCard(
+                    title: l10n.privacyTrimTitle,
+                    description: l10n.privacyTrimHelp,
                     children: [
-                      Expanded(
-                        child: _trimField(
-                          'privacy-trim-start',
-                          _trimStart,
-                          l10n.privacyTrimStart,
-                        ),
+                      Row(
+                        spacing: AppSpacing.md,
+                        children: [
+                          Expanded(
+                            child: _trimField(
+                              'privacy-trim-start',
+                              _trimStart,
+                              l10n.privacyTrimStart,
+                            ),
+                          ),
+                          Expanded(
+                            child: _trimField(
+                              'privacy-trim-end',
+                              _trimEnd,
+                              l10n.privacyTrimEnd,
+                            ),
+                          ),
+                        ],
                       ),
-                      Expanded(
-                        child: _trimField(
-                          'privacy-trim-end',
-                          _trimEnd,
-                          l10n.privacyTrimEnd,
+                      if (_problem case final problem?)
+                        InlineError(problem, key: const Key('privacy-error')),
+                      if (state.save.completed)
+                        Text(l10n.saved, key: const Key('privacy-saved')),
+                    ],
+                  ),
+                  SectionCard(
+                    title: l10n.privacyZonesTitle,
+                    description: l10n.privacyZonesHelp,
+                    children: [
+                      if (privacy.zones.isEmpty)
+                        EmptyState(
+                          key: const Key('privacy-zones-empty'),
+                          message: l10n.privacyZonesEmpty,
+                          icon: Icons.place_outlined,
+                          framed: false,
+                        )
+                      else
+                        for (final zone in privacy.zones)
+                          ListTile(
+                            key: Key('privacy-zone-${zone.id}'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.place_outlined),
+                            title: Text(zone.name),
+                            subtitle: Text(
+                              l10n.privacyZoneRadiusLine(
+                                length(
+                                  ref.watch(unitsChoiceViewModelProvider),
+                                  zone.radiusM.toDouble(),
+                                ),
+                              ),
+                            ),
+                            trailing: PageMenu(
+                              buttonKey: Key('privacy-zone-actions-${zone.id}'),
+                              entries: [
+                                PageMenuEntry(
+                                  key: Key('privacy-zone-delete-${zone.id}'),
+                                  label: l10n.privacyZoneDelete(zone.name),
+                                  icon: Icons.delete_outline,
+                                  destructive: true,
+                                  onSelected: state.save.running
+                                      ? () {}
+                                      : () => scheduleMicrotask(() {
+                                          if (mounted) {
+                                            _deleteZone(zone, l10n);
+                                          }
+                                        }),
+                                ),
+                              ],
+                            ),
+                          ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          key: const Key('privacy-add-zone'),
+                          onPressed: state.save.running
+                              ? null
+                              : () => _addZone(l10n),
+                          icon: const Icon(Icons.add),
+                          label: Text(l10n.privacyAddZone),
                         ),
                       ),
                     ],
-                  ),
-                  Text(l10n.privacyTrimHelp),
-                  if (_problem case final problem?)
-                    InlineError(problem, key: const Key('privacy-error')),
-                  if (state.save.completed)
-                    Text(l10n.saved, key: const Key('privacy-saved')),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton(
-                      key: const Key('privacy-save'),
-                      onPressed: state.save.running ? null : () => _save(l10n),
-                      child: Text(l10n.save),
-                    ),
-                  ),
-                  const Divider(),
-                  SectionHeading(title: l10n.privacyZonesTitle),
-                  Text(l10n.privacyZonesHelp),
-                  if (privacy.zones.isEmpty)
-                    EmptyState(
-                      key: const Key('privacy-zones-empty'),
-                      message: l10n.privacyZonesEmpty,
-                      icon: Icons.place_outlined,
-                    )
-                  else
-                    for (final zone in privacy.zones)
-                      ListTile(
-                        key: Key('privacy-zone-${zone.id}'),
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(zone.name),
-                        subtitle: Text(
-                          length(
-                            ref.watch(unitsChoiceViewModelProvider),
-                            zone.radiusM.toDouble(),
-                          ),
-                        ),
-                        trailing: PageMenu(
-                          buttonKey: Key('privacy-zone-actions-${zone.id}'),
-                          entries: [
-                            PageMenuEntry(
-                              key: Key('privacy-zone-delete-${zone.id}'),
-                              label: l10n.privacyZoneDelete(zone.name),
-                              icon: Icons.delete_outline,
-                              destructive: true,
-                              onSelected: state.save.running
-                                  ? () {}
-                                  : () => scheduleMicrotask(() {
-                                      if (mounted) _deleteZone(zone, l10n);
-                                    }),
-                            ),
-                          ],
-                        ),
-                      ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      key: const Key('privacy-add-zone'),
-                      onPressed: state.save.running
-                          ? null
-                          : () => _addZone(l10n),
-                      icon: const Icon(Icons.add_location_alt_outlined),
-                      label: Text(l10n.privacyAddZone),
-                    ),
                   ),
                 ],
               ),
@@ -336,32 +291,17 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     );
   }
 
-  Widget _streamSwitch(
-    String key,
-    bool value,
-    String title,
-    ValueChanged<bool> onChanged,
-  ) => SwitchListTile(
-    key: Key(key),
-    contentPadding: EdgeInsets.zero,
-    value: value,
-    title: Text(title),
-    onChanged: onChanged,
-  );
-
   Widget _trimField(
     String key,
     TextEditingController controller,
     String label,
-  ) => TextField(
-    key: Key(key),
+  ) => AppTextField(
+    fieldKey: Key(key),
     controller: controller,
+    label: label,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-    decoration: InputDecoration(
-      labelText: label,
-      suffixText: _units == Units.imperial ? 'mi' : 'm',
-    ),
+    suffix: _units == Units.imperial ? 'mi' : 'm',
   );
 }
 
@@ -437,23 +377,21 @@ class _ZoneSheetState extends State<_ZoneSheet> {
       onSave: _save,
       error: _problem,
       children: [
-        TextField(
-          key: const Key('privacy-zone-name'),
+        AppTextField(
+          fieldKey: const Key('privacy-zone-name'),
           controller: _name,
-          decoration: InputDecoration(labelText: l10n.privacyZoneName),
+          label: l10n.privacyZoneName,
         ),
-        TextField(
-          key: const Key('privacy-zone-radius'),
+        AppTextField(
+          fieldKey: const Key('privacy-zone-radius'),
           controller: _radius,
+          label: l10n.privacyZoneRadius,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
           ],
-          decoration: InputDecoration(
-            labelText: l10n.privacyZoneRadius,
-            suffixText: widget.units == Units.imperial ? 'mi' : 'm',
-            helperText: l10n.privacyZoneRadiusHelp,
-          ),
+          suffix: widget.units == Units.imperial ? 'mi' : 'm',
+          helper: l10n.privacyZoneRadiusHelp,
         ),
       ],
     );

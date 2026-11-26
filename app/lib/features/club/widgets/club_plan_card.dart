@@ -26,13 +26,13 @@ class ClubPlanCard extends StatelessWidget {
       key: const Key('club-plan-card'),
       title: l10n.clubPlanTitle,
       children: [
-        Text(
-          limit == null
-              ? l10n.clubMemberCount(plan.memberCount)
-              : l10n.clubPlanMembers(plan.memberCount, limit),
-          key: const Key('club-plan-members'),
-        ),
-        if (limit != null)
+        // Room used is stated against the limit, which is the plan's own fact; without a limit the count is
+        // the hero card's caption, so printing it here would be the same number twice.
+        if (limit != null) ...[
+          Text(
+            l10n.clubPlanMembers(plan.memberCount, limit),
+            key: const Key('club-plan-members'),
+          ),
           Semantics(
             label: l10n.clubPlanMembers(plan.memberCount, limit),
             excludeSemantics: true,
@@ -43,6 +43,7 @@ class ClubPlanCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSpacing.xs),
             ),
           ),
+        ],
         if (plan.paidUntil != null)
           Text(
             l10n.clubPlanPaidUntil(dateOnly(plan.paidUntil)),

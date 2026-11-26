@@ -27,6 +27,7 @@ public sealed class ResendVerification(
     IEmailSender sender,
     IOptions<SmtpOptions> smtp,
     IOptions<DemoOptions> demo,
+    IOptions<AccountsOptions> accounts,
     EmailVerificationLinks links,
     PasswordResetThrottle throttle,
     ILogger<ResendVerification> logger) : Endpoint<ResendVerificationRequest>
@@ -48,7 +49,7 @@ public sealed class ResendVerification(
             return;
         }
 
-        if (!EmailVerification.Required(smtp, demo))
+        if (!EmailVerification.Required(smtp, demo, accounts))
         {
             await Send.ResponseAsync(new { error = "email_not_configured" }, 503, ct);
             return;

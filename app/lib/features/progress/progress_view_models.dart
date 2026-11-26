@@ -7,7 +7,9 @@ import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/user_message.dart';
 import 'progress_data.dart';
+import 'events_data.dart';
 import 'progress_state.dart';
+import '../profile/profile_view_model.dart';
 
 part 'progress_view_models.g.dart';
 
@@ -70,66 +72,6 @@ class TotalsViewModel extends _$TotalsViewModel {
 }
 
 @Riverpod(keepAlive: true)
-class GoalsViewModel extends _$GoalsViewModel {
-  int _messageId = 0;
-  int _loadGeneration = 0;
-
-  @override
-  GoalsState build() {
-    if (ref.watch(signedInUserIdProvider) == null) return const GoalsState();
-    Future.microtask(load);
-    return const GoalsState();
-  }
-
-  Future<void> load() async {
-    final generation = ++_loadGeneration;
-    state = state.copyWith(load: state.load.start());
-    final result = await ref.read(progressDataProvider).goals();
-    if (!ref.mounted || generation != _loadGeneration) return;
-    state = switch (result) {
-      Ok(:final value) => state.copyWith(
-        load: state.load.finish(result),
-        goals: value?.goals ?? const [],
-      ),
-      Failed() => state.copyWith(load: state.load.finish(result)),
-    };
-  }
-
-  Future<void> add(CreateGoalRequest goal) =>
-      _run(() => ref.read(progressDataProvider).addGoal(goal));
-
-  Future<void> setTarget(String id, double target) =>
-      _run(() => ref.read(progressDataProvider).setTarget(id, target));
-
-  Future<void> delete(String id) =>
-      _run(() => ref.read(progressDataProvider).deleteGoal(id));
-
-  void messageShown(int id) => state = state.copyWith(
-    messages: [
-      for (final message in state.messages)
-        if (message.id != id) message,
-    ],
-  );
-
-  Future<void> _run(Future<Result<Object?>> Function() call) async {
-    if (state.action.running) return;
-    state = state.copyWith(action: state.action.start());
-    final result = await call();
-    if (!ref.mounted) return;
-    state = state.copyWith(action: state.action.finish(result));
-    if (result case Failed(:final failure)) {
-      _fail(failure);
-      return;
-    }
-    await load();
-  }
-
-  void _fail(Failure failure) => state = state.copyWith(
-    messages: [...state.messages, FailureMessage(_messageId++, failure)],
-  );
-}
-
-@Riverpod(keepAlive: true)
 class TrainingViewModel extends _$TrainingViewModel {
   int _loadGeneration = 0;
 
@@ -161,31 +103,54 @@ class TrainingViewModel extends _$TrainingViewModel {
 class PowerCurveViewModel extends _$PowerCurveViewModel {
   int _messageId = 0;
   int _loadGeneration = 0;
+  List<FtpHistoryEntry> _history = const [];
 
   @override
   PowerState build() {
     if (ref.watch(signedInUserIdProvider) == null) return const PowerState();
     ref.watch(progressFiltersViewModelProvider.select((f) => f.powerDays));
     Future.microtask(load);
-    return const PowerState();
+    return PowerState(history: _history);
   }
 
   Future<void> load() async {
     final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
-    final result = await ref
-        .read(progressDataProvider)
-        .powerCurve(ref.read(progressFiltersViewModelProvider).powerDays);
+    // The curve and the history behind its current FTP are read together, so the card never
+    // shows a number before it knows where that number came from.
+    final data = ref.read(progressDataProvider);
+    final (result, history) = await (
+      data.powerCurve(ref.read(progressFiltersViewModelProvider).powerDays),
+      data.ftpHistory(),
+    ).wait;
     if (!ref.mounted || generation != _loadGeneration) return;
-    state = state.copyWith(load: state.load.finish(result));
+    _history = history.valueOrNull?.entries ?? const [];
+    // A test FTP is dated by the ride it came from, which is the day of the effort, not the day the
+    // number was accepted. A ride that cannot be read simply has no day.
+    final newest = _history.firstOrNull;
+    final rideId = newest?.rideId;
+    final ftpRideDate = newest?.source_ == 'test' && rideId != null
+        ? await data.dateLookup(rideId)
+        : null;
+    if (!ref.mounted || generation != _loadGeneration) return;
+    // Built whole rather than copied, so a load without a test FTP clears the day it named before.
+    state = PowerState(
+      load: state.load.finish(result),
+      action: state.action,
+      messages: state.messages,
+      history: _history,
+      ftpRideDate: ftpRideDate,
+    );
   }
 
   /// Adopts the suggested FTP. Past TSS stays as it was; zones and new load use
-  /// the new value.
+  /// the new value. The history records it as adopted from the estimate.
   Future<void> useFtp(int watts) async {
     if (state.action.running) return;
     state = state.copyWith(action: state.action.start());
-    final result = await ref.read(progressDataProvider).setFtp(watts);
+    final result = await ref
+        .read(progressDataProvider)
+        .setFtp(watts, source: 'estimate');
     if (!ref.mounted) return;
     state = state.copyWith(action: state.action.finish(result));
     if (result case Failed(:final failure)) {
@@ -211,6 +176,142 @@ class PowerCurveViewModel extends _$PowerCurveViewModel {
 }
 
 @Riverpod(keepAlive: true)
+class FtpReminderViewModel extends _$FtpReminderViewModel {
+  int _messageId = 0;
+  int _loadGeneration = 0;
+
+  @override
+  FtpReminderState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const FtpReminderState();
+    }
+    Future.microtask(load);
+    return const FtpReminderState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    // A suggestion and the reminder's reason are read together: one open suggestion or the other, never both.
+    final data = ref.read(progressDataProvider);
+    final (result, suggestion) = await (
+      data.ftpCheck(),
+      data.ftpSuggestion(),
+    ).wait;
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = state.copyWith(
+      check: switch (result) {
+        Ok(:final value) => value,
+        // A check that could not be read says nothing: a silent card beats a wrong one.
+        Failed() => null,
+      },
+      suggestion: suggestion.valueOrNull,
+    );
+  }
+
+  /// Adopts a ride's suggestion as the FTP. Past TSS stays as it was; zones and new load use the new value.
+  Future<void> useSuggestion(String suggestionId) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(progressDataProvider)
+        .acceptFtpSuggestion(suggestionId);
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    ref
+      ..invalidate(powerCurveViewModelProvider)
+      ..invalidate(trainingViewModelProvider);
+    await load();
+  }
+
+  Future<void> dismissSuggestion(String suggestionId) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(progressDataProvider)
+        .dismissFtpSuggestion(suggestionId);
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    await load();
+  }
+
+  /// "Not now": the server keeps it quiet for two weeks.
+  Future<void> snooze() async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref.read(progressDataProvider).snoozeFtpCheck();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    await load();
+  }
+
+  /// Adopts the estimate as the FTP. The server clears its own snooze, so the reminder is reloaded.
+  Future<void> useEstimate(int watts) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(progressDataProvider)
+        .setFtp(watts, source: 'estimate');
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    // The curve already offers "Use ... W"; it follows the new FTP from here.
+    ref
+      ..invalidate(powerCurveViewModelProvider)
+      ..invalidate(trainingViewModelProvider);
+    await load();
+  }
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
+}
+
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+@Riverpod(keepAlive: true)
+class RiderCardViewModel extends _$RiderCardViewModel {
+  int _loadGeneration = 0;
+
+  @override
+  RiderCardState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const RiderCardState();
+    }
+    Future.microtask(load);
+    return const RiderCardState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    state = RiderCardState(load: state.load.start());
+    final result = await ref.read(progressDataProvider).riderCard();
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = RiderCardState(load: state.load.finish(result));
+  }
+}
+
+@Riverpod(keepAlive: true)
 class ReadinessViewModel extends _$ReadinessViewModel {
   int _loadGeneration = 0;
 
@@ -230,6 +331,149 @@ class ReadinessViewModel extends _$ReadinessViewModel {
     if (!ref.mounted || generation != _loadGeneration) return;
     state = ReadinessState(load: state.load.finish(result));
   }
+}
+
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+@Riverpod(keepAlive: true)
+class HeartRateSuggestionViewModel extends _$HeartRateSuggestionViewModel {
+  int _messageId = 0;
+
+  @override
+  HeartRateSuggestionState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const HeartRateSuggestionState();
+    }
+    Future.microtask(load);
+    return const HeartRateSuggestionState();
+  }
+
+  Future<void> load() async {
+    final data = ref.read(progressDataProvider);
+    final (suggestions, profile) = await (
+      data.heartRateSuggestions(),
+      data.profile(),
+    ).wait;
+    if (!ref.mounted) return;
+    state = state.copyWith(
+      suggestions: suggestions.valueOrNull ?? const [],
+      profile: profile.valueOrNull,
+    );
+  }
+
+  /// Adopts a ride's suggestion: the number becomes measured, from that ride.
+  Future<void> accept(String suggestionId) => _answer(
+    () =>
+        ref.read(progressDataProvider).acceptHeartRateSuggestion(suggestionId),
+    invalidateProfile: true,
+  );
+
+  Future<void> dismiss(String suggestionId) => _answer(
+    () =>
+        ref.read(progressDataProvider).dismissHeartRateSuggestion(suggestionId),
+  );
+
+  Future<void> _answer(
+    Future<Result<Object?>> Function() call, {
+    bool invalidateProfile = false,
+  }) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    if (invalidateProfile) ref.invalidate(profileViewModelProvider);
+    await load();
+  }
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
+}
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+@Riverpod(keepAlive: true)
+class EventsViewModel extends _$EventsViewModel {
+  int _messageId = 0;
+  int _loadGeneration = 0;
+
+  @override
+  EventsState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const EventsState();
+    Future.microtask(load);
+    return const EventsState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    state = state.copyWith(load: state.load.start());
+    final result = await ref.read(eventsDataProvider).list();
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = state.copyWith(
+      load: state.load.finish(result),
+      events: result.valueOrNull ?? const [],
+    );
+  }
+
+  Future<void> add(EventRequest event) =>
+      _run(() => ref.read(eventsDataProvider).add(event));
+
+  /// The ride that was this event, or null to unlink it.
+  Future<void> linkRide(String id, String? rideId) =>
+      _run(() => ref.read(eventsDataProvider).setRide(id, rideId));
+
+  Future<void> unlinkRide(String id) => linkRide(id, null);
+
+  /// The rides of one day, for the picker that links an event's ride; null with a message when they cannot be read,
+  /// so the picker never opens saying the day is empty.
+  Future<List<RideResponse>?> ridesOn(DateTime day) async {
+    final result = await ref.read(eventsDataProvider).ridesOn(day);
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return null;
+    }
+    return result.valueOrNull ?? const [];
+  }
+
+  Future<void> update(String id, UpdateEventRequest event) =>
+      _run(() => ref.read(eventsDataProvider).update(id, event));
+
+  Future<void> delete(String id) =>
+      _run(() => ref.read(eventsDataProvider).delete(id));
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+
+  Future<void> _run(Future<Result<Object?>> Function() call) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    await load();
+  }
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
 }
 
 @Riverpod(keepAlive: true)
@@ -281,6 +525,7 @@ class WellbeingViewModel extends _$WellbeingViewModel {
     int mood,
     int stress,
     int motivation,
+    int sleep,
   ) => _run(
     () => ref
         .read(progressDataProvider)
@@ -291,6 +536,7 @@ class WellbeingViewModel extends _$WellbeingViewModel {
             mood: mood,
             stress: stress,
             motivation: motivation,
+            sleep: Optional.present(sleep),
           ),
         ),
   );

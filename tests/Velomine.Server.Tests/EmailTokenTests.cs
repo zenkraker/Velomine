@@ -24,6 +24,7 @@ public sealed class EmailTokenTests(PostgresFixture postgres)
             if (smtp)
             {
                 b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");
+                b.UseSetting("Velomine:Accounts:Cloud", "true");
                 b.UseSetting("Velomine:Smtp:From", "velomine@club.example");
             }
 
@@ -49,12 +50,12 @@ public sealed class EmailTokenTests(PostgresFixture postgres)
         var user = (await users.FindByEmailAsync(email))!;
         var link = await scope.ServiceProvider.GetRequiredService<EmailVerificationLinks>().CreateAsync(user);
 
-        Assert.StartsWith("https://club.example/verify-email#token=", link);
-        var fragment = new Uri(link!).Fragment.TrimStart('#')
+        Assert.StartsWith("https://club.example/verify-email?token=", link);
+        var query = new Uri(link!).Query.TrimStart('?')
             .Split('&').ToDictionary(part => part.Split('=', 2)[0], part => Uri.UnescapeDataString(part.Split('=', 2)[1]));
-        Assert.Equal(email, fragment["email"]);
+        Assert.Equal(email, query["email"]);
 
-        Assert.True((await users.ConfirmEmailAsync(user, fragment["token"])).Succeeded);
+        Assert.True((await users.ConfirmEmailAsync(user, query["token"])).Succeeded);
         Assert.True(user.EmailConfirmed);
     }
 

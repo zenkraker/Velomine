@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- GoalGauge: One goal per card: a gauge, the progress in words, edit and delete in the menu. Guideline: GoalGauge.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Goal card</title>
+<style>
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-lg); padding: var(--space-xl); }
+  .gauge { display: block; width: 180px; max-width: 100%; height: auto; margin: var(--space-sm) auto; }
+  .trk { fill: none; stroke: var(--track); stroke-width: 14; stroke-linecap: round; }
+  .arc { fill: none; stroke: var(--accent-strong); stroke-width: 14; stroke-linecap: round; }
+  .pct { fill: var(--ink); font-size: 24px; font-weight: 500; text-anchor: middle; }
+  .done-chip { display: inline-flex; align-items: center; height: 28px; padding: 0 var(--space-md); border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--on-accent-soft); font-size: 13px; font-weight: 600; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+  .vm-card-head .vm-icon-btn { margin: -12px -12px -12px 0; }
+</style>
+</head>
+<body>
+<div class="row">
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">Distance this week</h3><button class="vm-icon-btn" type="button" aria-label="Goal actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div>
+    <svg class="gauge" viewBox="0 0 200 110" role="img" aria-label="46 percent"><path class="trk" d="M20 100 A80 80 0 0 1 180 100"/><path class="arc" d="M20 100 A80 80 0 0 1 89.97 20.63"/><text class="pct" x="100" y="96">46 %</text></svg>
+    <div class="vm-number"><span class="stat">69.7</span><span class="vm-unit">of 150 km</span></div>
+    <p class="vm-sentence body">80.3 km to go by Sunday.</p>
+  </article>
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">Climbing this month</h3><button class="vm-icon-btn" type="button" aria-label="Goal actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div>
+    <svg class="gauge" viewBox="0 0 200 110" role="img" aria-label="Reached, 130 percent"><path class="arc" d="M20 100 A80 80 0 0 1 180 100"/><text class="pct" x="100" y="96">130 %</text></svg>
+    <div class="vm-number"><span class="stat">3,917</span><span class="vm-unit">of 3,000 m</span><span class="done-chip">Reached</span></div>
+    <p class="vm-sentence body">917 m more than you planned.</p>
+  </article>
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">Rides this year</h3><button class="vm-icon-btn" type="button" aria-label="Goal actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div>
+    <svg class="gauge" viewBox="0 0 200 110" role="img" aria-label="15 percent"><path class="trk" d="M20 100 A80 80 0 0 1 180 100"/><path class="arc" d="M20 100 A80 80 0 0 1 28.72 63.68"/><text class="pct" x="100" y="96">15 %</text></svg>
+    <div class="vm-number"><span class="stat">18</span><span class="vm-unit">of 120 rides</span></div>
+    <p class="vm-sentence body">102 to go by 31 December.</p>
+  </article>
+</div>
+</body>
+</html>

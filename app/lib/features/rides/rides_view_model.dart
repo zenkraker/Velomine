@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/failure.dart';
@@ -10,6 +11,26 @@ import 'rides_state.dart';
 
 part 'rides_view_model.g.dart';
 
+/// The rides list's scroll position. It outlives the screen, so coming back to the tab lands where it left.
+class RidesScroll {
+  RidesScroll() {
+    controller.addListener(() => offset = controller.offset);
+  }
+
+  final controller = ScrollController();
+
+  /// Where the list was last seen; the controller has no position while the screen is away.
+  double offset = 0;
+}
+
+/// One per account: signing out or in starts the list at the top.
+final ridesScrollProvider = Provider<RidesScroll>((ref) {
+  ref.watch(signedInUserIdProvider);
+  final scroll = RidesScroll();
+  ref.onDispose(scroll.controller.dispose);
+  return scroll;
+});
+
 /// The member's rides: filtering, paging, uploading, and following an upload
 /// until the server has read it.
 @Riverpod(keepAlive: true)
@@ -18,24 +39,9 @@ class RidesViewModel extends _$RidesViewModel {
 
   int _messageId = 0;
   int _loadGeneration = 0;
-  ScrollController? _scroll;
-  double _offset = 0;
-
-  /// The list's controller. It outlives the screen, so coming back to the tab lands where it left.
-  ScrollController get scroll =>
-      _scroll ??= (ScrollController()
-        ..addListener(() => _offset = _scroll!.offset));
-
-  double get scrollOffset => _offset;
 
   @override
   RidesState build() {
-    // A rebuild registers this again; the controller is dropped once.
-    ref.onDispose(() {
-      final scroll = _scroll;
-      _scroll = null;
-      scroll?.dispose();
-    });
     if (ref.watch(signedInUserIdProvider) == null) return const RidesState();
     Future.microtask(refresh);
     return const RidesState();
@@ -76,11 +82,34 @@ class RidesViewModel extends _$RidesViewModel {
   }
 
   /// Shows only one surface, or every ride when [value] is null.
-  Future<void> setDisciplineFilter(String? value) async {
-    if (state.disciplineFilter == value) return;
+  Future<void> setDisciplineFilter(String? value) => _narrow(discipline: value);
+
+  /// Shows only the trainer rides, or every ride when [value] is null.
+  Future<void> setEnvironmentFilter(String? value) =>
+      _narrow(environment: value);
+
+  /// Shows only the commutes, or every ride when [value] is null.
+  Future<void> setCommuteFilter(bool? value) => _narrow(commute: value);
+
+  /// The chips are one row and one choice: picking a dimension puts the other two back, so a ride that
+  /// is both a gravel ride and a commute is found by whichever the rider asks for.
+  Future<void> _narrow({
+    String? discipline,
+    String? environment,
+    bool? commute,
+  }) async {
+    if (state.disciplineFilter == discipline &&
+        state.environmentFilter == environment &&
+        state.commuteFilter == commute) {
+      return;
+    }
     state = state.copyWith(
-      disciplineFilter: value,
-      clearDisciplineFilter: value == null,
+      disciplineFilter: discipline,
+      clearDisciplineFilter: discipline == null,
+      environmentFilter: environment,
+      clearEnvironmentFilter: environment == null,
+      commuteFilter: commute,
+      clearCommuteFilter: commute == null,
       clearNext: true,
     );
     await refresh();
@@ -112,6 +141,8 @@ class RidesViewModel extends _$RidesViewModel {
       query: '',
       clearDateRange: true,
       clearDisciplineFilter: true,
+      clearEnvironmentFilter: true,
+      clearCommuteFilter: true,
       clearNext: true,
     );
     await refresh();
@@ -122,6 +153,8 @@ class RidesViewModel extends _$RidesViewModel {
       .page(
         cursor: cursor,
         discipline: state.disciplineFilter,
+        environment: state.environmentFilter,
+        commute: state.commuteFilter,
         query: state.query,
         from: state.dateRange?.from,
         to: state.dateRange?.to,

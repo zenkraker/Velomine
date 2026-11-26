@@ -124,58 +124,6 @@ abstract class _$TotalsViewModel extends $Notifier<TotalsState> {
   }
 }
 
-@ProviderFor(GoalsViewModel)
-final goalsViewModelProvider = GoalsViewModelProvider._();
-
-final class GoalsViewModelProvider
-    extends $NotifierProvider<GoalsViewModel, GoalsState> {
-  GoalsViewModelProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'goalsViewModelProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$goalsViewModelHash();
-
-  @$internal
-  @override
-  GoalsViewModel create() => GoalsViewModel();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(GoalsState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<GoalsState>(value),
-    );
-  }
-}
-
-String _$goalsViewModelHash() => r'4d4fde365cfb1b46bc4be64a483f8034029c22f5';
-
-abstract class _$GoalsViewModel extends $Notifier<GoalsState> {
-  GoalsState build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<GoalsState, GoalsState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<GoalsState, GoalsState>,
-              GoalsState,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(TrainingViewModel)
 final trainingViewModelProvider = TrainingViewModelProvider._();
 
@@ -261,7 +209,7 @@ final class PowerCurveViewModelProvider
 }
 
 String _$powerCurveViewModelHash() =>
-    r'b73eac18834e97e8193849a02bd402c2e2fabbcf';
+    r'7fd08b7a161f3fc4979231af1b9aaae7c1df8938';
 
 abstract class _$PowerCurveViewModel extends $Notifier<PowerState> {
   PowerState build();
@@ -274,6 +222,118 @@ abstract class _$PowerCurveViewModel extends $Notifier<PowerState> {
             as $ClassProviderElement<
               AnyNotifier<PowerState, PowerState>,
               PowerState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(FtpReminderViewModel)
+final ftpReminderViewModelProvider = FtpReminderViewModelProvider._();
+
+final class FtpReminderViewModelProvider
+    extends $NotifierProvider<FtpReminderViewModel, FtpReminderState> {
+  FtpReminderViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ftpReminderViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$ftpReminderViewModelHash();
+
+  @$internal
+  @override
+  FtpReminderViewModel create() => FtpReminderViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(FtpReminderState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<FtpReminderState>(value),
+    );
+  }
+}
+
+String _$ftpReminderViewModelHash() =>
+    r'4dba306cef778a3cea24428883024289f9cb4cff';
+
+abstract class _$FtpReminderViewModel extends $Notifier<FtpReminderState> {
+  FtpReminderState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<FtpReminderState, FtpReminderState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<FtpReminderState, FtpReminderState>,
+              FtpReminderState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+
+@ProviderFor(RiderCardViewModel)
+final riderCardViewModelProvider = RiderCardViewModelProvider._();
+
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+final class RiderCardViewModelProvider
+    extends $NotifierProvider<RiderCardViewModel, RiderCardState> {
+  /// The rider card at the top of Progress: every number the member has, with where it came from.
+  RiderCardViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'riderCardViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$riderCardViewModelHash();
+
+  @$internal
+  @override
+  RiderCardViewModel create() => RiderCardViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RiderCardState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RiderCardState>(value),
+    );
+  }
+}
+
+String _$riderCardViewModelHash() =>
+    r'42ea02a5f6a0ae612a68acedebcc420c847398f9';
+
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+
+abstract class _$RiderCardViewModel extends $Notifier<RiderCardState> {
+  RiderCardState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<RiderCardState, RiderCardState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<RiderCardState, RiderCardState>,
+              RiderCardState,
               Object?,
               Object?
             >;
@@ -334,6 +394,130 @@ abstract class _$ReadinessViewModel extends $Notifier<ReadinessState> {
   }
 }
 
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+
+@ProviderFor(HeartRateSuggestionViewModel)
+final heartRateSuggestionViewModelProvider =
+    HeartRateSuggestionViewModelProvider._();
+
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+final class HeartRateSuggestionViewModelProvider
+    extends
+        $NotifierProvider<
+          HeartRateSuggestionViewModel,
+          HeartRateSuggestionState
+        > {
+  /// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+  HeartRateSuggestionViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'heartRateSuggestionViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$heartRateSuggestionViewModelHash();
+
+  @$internal
+  @override
+  HeartRateSuggestionViewModel create() => HeartRateSuggestionViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(HeartRateSuggestionState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<HeartRateSuggestionState>(value),
+    );
+  }
+}
+
+String _$heartRateSuggestionViewModelHash() =>
+    r'18dfe400e4b5c970971c1088e7eae3e9547e32e9';
+
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+
+abstract class _$HeartRateSuggestionViewModel
+    extends $Notifier<HeartRateSuggestionState> {
+  HeartRateSuggestionState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref as $Ref<HeartRateSuggestionState, HeartRateSuggestionState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<HeartRateSuggestionState, HeartRateSuggestionState>,
+              HeartRateSuggestionState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+
+@ProviderFor(EventsViewModel)
+final eventsViewModelProvider = EventsViewModelProvider._();
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+final class EventsViewModelProvider
+    extends $NotifierProvider<EventsViewModel, EventsState> {
+  /// The events the rider is training for. A change reloads the list, so the card and the list agree.
+  EventsViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'eventsViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventsViewModelHash();
+
+  @$internal
+  @override
+  EventsViewModel create() => EventsViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EventsState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EventsState>(value),
+    );
+  }
+}
+
+String _$eventsViewModelHash() => r'764f419610793f23fe3753035a65d8a745461ae7';
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+
+abstract class _$EventsViewModel extends $Notifier<EventsState> {
+  EventsState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<EventsState, EventsState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<EventsState, EventsState>,
+              EventsState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(WellbeingViewModel)
 final wellbeingViewModelProvider = WellbeingViewModelProvider._();
 
@@ -367,7 +551,7 @@ final class WellbeingViewModelProvider
 }
 
 String _$wellbeingViewModelHash() =>
-    r'afcce6f28be44df7cb4850674493682b7cdeefbf';
+    r'df7d7891768230a92ef3db07717263cf353c64dd';
 
 abstract class _$WellbeingViewModel extends $Notifier<WellbeingState> {
   WellbeingState build();

@@ -156,7 +156,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Sharing_ShouldKeepRidesAndTrainingApart_WhenOnlyOneKindIsShared()
+    public async Task Sharing_ShouldIncludeTheTraining_WhenOnlyRidesAreShared()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
@@ -170,14 +170,15 @@ public sealed class SharingTests(PostgresFixture postgres)
         (await ShareAsync(athlete, "coaches", "none")).EnsureSuccessStatusCode();
         var ridesOnly = await owner.Client.GetFromJsonAsync<CoachAthleteResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}", Ct);
+        // Sharing rides gives the training built from them too (owner, 21 Nov).
         Assert.True(ridesOnly!.SharesRides);
-        Assert.False(ridesOnly.SharesAnalytics);
+        Assert.True(ridesOnly.SharesAnalytics);
         Assert.Equal(1, ridesOnly.Rides);
         Assert.NotNull(ridesOnly.LastRideAt);
-        Assert.Null(ridesOnly.Tss7);
-        Assert.Null(ridesOnly.Tss42);
+        Assert.NotNull(ridesOnly.Tss7);
+        Assert.NotNull(ridesOnly.Tss42);
         Assert.Equal(
-            HttpStatusCode.NotFound,
+            HttpStatusCode.OK,
             (await owner.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/training", Ct)).StatusCode);
 
         (await ShareAsync(athlete, "none", "coaches")).EnsureSuccessStatusCode();
@@ -220,9 +221,9 @@ public sealed class SharingTests(PostgresFixture postgres)
         // One rider's choice must not colour the other's numbers.
         var rides = Assert.Single(roster!.Athletes, a => a.UserId == ridesOnly.Id);
         Assert.True(rides.SharesRides);
-        Assert.False(rides.SharesAnalytics);
+        Assert.True(rides.SharesAnalytics);
         Assert.NotNull(rides.Rides);
-        Assert.Null(rides.Tss7);
+        Assert.NotNull(rides.Tss7);
 
         var training = Assert.Single(roster.Athletes, a => a.UserId == trainingOnly.Id);
         Assert.False(training.SharesRides);
@@ -287,7 +288,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRides_ShouldHideTrainingLoad_WhenAnalyticsIsNotShared()
+    public async Task CoachRides_ShouldShowTrainingLoad_WhenOnlyRidesAreShared()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
@@ -300,22 +301,14 @@ public sealed class SharingTests(PostgresFixture postgres)
         var ride = await UploadAndWaitAsync(athlete.Client, Fit(new FitSession(Start, 600)));
         (await ShareAsync(athlete, "coaches", "none")).EnsureSuccessStatusCode();
 
+        // No training choice at all: the rides bring their training with them.
         var list = await owner.Client.GetFromJsonAsync<ListRidesResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides", Ct);
         var listed = Assert.Single(list!.Rides);
-        Assert.Null(listed.IntensityFactor);
-        Assert.Null(listed.Tss);
-        Assert.Null(listed.Trimp);
+        Assert.NotNull(listed.IntensityFactor);
+        Assert.NotNull(listed.Tss);
+        Assert.NotNull(listed.Trimp);
 
-        var hidden = await owner.Client.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
-        Assert.Null(hidden!.IntensityFactor);
-        Assert.Null(hidden.Tss);
-        Assert.Null(hidden.Trimp);
-        Assert.Null(hidden.HeartRateZones);
-        Assert.Null(hidden.PowerZones);
-
-        (await ShareAsync(athlete, "coaches", "coaches")).EnsureSuccessStatusCode();
         var shown = await owner.Client.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
         Assert.NotNull(shown!.IntensityFactor);

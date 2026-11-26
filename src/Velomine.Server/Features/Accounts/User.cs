@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
+
 namespace Velomine.Server.Features.Accounts;
 
 public sealed class User : IdentityUser<Guid>
@@ -15,6 +16,9 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>Functional threshold power in watts, entered by the member. Needed for IF, TSS and power zones.</summary>
     public int? FtpW { get; set; }
 
+    /// <summary>The day the member last hid the out-of-date FTP reminder; it stays quiet until the day after. Null when never snoozed.</summary>
+    public DateOnly? FtpReminderSnoozedUntil { get; set; }
+
     public double? WeightKg { get; set; }
 
     /// <summary>Year of birth; the maximum heart rate is estimated from the age it gives.</summary>
@@ -27,10 +31,37 @@ public sealed class User : IdentityUser<Guid>
     [Column("max_heart_rate")]
     public int? LegacyMaxHeartRate { get; set; }
 
-    /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
-    [NotMapped]
-    public int? MaxHeartRate => EstimateMaxHeartRate(BirthYear, TimeProvider.System);
+    /// <summary>The maximum heart rate the rider typed or a ride measured. Null means it is estimated (see <see cref="HeartRates"/>).</summary>
+    public int? MaxHeartRateBpm { get; set; }
 
+    /// <summary>How <see cref="MaxHeartRateBpm"/> was set: <c>manual</c> or <c>measured</c>. Null when no value is set.</summary>
+    public string? MaxHeartRateSource { get; set; }
+
+    /// <summary>The ride that measured the maximum, null for a typed number and for a ride since deleted.</summary>
+    public Guid? MaxHeartRateRideId { get; set; }
+
+    /// <summary>The threshold heart rate the rider typed or a ride measured. Null means 89 % of the maximum.</summary>
+    public int? ThresholdHeartRateBpm { get; set; }
+
+    /// <summary>How <see cref="ThresholdHeartRateBpm"/> was set: <c>manual</c> or <c>measured</c>. Null when no value is set.</summary>
+    public string? ThresholdHeartRateSource { get; set; }
+
+    /// <summary>The ride that measured the threshold, null for a typed number and for a ride since deleted.</summary>
+    public Guid? ThresholdHeartRateRideId { get; set; }
+
+    /// <summary>
+    /// The rider's own upper bounds for the seven power zones, as fractions of the FTP (six bounds, the top zone is
+    /// open). Null means the standard bounds.
+    /// </summary>
+    public double[]? PowerZoneBounds { get; set; }
+
+    /// <summary>The rider's own upper bounds for the five zones of the maximum model (four bounds). Null means standard.</summary>
+    public double[]? HeartRateMaxZoneBounds { get; set; }
+
+    /// <summary>The rider's own upper bounds for the five zones of the threshold model (four bounds). Null means standard.</summary>
+    public double[]? HeartRateThresholdZoneBounds { get; set; }
+
+    /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
     public static int? EstimateMaxHeartRate(int? birthYear, TimeProvider time) =>
         birthYear is { } year
             ? (int)Math.Round(208 - 0.7 * Math.Clamp(time.GetUtcNow().Year - year, 10, 100))
@@ -41,6 +72,13 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>"metric" or "imperial". Display only: every value is stored in SI units.</summary>
     public string Units { get; set; } = "metric";
+
+    /// <summary>
+    /// How the member rides (<c>just_riding</c>, <c>with_goals</c> or <c>training</c>). Display only: it decides
+    /// what the app shows first and the server never filters by it. Null means the member has not chosen yet, and
+    /// the app then shows just riding until they do.
+    /// </summary>
+    public string? RiderMode { get; set; }
     /// <summary>An IANA time zone such as "Europe/Rome". Null means UTC. Decides what "today" and "this week" are.</summary>
     public string? TimeZone { get; set; }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
 
@@ -54,6 +55,17 @@ void main() {
     }
   });
 
+  test(
+    'AppLocalizations_ShouldNameTheZoneAndQuoteTheNote_WhenItalian',
+    () async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('it'));
+
+      // A zone is the number and its own word, and a member's note sits in the language's quotes.
+      expect(l10n.zoneName('2'), 'Z2 Resistenza');
+      expect(l10n.noteQuoted('Ci vediamo sabato'), '«Ci vediamo sabato»');
+    },
+  );
+
   testWidgets('AppLocalizations_ShouldFollowDeviceLanguage_WhenNoneIsChosen', (
     tester,
   ) async {
@@ -63,7 +75,7 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 
-    expect(find.text('Uscite'), findsWidgets);
+    expect(find.text('Giri'), findsWidgets);
     expect(find.text('Rides'), findsNothing);
   });
 
@@ -88,7 +100,7 @@ void main() {
     await tester.tap(find.text('Italiano').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Uscite'), findsWidgets);
+    expect(find.text('Giri'), findsWidgets);
     expect(find.text('Rides'), findsNothing);
     expect(server.accounts[rider.email]!.language, 'it');
   });
@@ -109,13 +121,15 @@ void main() {
     server.signInBrowser(server.add('rider@example.com', language: 'it'));
     await startApp(tester, server.session(useCookies: true));
 
-    await tester.tap(find.text('Progressi'));
+    await goTo(tester, '/progress/fitness');
     await tester.pumpAndSettle();
 
-    expect(find.text('Carico di allenamento'), findsOneWidget);
+    // The training card's own name, and Obiettivi in the rail.
+    expect(find.text('Carico di allenamento'), findsWidgets);
     expect(find.text('Obiettivi'), findsOneWidget);
-    // The training range end (4 Nov 2026) in Italian: a short month name, not "Nov".
-    expect(find.textContaining('4 nov'), findsOneWidget);
+    // The training range end (4 Nov 2026) in Italian: a short month name, not "Nov". The range
+    // caption is one of several places the day is drawn now that the chart labels its own bars.
+    expect(find.textContaining('4 nov'), findsWidgets);
   });
 
   testWidgets('AppLocalizations_ShouldTranslateRidesList_WhenItalian', (
@@ -126,9 +140,9 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
 
     expect(
-      find.text('Nessuna uscita. Carica un file FIT, GPX o TCX.'),
+      find.text('Nessun giro. Carica un file FIT, GPX o TCX.'),
       findsOneWidget,
     );
-    expect(find.text('Carica uscita'), findsOneWidget);
+    expect(find.text('Carica giro'), findsOneWidget);
   });
 }

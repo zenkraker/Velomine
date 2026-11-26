@@ -1,26 +1,18 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../motion.dart';
+import '../theme.dart';
 import '../tokens.dart';
 
-/// The blur behind the pill on this device, 0 for none.
+/// The blur behind the glass on this device, 0 for none.
 ///
-/// A live blur redraws the whole page behind it on every frame, which many Android phones and the web
-/// cannot do smoothly, so those get a nearly solid pill instead. iOS and desktop keep the blur. A system
-/// that asks for high contrast gets no blur either.
+/// Every platform gets the blur the glass tokens ask for. Only a system that asks for high contrast
+/// drops it, because glass over a blur is the one thing that makes text harder to read.
 double pillBlurOf(BuildContext context) {
   if (MediaQuery.highContrastOf(context)) return 0;
-  if (kIsWeb) return 0;
-  return switch (defaultTargetPlatform) {
-    TargetPlatform.iOS ||
-    TargetPlatform.macOS ||
-    TargetPlatform.windows ||
-    TargetPlatform.linux => AppNav.pillBlur,
-    TargetPlatform.android || TargetPlatform.fuchsia => 0,
-  };
+  return AppNav.pillBlur;
 }
 
 /// One destination of the [FloatingNavPill]: an outlined icon, the filled one while selected, a label.
@@ -57,23 +49,36 @@ class FloatingNavPill extends StatelessWidget {
     final duration = motionDuration(context, AppMotion.standard);
     final curve = motionCurve(context, AppMotion.emphasized);
     final blur = pillBlurOf(context);
+    final glass = VelomineColors.of(context).glass;
     final surface = ColoredBox(
-      color: scheme.surfaceContainer.withValues(
-        alpha: blur > 0 ? AppNav.pillOpacity : AppNav.pillOpacityNoBlur,
-      ),
+      // Without the blur the glass turns nearly solid, so the content behind never shows through it.
+      color: blur > 0
+          ? glass
+          : glass.withValues(alpha: AppNav.pillOpacityNoBlur),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xs),
-        child: Row(
-          children: [
-            for (final (i, item) in items.indexed)
-              Expanded(
-                child: _PillItem(
-                  item: item,
-                  selected: i == selected,
-                  onTap: () => onSelected(i),
-                ),
+        // Each slot is as wide as its label, spread evenly, so five labels stay at `nav-label` size
+        // ("Allenamento" is wider than a fifth of a phone); only a window too narrow for them all
+        // scales the row down rather than overflowing.
+        child: LayoutBuilder(
+          builder: (context, constraints) => FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  for (final (i, item) in items.indexed)
+                    _PillItem(
+                      item: item,
+                      selected: i == selected,
+                      onTap: () => onSelected(i),
+                    ),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
       ),
     );
@@ -177,18 +182,17 @@ class _PillItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   selected ? item.selectedIcon : item.icon,
-                  // The pill's height is fixed, so its label grows only a little with the text size.
+                  // The pill's height is fixed, so its label grows only a little with the text size;
+                  // it is never squeezed, because `nav-label` is a size the design fixes at 15.
                   MediaQuery.withClampedTextScaling(
                     maxScaleFactor: AppNav.maxLabelScale,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: color,
-                          fontWeight: selected ? FontWeight.w600 : null,
-                        ),
+                    child: Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.visible,
+                      style: VelomineText.of(context).navLabel.copyWith(
+                        color: color,
+                        fontWeight: selected ? FontWeight.w600 : null,
                       ),
                     ),
                   ),

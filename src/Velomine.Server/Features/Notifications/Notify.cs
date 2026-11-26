@@ -13,9 +13,10 @@ namespace Velomine.Server.Features.Notifications;
 /// </summary>
 public static class Notify
 {
-    public static void Add(VelomineDbContext db, TimeProvider time, Guid userId, string type, string subject,
+    /// <summary>Adds one notification and returns it, so a caller that may have to take it back again holds it.</summary>
+    public static Notification Add(VelomineDbContext db, TimeProvider time, Guid userId, string type, string subject,
         Guid? rideId = null, Guid? bikeId = null, Guid? componentId = null, Guid? aboutUserId = null,
-        Guid? plannedRideId = null) =>
+        Guid? plannedRideId = null, Guid? trainingSessionId = null) =>
         db.Notifications.Add(new Notification
         {
             Id = Guid.CreateVersion7(),
@@ -27,8 +28,9 @@ public static class Notify
             ComponentId = componentId,
             AboutUserId = aboutUserId,
             PlannedRideId = plannedRideId,
+            TrainingSessionId = trainingSessionId,
             CreatedAt = time.GetUtcNow(),
-        });
+        }).Entity;
 
     /// <summary>Tells the member how their upload went.</summary>
     public static void RideRead(VelomineDbContext db, TimeProvider time, Ride ride)
@@ -41,6 +43,16 @@ public static class Notify
             _ => null,
         };
         if (type is not null) Add(db, time, ride.UserId, type, ride.FileName, rideId: ride.Id);
+    }
+
+    /// <summary>
+    /// Tells the member when a newly read ride beat their best power. Called after the rides and their bests are in the
+    /// context and before the save, so a ride of this same read counts as an earlier one.
+    /// </summary>
+    public static async Task PowerRecordAsync(VelomineDbContext db, TimeProvider time, MemberClock clock, Ride ride, CancellationToken ct)
+    {
+        if (await Analytics.PowerRecords.SubjectAsync(db, clock, ride, ct) is { } subject)
+            Add(db, time, ride.UserId, NotificationTypes.PowerRecord, subject, rideId: ride.Id);
     }
 
     /// <summary>Tells every admin that a new account waits for approval.</summary>

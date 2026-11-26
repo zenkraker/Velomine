@@ -1,6 +1,12 @@
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine_api/api.dart';
 
+import 'package:velomine/core/result.dart';
+import 'package:velomine/core/widgets/app_card.dart';
+import 'package:velomine/features/rides/rides_data.dart';
 import 'package:velomine/features/rides/rides_screen.dart';
 import 'package:velomine/features/rides/rides_view_model.dart';
 
@@ -104,23 +110,68 @@ void main() {
     expect(find.byKey(const Key('rides-actions')), findsOneWidget);
   });
 
-  testWidgets('RidesScreen_ShouldOfferEveryImport_WhenAPhoneHasNoRides', (
+  testWidgets(
+    'RidesScreen_ShouldLeaveTheEmptyStateToThePage_WhenAPhoneHasNoRides',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      final empty = find.byKey(const Key('no-rides'));
+      expect(empty, findsOneWidget);
+      // No wall of import buttons inside the empty state: the ways in are the page's own.
+      expect(find.byKey(const Key('empty-upload')), findsNothing);
+      expect(find.byKey(const Key('empty-import-strava')), findsNothing);
+      expect(find.byKey(const Key('empty-bulk-folder')), findsNothing);
+      expect(find.byKey(const Key('upload')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('import-strava')), findsOneWidget);
+    },
+  );
+
+  testWidgets('RidesScreen_ShouldPutTheDateBesideTheTitle_WhenTheRideHasOne', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(390, 844);
+    tester.view.physicalSize = const Size(1300, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
+    server.rides.add(
+      rideJson(
+        'r1',
+        'ready',
+        fileName: 'sunday.gpx',
+        title: 'Sunday morning ride',
+        distanceM: 42000,
+        movingS: 5400,
+      ),
+    );
     await startApp(tester, server.session(useCookies: true));
 
-    final empty = find.byKey(const Key('no-rides'));
-    expect(empty, findsOneWidget);
-    for (final key in ['empty-upload', 'empty-import-strava']) {
-      expect(
-        find.descendant(of: empty, matching: find.byKey(Key(key))),
-        findsOneWidget,
-        reason: key,
-      );
-    }
+    final card = find.byKey(const Key('ride-r1'));
+    // The shared card, not a hand-built one.
+    expect(tester.widget(card), isA<AppCard>());
+    final title = find.descendant(
+      of: card,
+      matching: find.byKey(const Key('ride-title')),
+    );
+    // The moment is a caption on the title's own line, right of it, not a line under it.
+    final date = find.descendant(
+      of: card,
+      matching: find.byKey(const Key('ride-date')),
+    );
+    expect(date, findsOneWidget);
+    expect(
+      tester.getTopLeft(date).dy,
+      closeTo(tester.getTopLeft(title).dy, 2),
+      reason: 'the date sits on the title line',
+    );
+    expect(
+      tester.getTopLeft(date).dx,
+      greaterThan(tester.getTopLeft(title).dx),
+    );
   });
 
   testWidgets('RidesScreen_ShouldPutTheImportsInAMenu_WhenAPhoneHasRides', (
@@ -514,6 +565,9 @@ void main() {
         overrides: recorderOverrides(recorder),
       );
 
+      // Start ride is the first entry of the page's menu.
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('start-ride')));
       await tester.pumpAndSettle();
 
@@ -523,35 +577,35 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.byType(RecordingScreen), findsNothing);
-      expect(find.byKey(const Key('start-ride')), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'RidesScreen_ShouldPutUploadInTheMenu_WhenStartRideIsTheHeaderButton',
-    (tester) async {
-      tester.view.physicalSize = const Size(360, 780);
-      tester.view.devicePixelRatio = 1;
-      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearAllTestValues);
-      server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
-      await startApp(
-        tester,
-        server.session(useCookies: true),
-        overrides: recorderOverrides(FakeRecorder()),
-      );
-
-      expect(tester.takeException(), isNull);
-      expect(find.byKey(const Key('start-ride')), findsOneWidget);
-      expect(find.byKey(const Key('upload')), findsNothing);
-      expect(find.byType(FloatingActionButton), findsNothing);
-
-      await tester.tap(find.byKey(const Key('rides-actions')));
-      await tester.pumpAndSettle();
       expect(find.byKey(const Key('upload')), findsOneWidget);
     },
   );
+
+  testWidgets('RidesScreen_ShouldPutStartRideInTheMenu_WhenThePhoneCanRecord', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+    server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      overrides: recorderOverrides(FakeRecorder()),
+    );
+
+    expect(tester.takeException(), isNull);
+    // Upload is the header's one action at every width; Start ride waits in the menu.
+    expect(find.byKey(const Key('upload')), findsOneWidget);
+    expect(find.byKey(const Key('start-ride')), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
+
+    await tester.tap(find.byKey(const Key('rides-actions')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('start-ride')), findsOneWidget);
+  });
 
   testWidgets('RidesScreen_ShouldNotOfferStartRide_WhenThereIsNoRecorder', (
     tester,
@@ -590,4 +644,166 @@ void main() {
     expect(find.byType(RecordingScreen), findsOneWidget);
     expect(find.byKey(const Key('live-ride-banner')), findsNothing);
   });
+
+  for (final width in [390.0, 600.0, 1300.0]) {
+    testWidgets('RidesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.rides.add(
+        rideJson(
+          'r2',
+          'ready',
+          distanceM: 42000,
+          movingS: 5400,
+          elevationGainM: 300,
+          avgSpeedMs: 7.8,
+        ),
+      );
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      expect(find.byKey(const Key('ride-r2')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('RidesScreen_ShouldOfferOneMainAction_WhenTheWindowIsAPhone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+
+    // One filled action in the header, and the imports behind the menu.
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byKey(const Key('upload')), findsOneWidget);
+    // The imports and the filters sit behind the header's menu.
+    expect(find.byKey(const Key('rides-actions')), findsOneWidget);
+  });
+
+  testWidgets('RidesScreen_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    tester.view.physicalSize = const Size(390, 2600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.rides.add(
+      rideJson(
+        'r2',
+        'ready',
+        distanceM: 42000,
+        movingS: 5400,
+        elevationGainM: 300,
+        avgSpeedMs: 7.8,
+      ),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(tester.takeException(), isNull);
+  });
+
+  test('RidesData_ShouldSendTheEnvironmentAndTheCommute_WhenThoseFiltersAreChosen', () async {
+    late http.Request sent;
+    final client = ApiClient(basePath: 'https://example.test')
+      ..client = MockClient((request) async {
+        sent = request;
+        return http.Response('{"rides":[],"next":null}', 200);
+      });
+
+    await RidesData(RidesApi(client))
+        .page(environment: 'indoor', commute: true);
+
+    expect(sent.url.path, '/api/v1/rides');
+    expect(sent.url.queryParameters, containsPair('environment', 'indoor'));
+    expect(sent.url.queryParameters, containsPair('commute', 'true'));
+    // Indoor is a place, never a discipline: the server would reject it there.
+    expect(sent.url.queryParameters.containsKey('discipline'), isFalse);
+  });
+
+  testWidgets(
+    'RidesScreen_ShouldAskForTheIndoorRides_WhenTheIndoorChipIsChosen',
+    (tester) async {
+      final data = _SpyRidesData();
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        overrides: [ridesDataProvider.overrideWithValue(data)],
+      );
+
+      await tester.tap(find.byKey(const Key('filter-indoor')));
+      await tester.pumpAndSettle();
+
+      expect(data.calls.last, (
+        discipline: null,
+        environment: 'indoor',
+        commute: null,
+      ));
+    },
+  );
+
+  testWidgets(
+    'RidesScreen_ShouldAskForTheCommutesOnly_WhenTheCommuteChipFollowsTheIndoorOne',
+    (tester) async {
+      final data = _SpyRidesData();
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        overrides: [ridesDataProvider.overrideWithValue(data)],
+      );
+
+      await tester.tap(find.byKey(const Key('filter-indoor')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('filter-commute')));
+      await tester.pumpAndSettle();
+
+      // The chips are one choice: the place the rider left is not asked for any more.
+      expect(data.calls.last, (
+        discipline: null,
+        environment: null,
+        commute: true,
+      ));
+      expect(
+        tester
+            .widget<FilterChip>(find.byKey(const Key('filter-indoor')))
+            .selected,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<FilterChip>(find.byKey(const Key('filter-commute')))
+            .selected,
+        isTrue,
+      );
+    },
+  );
+}
+
+/// The ride list's data source, with the request the view model made written down instead of sent.
+class _SpyRidesData extends RidesData {
+  _SpyRidesData() : super(RidesApi());
+
+  final calls = <({String? discipline, String? environment, bool? commute})>[];
+
+  @override
+  Future<Result<RidesPage>> page({
+    String? cursor,
+    String? discipline,
+    String? environment,
+    bool? commute,
+    String? query,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    calls.add((
+      discipline: discipline,
+      environment: environment,
+      commute: commute,
+    ));
+    return const Ok<RidesPage>((rides: <RideResponse>[], next: null));
+  }
 }

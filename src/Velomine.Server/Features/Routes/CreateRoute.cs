@@ -88,7 +88,7 @@ public sealed class CreateRoute(VelomineDbContext db, TimeProvider time) : Endpo
             if (ride.Problem != RideRouteProblem.None)
             {
                 AddError(RideRoutePoints.Message(ride.Problem));
-                await Send.ErrorsAsync(409, ct);
+                await Send.ErrorsAsync(RideRoutePoints.StatusCode(ride.Problem), ct);
                 return;
             }
 

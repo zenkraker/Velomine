@@ -13,10 +13,16 @@ import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/avatar.dart';
+import '../../core/widgets/badge.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/inline_error.dart';
+import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
+import '../../core/widgets/section_card.dart';
 
 String _roleName(AppLocalizations l10n, String role) => switch (role) {
   'member' => l10n.roleMember,
@@ -142,47 +148,58 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
       children: [
-        TextField(
-          key: const Key('account-search'),
+        AppTextField(
+          fieldKey: const Key('account-search'),
           controller: _search,
-          decoration: InputDecoration(
-            labelText: l10n.accountSearch,
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: _query.isEmpty
-                ? null
-                : IconButton(
-                    tooltip: l10n.clearSearch,
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      _search.clear();
-                      setState(() => _query = '');
-                    },
-                  ),
-          ),
+          label: l10n.accountSearch,
+          hint: l10n.accountSearchHint,
+          // The glyph closes the field, as the mock-up draws it, and turns into the way to clear it
+          // once there is something to clear.
+          suffixIcon: _query.isEmpty
+              ? const Icon(Icons.search)
+              : IconButton(
+                  tooltip: l10n.clearSearch,
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    _search.clear();
+                    setState(() => _query = '');
+                  },
+                ),
           onChanged: (value) => setState(() => _query = value),
         ),
         const SizedBox(height: AppSpacing.lg),
-        if (s.load.failure case final failure?)
+        if (s.load.failure case final failure?) ...[
           InlineError(
             failureText(l10n, failure),
             key: const Key('admin-error'),
           ),
-        Text(
-          l10n.waitingForApproval,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        if (waiting.isEmpty && !s.load.running)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(l10n.nonePending, key: const Key('none-pending')),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        // The first load is a loading state, not two empty cards.
+        if (s.users.isEmpty && s.load.failure == null && !s.load.completed)
+          const LoadingState.rows()
+        else ...[
+          SectionCard(
+            title: l10n.waitingForApproval,
+            children: [
+              if (waiting.isEmpty && !s.load.running)
+                EmptyState(
+                  key: const Key('none-pending'),
+                  message: l10n.nonePending,
+                  framed: false,
+                )
+              else
+                for (final user in waiting) _tile(context, ref, user, myId),
+            ],
           ),
-        for (final user in waiting) _tile(context, ref, user, myId),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          l10n.adminAccounts,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        for (final user in rest) _tile(context, ref, user, myId),
+          const SizedBox(height: AppSpacing.lg),
+          SectionCard(
+            title: l10n.adminAccounts,
+            children: [
+              for (final user in rest) _tile(context, ref, user, myId),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -195,86 +212,107 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
   ) {
     final l10n = context.l10n;
     final mine = user.id == myId;
-    return Card(
+    return ListTile(
       key: Key('user-${user.id}'),
-      child: ListTile(
-        title: Wrap(
-          spacing: AppSpacing.sm,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(user.displayName),
-            if (mine) Chip(label: Text(l10n.you)),
-            if (user.isLockedOut) Chip(label: Text(l10n.locked)),
-            for (final role in user.roles)
-              if (role != 'member') Chip(label: Text(_roleName(l10n, role))),
-          ],
-        ),
-        subtitle: Text('${user.email} · ${dateTime(user.createdAt)}'),
-        trailing: !user.isApproved
-            ? FilledButton(
-                key: Key('approve-${user.id}'),
-                onPressed: () => ref
-                    .read(adminAccountsViewModelProvider.notifier)
-                    .approve(user),
-                child: Text(l10n.approve),
-              )
-            : mine
-            ? null
-            : PageMenu(
-                buttonKey: Key('user-menu-${user.id}'),
-                entries: [
-                  PageMenuEntry(
-                    key: Key('roles-${user.id}'),
-                    icon: Icons.admin_panel_settings_outlined,
-                    label: l10n.changeRoles,
-                    onSelected: () =>
-                        _later(context, () => _roles(context, ref, user)),
-                  ),
-                  if (user.isLockedOut)
-                    PageMenuEntry(
-                      key: Key('unlock-${user.id}'),
-                      icon: Icons.lock_open_outlined,
-                      label: l10n.unlockAccount,
-                      onSelected: () => ref
-                          .read(adminAccountsViewModelProvider.notifier)
-                          .unlock(user),
-                    )
-                  else
-                    PageMenuEntry(
-                      key: Key('lock-${user.id}'),
-                      icon: Icons.lock_outline,
-                      label: l10n.lockAccount,
-                      onSelected: () => ref
-                          .read(adminAccountsViewModelProvider.notifier)
-                          .lock(user),
-                    ),
-                  PageMenuEntry(
-                    key: Key('reset-password-${user.id}'),
-                    icon: Icons.link,
-                    label: l10n.resetPasswordLink,
-                    onSelected: () =>
-                        _later(context, () => _resetLink(context, ref, user)),
-                  ),
-                  PageMenuEntry(
-                    key: Key('reset-two-factor-${user.id}'),
-                    icon: Icons.phonelink_lock_outlined,
-                    label: l10n.resetTwoFactor,
-                    onSelected: () => _later(
-                      context,
-                      () => _resetTwoFactor(context, ref, user),
-                    ),
-                  ),
-                  PageMenuEntry(
-                    key: Key('delete-${user.id}'),
-                    icon: Icons.delete_outline,
-                    label: l10n.deleteAccountAction,
-                    destructive: true,
-                    onSelected: () =>
-                        _later(context, () => _delete(context, ref, user)),
-                  ),
-                ],
+      contentPadding: EdgeInsets.zero,
+      leading: Avatar(user.displayName),
+      title: Wrap(
+        spacing: AppSpacing.sm,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(user.displayName),
+          if (mine) AppBadge(l10n.you),
+          if (user.isLockedOut) AppBadge(l10n.locked, tone: AppBadgeTone.bad),
+          // The roles the account has beyond member, and member itself only when it has no other:
+          // as the mock-up draws it, "Member" is what an ordinary account is.
+          for (final role in user.roles)
+            if (role != 'member')
+              AppBadge(
+                _roleName(l10n, role),
+                tone: role == 'admin'
+                    ? AppBadgeTone.good
+                    : AppBadgeTone.neutral,
               ),
+          if (!user.roles.any((role) => role != 'member'))
+            AppBadge(l10n.roleMember),
+        ],
       ),
+      subtitle: Text(
+        user.isApproved
+            ? '${user.email} · ${dateTime(user.createdAt)}'
+            : '${user.email} · ${_askedAgo(l10n, user.createdAt)}',
+      ),
+      // A waiting account is approved and then handled like any other: both are on its row.
+      trailing: mine
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: AppSpacing.sm,
+              children: [
+                if (!user.isApproved)
+                  FilledButton(
+                    key: Key('approve-${user.id}'),
+                    onPressed: () => ref
+                        .read(adminAccountsViewModelProvider.notifier)
+                        .approve(user),
+                    child: Text(l10n.approve),
+                  ),
+                PageMenu(
+                  buttonKey: Key('user-menu-${user.id}'),
+                  entries: [
+                    PageMenuEntry(
+                      key: Key('roles-${user.id}'),
+                      icon: Icons.admin_panel_settings_outlined,
+                      label: l10n.changeRoles,
+                      onSelected: () =>
+                          _later(context, () => _roles(context, ref, user)),
+                    ),
+                    if (user.isLockedOut)
+                      PageMenuEntry(
+                        key: Key('unlock-${user.id}'),
+                        icon: Icons.lock_open_outlined,
+                        label: l10n.unlockAccount,
+                        onSelected: () => ref
+                            .read(adminAccountsViewModelProvider.notifier)
+                            .unlock(user),
+                      )
+                    else
+                      PageMenuEntry(
+                        key: Key('lock-${user.id}'),
+                        icon: Icons.lock_outline,
+                        label: l10n.lockAccount,
+                        onSelected: () => ref
+                            .read(adminAccountsViewModelProvider.notifier)
+                            .lock(user),
+                      ),
+                    PageMenuEntry(
+                      key: Key('reset-password-${user.id}'),
+                      icon: Icons.link,
+                      label: l10n.resetPasswordLink,
+                      onSelected: () =>
+                          _later(context, () => _resetLink(context, ref, user)),
+                    ),
+                    PageMenuEntry(
+                      key: Key('reset-two-factor-${user.id}'),
+                      icon: Icons.phonelink_lock_outlined,
+                      label: l10n.resetTwoFactor,
+                      onSelected: () => _later(
+                        context,
+                        () => _resetTwoFactor(context, ref, user),
+                      ),
+                    ),
+                    PageMenuEntry(
+                      key: Key('delete-${user.id}'),
+                      icon: Icons.delete_outline,
+                      label: l10n.deleteAccountAction,
+                      destructive: true,
+                      onSelected: () =>
+                          _later(context, () => _delete(context, ref, user)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }
@@ -373,4 +411,16 @@ class _RolesSheetState extends State<_RolesSheet> {
       ],
     );
   }
+}
+
+/// How long ago a waiting account asked: hours and days for a week, then its date.
+String _askedAgo(AppLocalizations l10n, DateTime? at, {DateTime? now}) {
+  if (at == null) return '–';
+  final current = (now ?? DateTime.now()).toLocal();
+  final asked = at.toLocal();
+  final elapsed = current.difference(asked);
+  if (elapsed.isNegative || elapsed.inMinutes < 60) return l10n.askedJustNow;
+  if (elapsed.inDays < 1) return l10n.askedHoursAgo(elapsed.inHours);
+  if (elapsed.inDays < 7) return l10n.askedDaysAgo(elapsed.inDays);
+  return dateOnly(asked);
 }

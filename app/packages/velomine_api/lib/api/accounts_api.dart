@@ -97,6 +97,55 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'DELETE /api/v1/accounts/me/heart-rate/{kind}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  Future<Response> clearHeartRateWithHttpInfo(String kind, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/heart-rate/{kind}'
+      .replaceAll('{kind}', kind);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  Future<ProfileResponse?> clearHeartRate(String kind, { Future<void>? abortTrigger, }) async {
+    final response = await clearHeartRateWithHttpInfo(kind, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ProfileResponse',) as ProfileResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/me/export-link' operation and returns the [Response].
   Future<Response> createExportLinkWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -440,6 +489,48 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'GET /api/v1/accounts/me/ftp-history' operation and returns the [Response].
+  Future<Response> getFtpHistoryWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/ftp-history';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<FtpHistoryResponse?> getFtpHistory({ Future<void>? abortTrigger, }) async {
+    final response = await getFtpHistoryWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'FtpHistoryResponse',) as FtpHistoryResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/accounts/me' operation and returns the [Response].
   Future<Response> getMeWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -645,6 +736,48 @@ class AccountsApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TwoFactorState',) as TwoFactorState;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/accounts/me/zones' operation and returns the [Response].
+  Future<Response> getZonesWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/zones';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<ZonesResponse?> getZones({ Future<void>? abortTrigger, }) async {
+    final response = await getZonesWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ZonesResponse',) as ZonesResponse;
     
     }
     return null;
@@ -1102,6 +1235,55 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'DELETE /api/v1/accounts/me/zones/{set}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  Future<Response> resetZonesWithHttpInfo(String set_, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/zones/{set}'
+      .replaceAll('{set}', set_);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  Future<ZonesResponse?> resetZones(String set_, { Future<void>? abortTrigger, }) async {
+    final response = await resetZonesWithHttpInfo(set_, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ZonesResponse',) as ZonesResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/me/sessions/logout-others' operation and returns the [Response].
   Future<Response> revokeOtherSessionsWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -1225,6 +1407,59 @@ class AccountsApi {
     return null;
   }
 
+  /// Performs an HTTP 'PUT /api/v1/accounts/me/heart-rate/{kind}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  ///
+  /// * [SetHeartRateRequest] setHeartRateRequest (required):
+  Future<Response> setHeartRateWithHttpInfo(String kind, SetHeartRateRequest setHeartRateRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/heart-rate/{kind}'
+      .replaceAll('{kind}', kind);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setHeartRateRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  ///
+  /// * [SetHeartRateRequest] setHeartRateRequest (required):
+  Future<ProfileResponse?> setHeartRate(String kind, SetHeartRateRequest setHeartRateRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setHeartRateWithHttpInfo(kind, setHeartRateRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ProfileResponse',) as ProfileResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'PUT /api/v1/accounts/me/language' operation and returns the [Response].
   /// Parameters:
   ///
@@ -1260,6 +1495,54 @@ class AccountsApi {
   /// * [SetMyLanguageRequest] setMyLanguageRequest (required):
   Future<MeResponse?> setMyLanguage(SetMyLanguageRequest setMyLanguageRequest, { Future<void>? abortTrigger, }) async {
     final response = await setMyLanguageWithHttpInfo(setMyLanguageRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'MeResponse',) as MeResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/accounts/me/rider-mode' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [SetMyRiderModeRequest] setMyRiderModeRequest (required):
+  Future<Response> setMyRiderModeWithHttpInfo(SetMyRiderModeRequest setMyRiderModeRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/rider-mode';
+
+    // ignore: prefer_final_locals
+    Object? postBody = setMyRiderModeRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [SetMyRiderModeRequest] setMyRiderModeRequest (required):
+  Future<MeResponse?> setMyRiderMode(SetMyRiderModeRequest setMyRiderModeRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setMyRiderModeWithHttpInfo(setMyRiderModeRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -1364,6 +1647,59 @@ class AccountsApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TelemetryResponse',) as TelemetryResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/accounts/me/zones/{set}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  ///
+  /// * [SetZonesRequest] setZonesRequest (required):
+  Future<Response> setZonesWithHttpInfo(String set_, SetZonesRequest setZonesRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/zones/{set}'
+      .replaceAll('{set}', set_);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setZonesRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  ///
+  /// * [SetZonesRequest] setZonesRequest (required):
+  Future<ZonesResponse?> setZones(String set_, SetZonesRequest setZonesRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setZonesWithHttpInfo(set_, setZonesRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ZonesResponse',) as ZonesResponse;
     
     }
     return null;

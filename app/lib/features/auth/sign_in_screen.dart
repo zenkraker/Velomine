@@ -12,7 +12,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'auth_page.dart';
 import 'auth_view_models.dart';
 import 'password_field.dart';
-import '../../core/tokens.dart';
+import '../../core/widgets/app_text_field.dart';
 
 String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
     switch (problem) {
@@ -89,7 +89,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ? authProblemText(l10n, restoreProblem)
               : (ssoError == null ? null : ssoErrorText(l10n, ssoError)));
     return AuthPage(
-      eyebrow: l10n.authEyebrowSignIn,
+      title: l10n.signInTitle,
       help: l10n.signInHelp,
       primaryLabel: s.challenge != null ? l10n.twoFactorVerify : l10n.signIn,
       primaryKey: Key(s.challenge != null ? 'two-factor-verify' : 'sign-in'),
@@ -97,7 +97,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       primaryBusy: s.command.running,
       children: [
         if (widget.onChangeServer != null) ...[
-          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -117,28 +116,24 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ],
           ),
         ],
-        const SizedBox(height: AppSpacing.xl),
         if (s.challenge != null) ...[
           Text(
             l10n.twoFactorTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: AppSpacing.sm),
           Text(l10n.twoFactorHelp),
-          const SizedBox(height: AppSpacing.lg),
           AutofillGroup(
-            child: TextField(
-              key: const Key('two-factor-code'),
+            child: AppTextField(
+              fieldKey: const Key('two-factor-code'),
               controller: _code,
+              label: l10n.twoFactorCode,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.oneTimeCode],
-              decoration: InputDecoration(labelText: l10n.twoFactorCode),
-              onSubmitted: (_) => _verifyCode(),
+              onDone: (_) => _verifyCode(),
             ),
           ),
           if (message != null) ...[
-            const SizedBox(height: AppSpacing.md),
             AuthFailure(keyName: 'sign-in-error', message: message),
           ],
           TextButton(
@@ -149,17 +144,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             child: Text(l10n.twoFactorUseAnother),
           ),
         ] else ...[
-          TextField(
-            key: const Key('email'),
+          AppTextField(
+            fieldKey: const Key('email'),
             controller: _email,
+            label: l10n.email,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             // An address, not a typed-named login: the browser pairs it with the password below
             // and every password manager recognises the pair.
             autofillHints: const [AutofillHints.email, AutofillHints.username],
-            decoration: InputDecoration(labelText: l10n.email),
           ),
-          const SizedBox(height: AppSpacing.md),
           PasswordField(
             fieldKey: const Key('password'),
             visibilityKey: const Key('password-visibility'),
@@ -171,17 +165,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ],
             onSubmitted: (_) => _signIn(),
           ),
-          CheckboxListTile(
+          SwitchListTile(
             key: const Key('stay-signed-in'),
             contentPadding: EdgeInsets.zero,
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
             value: _staySignedIn,
-            onChanged: (value) => setState(() => _staySignedIn = value ?? true),
+            onChanged: (value) => setState(() => _staySignedIn = value),
             title: Text(l10n.staySignedIn),
           ),
-          Align(
-            alignment: Alignment.centerRight,
+          // Below the fields and above the ways in, as the design draws it: a full-width text button, not a
+          // link pushed to the right edge.
+          SizedBox(
+            width: double.infinity,
             child: TextButton(
               key: const Key('forgot-password'),
               onPressed: () => context.push('/forgot-password'),
@@ -189,11 +183,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ),
           ),
           if (message != null) ...[
-            const SizedBox(height: AppSpacing.md),
             AuthFailure(keyName: 'sign-in-error', message: message),
           ],
           if (restoreProblem != null) ...[
-            const SizedBox(height: AppSpacing.sm),
             OutlinedButton(
               key: const Key('retry-session'),
               onPressed: ref
@@ -205,7 +197,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           if (kIsWeb
               ? (sso?.enabled ?? false)
               : (sso?.appSsoEnabled ?? false)) ...[
-            const SizedBox(height: AppSpacing.md),
+            const AuthOr(),
             OutlinedButton(
               key: const Key('sso'),
               onPressed: widget.startSso,
@@ -214,7 +206,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
           TextButton(
             key: const Key('to-register'),
             onPressed: () => context.push('/register'),

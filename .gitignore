@@ -5,9 +5,21 @@ obj/
 # Written by tools/generate-api-client.sh (the exported OpenAPI document)
 src/Velomine.Server/wwwroot/
 
-# Nix dev environment (docs/development.md): direnv cache and machine-local caches, SDKs and data
-.direnv/
+# Machine-local caches, SDKs and data (docs/development.md)
 .dev/
 
 # Local compose and app secrets (.env.example is the committed template)
 .env
+
+# Pi downloads its packages here (.pi/settings.json lists them)
+.pi/git/
+.pi/npm/
+
+# Claude Code's personal settings (approved MCP servers, permissions); never shared
+.claude/settings.local.json
+
+# The docs section is built from docs-site/ by the Pages workflow
+site/docs/
+docs-site/node_modules/
+docs-site/.astro/
+docs-site/src/styles/tokens.css

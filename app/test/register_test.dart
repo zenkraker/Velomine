@@ -24,6 +24,60 @@ void main() {
   }
 
   testWidgets(
+    'RegisterScreen_ShouldAskForTheNameBeforeTheEmail_WhenTheFormOpens',
+    (tester) async {
+      await startApp(tester, server.session(useCookies: false));
+      await tester.ensureVisible(find.byKey(const Key('to-register')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('to-register')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('New account'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const Key('name'))).dy,
+        lessThan(tester.getTopLeft(find.byKey(const Key('email'))).dy),
+      );
+    },
+  );
+
+  testWidgets('RegisterScreen_ShouldSayWhatAnAccountIsFor_WhenTheFormOpens', (
+    tester,
+  ) async {
+    await startApp(tester, server.session(useCookies: false));
+    await tester.ensureVisible(find.byKey(const Key('to-register')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('to-register')));
+    await tester.pumpAndSettle();
+
+    // The sentence sits under the title and above the first field, as the mock-up draws it.
+    final help = find.text('Ride, track your form and keep your data.');
+    expect(help, findsOneWidget);
+    expect(
+      tester.getTopLeft(help).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('name'))).dy),
+    );
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'RegisterScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(tester, server.session(useCookies: false));
+        await tester.ensureVisible(find.byKey(const Key('to-register')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('to-register')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('register')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
     'RegisterScreen_ShouldOfferANewPasswordToPasswordManagers_WhenTheFormOpens',
     (tester) async {
       await startApp(tester, server.session(useCookies: false));

@@ -1,3 +1,5 @@
+using Velomine.Server.Features.Training;
+
 namespace Velomine.Server.Features.Notifications.Email;
 
 /// <summary>The wording of a notification in an email, in the member's language. The app words the same notifications on its own screen.</summary>
@@ -22,8 +24,48 @@ public static class NotificationText
         NotificationTypes.ClubRidePlanned => EmailStrings.Format("ClubRidePlanned", n.Subject),
         NotificationTypes.ClubRideChanged => EmailStrings.Format("ClubRideChanged", n.Subject),
         NotificationTypes.ClubRideCancelled => EmailStrings.Format("ClubRideCancelled", n.Subject),
+        NotificationTypes.PowerRecord => EmailStrings.Format("PowerRecord", n.Subject),
+        NotificationTypes.FtpSuggested => EmailStrings.Format("FtpSuggested", n.Subject),
+        NotificationTypes.HeartRateMeasured => EmailStrings.Format("HeartRateMeasured", n.Subject),
+        NotificationTypes.HeartRateSuggested => EmailStrings.Format("HeartRateSuggested", n.Subject),
+        NotificationTypes.TrainingSessionQuestion => EmailStrings.Format("TrainingSessionQuestion", n.Subject),
+        NotificationTypes.TrainingToday => EmailStrings.Format("TrainingToday", TrainingNoticeSubject.Field(n.Subject, 0)),
+        NotificationTypes.TrainingEasy => Easy(n.Subject),
+        NotificationTypes.TrainingMoved => EmailStrings.Format("TrainingMoved",
+            TrainingNoticeSubject.Field(n.Subject, 0), Day(TrainingNoticeSubject.Field(n.Subject, 1))),
+        NotificationTypes.TrainingSkipped => EmailStrings.Format("TrainingSkipped",
+            TrainingNoticeSubject.Field(n.Subject, 0), Day(TrainingNoticeSubject.Field(n.Subject, 1))),
         _ => n.Subject,
     };
+
+    /// <summary>
+    /// A session made easy: the reason the rider reads, and the day the hard work went to when it moved. A subject
+    /// whose reason is not one of ours is a session's name, kept from before the format, and is what the email says.
+    /// </summary>
+    private static string Easy(string subject)
+    {
+        var reason = TrainingNoticeSubject.Field(subject, 0) switch
+        {
+            TrainingEasyReasons.SleptPoorly => EmailStrings.Get("ReasonSleptPoorly"),
+            TrainingEasyReasons.Tired => EmailStrings.Get("ReasonTired"),
+            TrainingEasyReasons.Sore => EmailStrings.Get("ReasonSore"),
+            TrainingEasyReasons.FormLow => EmailStrings.Get("ReasonFormLow"),
+            TrainingEasyReasons.Asked => EmailStrings.Get("ReasonAsked"),
+            _ => null,
+        };
+        if (reason is null) return subject;
+        var line = EmailStrings.Format("TrainingEasy", reason);
+        if (TrainingNoticeSubject.Field(subject, 1) is { } moved)
+            line += " " + EmailStrings.Format("TrainingEasyMoved", Day(moved));
+        return line;
+    }
+
+    /// <summary>The day of a training notice, in the language the email is written in; the subject keeps it as an ISO day.</summary>
+    private static string Day(string? subject) =>
+        DateOnly.TryParseExact(subject, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out var day)
+            ? day.ToString("dddd", System.Globalization.CultureInfo.CurrentUICulture)
+            : subject ?? "";
 
     /// <summary>The subject of a plan notification is an ISO day; the email writes it in the member's language.</summary>
     private static string PlanDate(string subject) =>

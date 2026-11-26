@@ -1,6 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/tokens.dart';
+import 'package:velomine/core/widgets/card_link.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -32,23 +35,142 @@ void main() {
     ];
   });
 
-  Future<void> openProgress(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2000);
+  Future<void> openProgress(
+    WidgetTester tester, {
+    Size size = const Size(1000, 2000),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/progress');
   }
 
-  Future<void> reveal(WidgetTester tester, Finder finder) async {
-    await tester.scrollUntilVisible(
-      finder,
-      300,
-      scrollable: find.byType(Scrollable).first,
+  testWidgets('ProgressScreen_ShouldShowFourStatCards_WhenTheRiderJustRides', (
+    tester,
+  ) async {
+    // A rider who just rides sees the four numbers; the analysis waits behind one button.
+    server.accounts['rider@example.com']!.riderMode = 'just_riding';
+    await openProgress(tester);
+
+    for (final key in [
+      'metric-readiness',
+      'metric-form',
+      'metric-period',
+      'metric-next-event',
+    ]) {
+      expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+    }
+    // The deep charts answer their own question on their own page: none of them is on the overview,
+    // and there is no fold to open.
+    for (final key in [
+      'training-tss',
+      'tss-chart',
+      'fitness-chart',
+      'power-curve-card',
+      'intensity-card',
+      'efficiency-card',
+      'readiness-card',
+      'wellbeing-card',
+      'goal-goal-1',
+      'more-details',
+    ]) {
+      expect(find.byKey(Key(key)), findsNothing, reason: key);
+    }
+    // The overview still shows the totals chart and its period control, and links on to Totals.
+    expect(find.byKey(const Key('progress-period')), findsOneWidget);
+    expect(find.byKey(const Key('progress-totals-link')), findsOneWidget);
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldKeepTheAnalysisOffTheOverview_WhenTheModeIsTraining',
+    (tester) async {
+      // A training rider gets the same overview as everyone else: the analysis lives on its sub-pages.
+      server.accounts['rider@example.com']!.riderMode = 'training';
+      await openProgress(tester);
+
+      expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
+      expect(find.byKey(const Key('more-details')), findsNothing);
+      expect(find.byKey(const Key('intensity-card')), findsNothing);
+      expect(find.byKey(const Key('power-curve-card')), findsNothing);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldShowThisWeek_WhenShowingTotals', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    expect(server.requests, contains('GET /api/v1/analytics/totals'));
+    final card = find.byKey(const Key('metric-period'));
+    expect(
+      find.descendant(of: card, matching: find.text('This week')),
+      findsOneWidget,
+    );
+    // The latest week is 42.5 km against a 60 km week before it: below the average, and the sentence
+    // keeps the rides and the time the week took.
+    expect(
+      find.descendant(of: card, matching: find.text('42.5 km')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.text(
+          '2 rides, 1 h 30 min. Below your 12-week average of 60.0 km.',
+        ),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldGrowTheChartCardToTheWindowBottom_WhenWidthIs1300',
+    (tester) async {
+      await openProgress(tester, size: const Size(1300, 1000));
+
+      // ProgressDesktop.md: "It grows to the bottom of the window, so the content ends level with the
+      // sidebar." The card's link sits at its foot, well below the short chart.
+      final link = find.byKey(const Key('progress-totals-link'));
+      expect(link, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getRect(link).bottom,
+        greaterThan(1000 - 4 * AppSpacing.xxl),
+        reason: 'the card ends at the window bottom',
+      );
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldNotOverflow_WhenTheWindowIsShortAndFillLastIsOn',
+    (tester) async {
+      // A 500 dp window at the sidebar width: the card is taller than the room left, so the page
+      // scrolls rather than overflowing.
+      await openProgress(tester, size: const Size(1300, 500));
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('progress-totals-link')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldAskMonthlyTotals_WhenSwitchingToMonths', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('progress-period')),
+        matching: find.text('Months'),
+      ),
     );
     await tester.pumpAndSettle();
-  }
+
+    expect(find.text('Distance per month'), findsOneWidget);
+  });
 
   testWidgets(
     'ProgressScreen_ShouldShowOnlyTheChosenPeriod_WhenThePeriodChangesDuringALoad',
@@ -57,358 +179,25 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/progress');
 
       final gate = server.delayNext('/api/v1/analytics/totals');
-      await tester.tap(find.text('Progress'));
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const Key('progress-period')),
+          matching: find.text('Months'),
+        ),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 10));
 
-      await tester.tap(find.text('Months'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('This month'), findsOneWidget);
       gate.complete();
       await tester.pumpAndSettle();
 
-      expect(find.text('This month'), findsOneWidget);
-      expect(find.text('This week'), findsNothing);
-      expect(find.text('103 km'), findsWidgets);
+      expect(find.text('Distance per month'), findsOneWidget);
+      expect(find.text('Distance per week'), findsNothing);
     },
   );
-
-  testWidgets('ProgressScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    expect(server.requests, contains('GET /api/v1/analytics/totals'));
-    final thisWeek = find.byKey(const Key('total-0'));
-    expect(
-      find.descendant(of: thisWeek, matching: find.text('This week')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: thisWeek, matching: find.text('42.5 km')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: thisWeek,
-        matching: find.text('2 rides · 1 h 30 min · 400 m climbing'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.byKey(const Key('total-1')), findsOneWidget);
-    expect(find.byKey(const Key('no-goals')), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldAskMonthlyTotals_WhenSwitchingToMonths', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await tester.tap(find.text('Months'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('This month'), findsOneWidget);
-    expect(find.text('103 km'), findsWidgets); // 102.5 km, rounded
-  });
-
-  testWidgets('ProgressScreen_ShouldShowTrainingTotals_WhenChangingRange', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    expect(server.trainingRequests, [90]);
-    expect(
-      tester.widget<Text>(find.byKey(const Key('training-tss'))).data,
-      '240',
-    );
-    expect(
-      tester.widget<Text>(find.byKey(const Key('training-trimp'))).data,
-      '180',
-    );
-    expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
-    expect(find.byKey(const Key('tss-chart')), findsOneWidget);
-
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const Key('training-range')),
-        matching: find.text('30 d'),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(server.trainingRequests, [90, 30]);
-  });
-
-  testWidgets('ProgressScreen_ShouldSendGoalInMetres_WhenTargetIsInKm', (
-    tester,
-  ) async {
-    server.goalCurrent['distance'] = 40000;
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('add-goal')));
-    await tester.tap(find.byKey(const Key('add-goal')));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('goal-target')), '100');
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-
-    expect(server.goals.single, {
-      'id': 'goal-1',
-      'period': 'week',
-      'metric': 'distance',
-      'target': 100000.0,
-    });
-    expect(find.text('Weekly distance'), findsOneWidget);
-    expect(find.text('40.0 km of 100 km · 40 %'), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldStoreMilesAsMetres_WhenUnitsAreImperial', (
-    tester,
-  ) async {
-    server.accounts['rider@example.com']!.units = 'imperial';
-    server.goalCurrent['distance'] = 40000;
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('add-goal')));
-    await tester.tap(find.byKey(const Key('add-goal')));
-    await tester.pumpAndSettle();
-    // The field is labelled in miles: 100 mi is 160934.4 m.
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('goal-target')))
-          .decoration!
-          .suffixText,
-      'mi',
-    );
-    await tester.enterText(find.byKey(const Key('goal-target')), '100');
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-
-    expect(server.goals.single['target'], closeTo(160934.4, 0.1));
-    expect(find.text('24.9 mi of 100 mi · 24 %'), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldUpdateAndDeleteGoal_WhenEditingGoal', (
-    tester,
-  ) async {
-    server.goals.add({
-      'id': 'goal-1',
-      'period': 'month',
-      'metric': 'time',
-      'target': 36000.0,
-    });
-    server.goalCurrent['time'] = 36000;
-    await openProgress(tester);
-    expect(find.text('Reached'), findsOneWidget);
-
-    await reveal(tester, find.byKey(const Key('goal-edit-goal-1')));
-    await tester.tap(find.byKey(const Key('goal-edit-goal-1')));
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('goal-target')))
-          .controller!
-          .text,
-      '10',
-    );
-    await tester.enterText(find.byKey(const Key('goal-target')), '20');
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-    expect(server.goals.single['target'], 72000.0);
-    expect(find.text('10 h 00 min of 20 h 00 min · 50 %'), findsOneWidget);
-
-    await reveal(tester, find.byKey(const Key('goal-delete-goal-1')));
-    await tester.tap(find.byKey(const Key('goal-delete-goal-1')));
-    await tester.pumpAndSettle();
-    expect(server.goals, isEmpty);
-    expect(find.byKey(const Key('no-goals')), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldRejectEmptyTarget_WhenSavingGoal', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('add-goal')));
-    await tester.tap(find.byKey(const Key('add-goal')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Enter a target above 0.'), findsOneWidget);
-    expect(server.goals, isEmpty);
-  });
-
-  testWidgets('ProgressScreen_ShouldShowPowerAndReadiness_WhenAnalyticsLoad', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('power-curve-card')));
-    expect(find.byKey(const Key('readiness-card')), findsOneWidget);
-    expect(find.byKey(const Key('power-curve-card')), findsOneWidget);
-    expect(find.text('Estimated FTP'), findsOneWidget);
-    expect(find.byKey(const Key('use-ftp')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('use-ftp')));
-    await tester.pumpAndSettle();
-
-    expect(server.profiles['rider@example.com']?['ftpW'], 266);
-  });
-
-  testWidgets('ProgressScreen_ShouldAskForConsent_WhenWellbeingIsNotSetUp', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('wellbeing-consent')));
-    expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('wellbeing-consent')));
-    await tester.pumpAndSettle();
-
-    expect(server.wellbeingConsent, isTrue);
-    await reveal(tester, find.byKey(const Key('wellbeing-save')));
-    await tester.tap(find.byKey(const Key('wellbeing-save')));
-    await tester.pumpAndSettle();
-
-    expect(server.wellbeingToday?['fatigue'], 3);
-    expect(server.wellbeingToday?['motivation'], 3);
-    expect(find.byKey(const Key('readiness-card')), findsOneWidget);
-    expect(find.text('How you feel'), findsOneWidget);
-  });
-
-  testWidgets(
-    'ProgressScreen_ShouldClearMemberData_WhenAnotherAccountSignsIn',
-    (tester) async {
-      final second = server.add('other@example.com');
-      await openProgress(tester);
-      expect(find.byKey(const Key('total-0')), findsOneWidget);
-      expect(find.text('42.5 km'), findsWidgets);
-
-      await openAccount(tester, 'sign-out');
-      await tester.pumpAndSettle();
-      server.totals.clear();
-      server.goals.clear();
-      server.goalCurrent.clear();
-
-      await tester.enterText(find.byKey(const Key('email')), second.email);
-      await tester.enterText(
-        find.byKey(const Key('password')),
-        second.password,
-      );
-      await tester.tap(find.byKey(const Key('sign-in')));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Progress'));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('total-0')), findsNothing);
-      expect(find.text('42.5 km'), findsNothing);
-      expect(find.byKey(const Key('no-goals')), findsOneWidget);
-      expect(
-        server.requests
-            .where((r) => r == 'GET /api/v1/analytics/totals')
-            .length,
-        2,
-      );
-    },
-  );
-
-  const consented = {
-    'date': '2026-11-08',
-    'fatigue': 3,
-    'soreness': 2,
-    'mood': 4,
-    'stress': 2,
-    'motivation': 5,
-  };
-
-  Future<void> openWithdraw(WidgetTester tester) async {
-    await reveal(tester, find.byKey(const Key('wellbeing-actions')));
-    await tester.tap(find.byKey(const Key('wellbeing-actions')));
-    await tester.pumpAndSettle();
-  }
-
-  testWidgets(
-    'ProgressScreen_ShouldWithdrawConsent_WhenTheMenuEntryIsConfirmed',
-    (tester) async {
-      server.wellbeingConsent = true;
-      server.wellbeingToday = consented;
-      await openProgress(tester);
-
-      await openWithdraw(tester);
-      // The only red thing in the card is the menu entry; no button stays on the card.
-      final entry = tester.widget<MenuItemButton>(
-        find.byKey(const Key('wellbeing-withdraw')),
-      );
-      final scheme = Theme.of(
-        tester.element(find.byKey(const Key('wellbeing-withdraw'))),
-      ).colorScheme;
-      expect(entry.style?.foregroundColor?.resolve({}), scheme.error);
-      await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wellbeing-withdraw-confirm')));
-      await tester.pumpAndSettle();
-
-      expect(server.wellbeingConsent, isFalse);
-      expect(server.sharingChoices['wellbeing'], 'none');
-      expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
-    },
-  );
-
-  testWidgets('ProgressScreen_ShouldKeepConsent_WhenWithdrawIsCancelled', (
-    tester,
-  ) async {
-    server.wellbeingConsent = true;
-    server.wellbeingToday = consented;
-    await openProgress(tester);
-
-    await openWithdraw(tester);
-    await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-
-    expect(server.wellbeingConsent, isTrue);
-    expect(find.byKey(const Key('wellbeing-card')), findsOneWidget);
-  });
-
-  for (final (name, size) in [
-    ('Phone', const Size(390, 844)),
-    ('Wide', const Size(1000, 2000)),
-  ]) {
-    testWidgets(
-      'ProgressScreen_ShouldFilterFromOneSheet_WhenA${name}OpensTheMenuFilter',
-      (tester) async {
-        tester.view.physicalSize = size;
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await startApp(tester, server.session(useCookies: true));
-        await tester.tap(find.text('Progress'));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byKey(const Key('progress-actions')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('progress-filter')));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(BottomSheet), findsOneWidget);
-        await tester.tap(
-          find.descendant(
-            of: find.byType(BottomSheet),
-            matching: find.byKey(const Key('progress-filter-gravel')),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(server.analyticsFilters, contains('gravel'));
-      },
-    );
-  }
 
   testWidgets('ProgressScreen_ShouldAskForOneDiscipline_WhenAFilterIsChosen', (
     tester,
@@ -419,5 +208,262 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.analyticsFilters, contains('gravel'));
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldPutTheSportChipInTheTitleRow_WhenTheWindowIsAPhone',
+    (tester) async {
+      await openProgress(tester, size: const Size(390, 844));
+
+      // The chip sits in the header, above the sub-pages' tabs.
+      final chip = tester
+          .getTopLeft(find.byKey(const Key('progress-filter-chip')))
+          .dy;
+      final tabs = tester
+          .getTopLeft(find.byKey(const Key('progress-tab-overview')))
+          .dy;
+      expect(chip, lessThan(tabs));
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldOpenTheFitnessPage_WhenThePhoneTapsTheFormCard',
+    (tester) async {
+      await openProgress(tester, size: const Size(390, 844));
+
+      final card = find.byKey(const Key('metric-form'));
+      // Two cards side by side carry no link: the whole card is the way on.
+      expect(
+        find.descendant(of: card, matching: find.byType(CardLink)),
+        findsNothing,
+      );
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldOpenTheFilterInOneSheet_WhenAPhoneTapsTheSportChip',
+    (tester) async {
+      await openProgress(tester, size: const Size(390, 844));
+
+      await tester.tap(find.byKey(const Key('progress-filter-chip')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byKey(const Key('progress-filter-gravel')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldNotRepeatTheSportFilter_WhenTheChipsAlreadyDrawIt',
+    (tester) async {
+      await openProgress(tester);
+
+      // The chips on the page are the only way to the filter: no menu repeats them.
+      expect(find.byKey(const Key('progress-actions')), findsNothing);
+      await tester.tap(find.byKey(const Key('progress-filter-gravel')));
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldShowTheFormStateWord_WhenTheFormArrives', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    final card = find.byKey(const Key('metric-form'));
+    expect(
+      find.descendant(of: card, matching: find.text('Building')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldShowEmptyCards_WhenTheRiderHasNoLoadAndNoRides',
+    (tester) async {
+      server.training = {...trainingJson(), 'days': const <Object?>[]};
+      server.totals['week'] = [];
+      await openProgress(tester);
+
+      // No data is a fact the cards carry: they say what makes one appear instead of vanishing.
+      for (final (key, sentence) in [
+        (
+          'metric-form',
+          'No training load in this range. Rides with power or heart rate add to it.',
+        ),
+        (
+          'metric-period',
+          'No rides yet. Upload or record a ride to see your totals.',
+        ),
+      ]) {
+        final card = find.byKey(Key(key));
+        expect(card, findsOneWidget, reason: key);
+        expect(
+          find.descendant(of: card, matching: find.text(sentence)),
+          findsOneWidget,
+          reason: key,
+        );
+        expect(
+          find.descendant(of: card, matching: find.text('–')),
+          findsOneWidget,
+          reason: key,
+        );
+      }
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldShowTheNextEvent_WhenOneIsPlanned', (
+    tester,
+  ) async {
+    final date = DateUtils.dateOnly(DateTime.now())
+        .add(const Duration(days: 10))
+        .toIso8601String()
+        .substring(0, 10);
+    server.events.add({
+      'id': 'event-1',
+      'name': 'Gran Fondo',
+      'date': date,
+      'kind': 'sportive',
+      'distanceM': 120000.0,
+      'elevationGainM': null,
+      'notes': null,
+      'rideId': null,
+      'createdAt': '2026-11-10T09:00:00Z',
+    });
+    await openProgress(tester);
+
+    final card = find.byKey(const Key('metric-next-event'));
+    expect(card, findsOneWidget);
+    expect(
+      find.descendant(of: card, matching: find.text('10 days')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Gran Fondo')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('NextEventCard_ShouldShowFallback_WhenNoEventPlanned', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    final card = find.byKey(const Key('metric-next-event'));
+    expect(card, findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.text('No event planned. Add one to see the days to go.'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('Goals and events')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('ProgressScreen_ShouldOpenTheSubPage_WhenItsCardLinkIsChosen', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('metric-form')),
+        matching: find.text('Fitness'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldClearMemberData_WhenAnotherAccountSignsIn',
+    (tester) async {
+      final second = server.add('other@example.com');
+      await openProgress(tester);
+      expect(find.text('42.5 km'), findsWidgets);
+
+      await openAccount(tester, 'sign-out');
+      await tester.pumpAndSettle();
+      server.totals.clear();
+
+      await tester.enterText(find.byKey(const Key('email')), second.email);
+      await tester.enterText(
+        find.byKey(const Key('password')),
+        second.password,
+      );
+      await tester.tap(find.byKey(const Key('sign-in')));
+      await tester.pumpAndSettle();
+
+      await goTo(tester, '/progress');
+
+      expect(find.text('42.5 km'), findsNothing);
+      expect(
+        server.requests
+            .where((r) => r == 'GET /api/v1/analytics/totals')
+            .length,
+        2,
+      );
+    },
+  );
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'ProgressScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        server.totals['week'] = [
+          for (var i = 0; i < 12; i++)
+            totalsJson(
+              '2026-09-${(1 + i * 2).toString().padLeft(2, '0')}',
+              '2026-09-${(7 + i * 2).toString().padLeft(2, '0')}',
+              rides: i,
+              distanceM: i * 9000.0,
+              movingS: i * 3600.0,
+              elevationGainM: i * 120.0,
+            ),
+        ];
+        server.training = trainingJson();
+        server.wellbeingConsent = true;
+        await openProgress(tester, size: Size(width, 2000));
+
+        for (final key in [
+          'metric-readiness',
+          'metric-form',
+          'metric-period',
+          'metric-next-event',
+        ]) {
+          expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('ProgressScreen_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    server.training = trainingJson();
+    await openProgress(tester, size: const Size(390, 2400));
+
+    expect(tester.takeException(), isNull);
   });
 }

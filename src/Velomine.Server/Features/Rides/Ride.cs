@@ -85,6 +85,12 @@ public sealed class Ride
     /// <summary>The maximum heart rate behind the heart-rate load, recorded like <see cref="LoadFtpW"/>.</summary>
     public int? LoadMaxHeartRate { get; set; }
 
+    /// <summary>
+    /// The threshold heart rate the stored <see cref="HrTss"/> was worked out from, recorded like <see cref="LoadFtpW"/>;
+    /// 0 means the member had none at the first read. Null on a ride read before it was recorded.
+    /// </summary>
+    public int? LoadThresholdHeartRate { get; set; }
+
     /// <summary>Always UTC.</summary>
     public DateTimeOffset? StartTime { get; set; }
 
@@ -98,6 +104,20 @@ public sealed class Ride
 
     /// <summary>The member's own words about the ride, up to <see cref="RideText.MaxDescription"/> characters; null when none.</summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Why this ride changed a heart-rate number, when it was first read: one of <see cref="Analytics.HeartRateNotes"/>,
+    /// or null. The maximum's note first, then the threshold's. Shown on the ride's page once; the history and the
+    /// suggestions hold the truth beyond it.
+    /// </summary>
+    public string? HeartRateNote { get; set; }
+
+    /// <summary>
+    /// The threshold's note from the same read, when the ride moved both numbers: one of
+    /// <see cref="Analytics.HeartRateNotes"/>, or null. <see cref="HeartRateNote"/> keeps the maximum first for a rider
+    /// whose app predates this column.
+    /// </summary>
+    public string? HeartRateThresholdNote { get; set; }
 
     /// <summary>road, gravel, mountain or track; null when the file and the member have not said.</summary>
     public string? Discipline { get; set; }
@@ -142,33 +162,59 @@ public sealed class Ride
     /// <summary>Zone-weighted heart-rate load in points: one per minute in Z1, five in Z5.</summary>
     public double? Trimp { get; set; }
 
+    /// <summary>
+    /// Watts estimated from speed, slope and weight when the ride had no power at all; null otherwise. They are shown
+    /// and never feed power bests, the curve, FTP or the zones.
+    /// </summary>
+    public int? EstimatedAvgPowerW { get; set; }
+
+    /// <summary>The normalized power of the estimated watts.</summary>
+    public int? EstimatedNormalizedPowerW { get; set; }
+
+    /// <summary>The training stress of the estimated watts, with the FTP (or the 2.5 W/kg stand-in) at read.</summary>
+    public double? EstimatedTss { get; set; }
+
+    /// <summary>
+    /// Velomine's heart-rate effort score, on the TSS scale, worked out when the ride was read from the threshold heart
+    /// rate in use then (one hour at the threshold is 100). Our own squared-intensity form, not TrainingPeaks' hrTSS.
+    /// Null without heart rate or without a threshold.
+    /// </summary>
+    public double? HrTss { get; set; }
+
     public int? AvgHeartRate { get; set; }
 
     public int? MaxHeartRate { get; set; }
 
     public int? AvgCadence { get; set; }
 
+    /// <summary>Normalized power over the moving seconds with a heart rate and a power, per beat per minute (Friel).</summary>
+    public double? EfficiencyFactor { get; set; }
+
+    /// <summary>How much the efficiency factor fell from the first half of the ride to the second, in percent; only a steady ride has one.</summary>
+    public double? DecouplingPct { get; set; }
+
+    /// <summary>Whether the ride's variability index was low enough for decoupling to mean anything; null without both signals.</summary>
+    public bool? Steady { get; set; }
+
     /// <summary>The bike ridden. Copied from the member's default bike when the ride is imported; the member can change it.</summary>
     public Guid? BikeId { get; set; }
 
-    /// <summary>
-    /// <see cref="PrivacySettings.HideHeartRate"/> at import.
-    /// </summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideHeartRate { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HidePower"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HidePower { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideCadence"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideCadence { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideSpeed"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideSpeed { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideElevation"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideElevation { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideTemperature"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideTemperature { get; set; }
 
     /// <summary><see cref="PrivacySettings.TrimStartM"/> at import.</summary>
@@ -178,27 +224,25 @@ public sealed class Ride
     public int? TrimEndM { get; set; }
 
     /// <summary>
-    /// The member's privacy defaults copied onto the ride when it was imported, so changing a default never changes
-    /// what a viewer sees of this ride. Null on a ride imported before the copy existed; the view then uses the
-    /// member's current choices. Zones are not part of it: they are places, and their current radius always applies.
-    /// A re-read of the ride from its original file keeps it (RideReparseService assigns only what it derives).
+    /// The member's trim copied onto the ride when it was imported, so changing the default never changes what a
+    /// viewer sees of this ride. Null on a ride imported before the copy existed; the view then uses the member's
+    /// current trim. Zones are not part of it: they are places, and their current radius always applies. A re-read of
+    /// the ride from its original file keeps it (RideReparseService assigns only what it derives).
     /// </summary>
     public PrivacyDefaults? Privacy
     {
-        get => HideHeartRate is null
-            ? null
-            : new(HideHeartRate.Value, HidePower!.Value, HideCadence!.Value, HideSpeed!.Value,
-                HideElevation!.Value, HideTemperature!.Value, TrimStartM!.Value, TrimEndM!.Value);
+        get => TrimStartM is null ? null : new(TrimStartM.Value, TrimEndM!.Value);
         set
         {
-            HideHeartRate = value?.HideHeartRate;
-            HidePower = value?.HidePower;
-            HideCadence = value?.HideCadence;
-            HideSpeed = value?.HideSpeed;
-            HideElevation = value?.HideElevation;
-            HideTemperature = value?.HideTemperature;
             TrimStartM = value?.TrimStartM;
             TrimEndM = value?.TrimEndM;
+            // The six switch columns stay valid for their last release; a new import writes them false.
+            HideHeartRate = value is null ? null : false;
+            HidePower = value is null ? null : false;
+            HideCadence = value is null ? null : false;
+            HideSpeed = value is null ? null : false;
+            HideElevation = value is null ? null : false;
+            HideTemperature = value is null ? null : false;
         }
     }
 
@@ -251,6 +295,9 @@ public sealed class RideStreams
     public short?[]? HeartRate { get; set; }
 
     public short?[]? Power { get; set; }
+
+    /// <summary>Watts estimated from speed, slope and weight, for a ride with no power meter; owner only.</summary>
+    public short?[]? EstimatedPower { get; set; }
 
     public short?[]? Cadence { get; set; }
 

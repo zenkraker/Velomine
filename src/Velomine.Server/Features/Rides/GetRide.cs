@@ -2,6 +2,8 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -11,7 +13,7 @@ public sealed class RideIdRequest
 }
 
 /// <summary>A member's own ride. Someone else's ride looks exactly like a ride that does not exist.</summary>
-public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, RideResponse>
+public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<RideIdRequest, RideResponse>
 {
     public override void Configure() => Get("rides/{id}");
 
@@ -28,6 +30,39 @@ public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, Ride
             return;
         }
 
-        await Send.OkAsync(RideDetails.Build(ride), ct);
+        var suggestion = await db.FtpSuggestions.AsNoTracking()
+            .Where(s => s.RideId == ride.Id && s.Status == FtpSuggestionStatuses.Open)
+            .Select(s => new { s.Id, s.Watts, s.Method, s.EffortWatts })
+            .FirstOrDefaultAsync(ct);
+        // The effort score is the owner's, and how hard the ride felt can be rated after it was read.
+        var rpe = await db.RideFeels.AsNoTracking()
+            .Where(f => f.RideId == ride.Id)
+            .Select(f => (int?)f.Rpe)
+            .FirstOrDefaultAsync(ct);
+        var (effortScore, effortSource) = TrainingLoad.Effort(
+            ride.Tss,
+            ride.HrTss,
+            TrainingLoad.FeelScore(ride.MovingS, rpe),
+            ride.EstimatedTss);
+        // The session this ride was, or the one the rider is being asked about. With auto training off there is none:
+        // the sessions are gone with the plan.
+        var session = await db.TrainingSessions.AsNoTracking()
+            .Where(s => s.UserId == userId && (s.RideId == ride.Id || s.QuestionRideId == ride.Id))
+            .OrderByDescending(s => s.RideId == ride.Id)
+            .FirstOrDefaultAsync(ct);
+        await Send.OkAsync(
+            (await RideDetails.BuildAsync(db, time, ride, ct)) with
+            {
+                PowerRecords = await PowerRecords.ForRideAsync(db, userId, ride.Id, ride.StartTime, ct),
+                // Only the owner sees the suggestion, and only on the ride it came from.
+                FtpSuggestionW = suggestion?.Watts,
+                FtpSuggestionEffortW = suggestion?.EffortWatts,
+                FtpSuggestionMethod = suggestion?.Method,
+                FtpSuggestionId = suggestion?.Id,
+                EffortScore = effortScore,
+                EffortSource = effortSource,
+                Training = session is null ? null : TrainingRideMatch.Of(session),
+            },
+            ct);
     }
 }

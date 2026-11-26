@@ -1,14 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/bottom_action_bar.dart';
-import '../../core/widgets/eyebrow.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/page_scaffold.dart';
 
 /// The frame every signed-out screen shares: the wordmark as a hero, the step's name, one sentence
-/// about it, then one column at a readable width, a back arrow where there is a way back, and the
-/// step's one primary button: pinned at the bottom on a phone, under the fields on a wide window.
+/// about it, then one column at the design's 440 px, centred in the page, a back arrow where there is a
+/// way back, and the step's one primary button, pinned at the bottom.
+///
+/// The box is `docs/design/pages/bundle.css` `.vm-auth`: 440 wide, centred both ways, the wordmark 28 in ink.
 ///
 /// There is no shell here, so the page asks for the header itself (`showOnPhone`): it only holds the
 /// back arrow, because the wordmark is the page's title.
@@ -16,7 +19,7 @@ class AuthPage extends StatelessWidget {
   const AuthPage({
     super.key,
     this.title,
-    this.eyebrow,
+    this.caption,
     this.help,
     this.onBack,
     this.primaryLabel,
@@ -29,8 +32,9 @@ class AuthPage extends StatelessWidget {
   /// The name of the step. Sign-in leaves it empty: the wordmark is its title.
   final String? title;
 
-  /// A short line over the title, saying which part of signing in this is.
-  final String? eyebrow;
+  /// The page this step belongs to, as a small caption above the title: "Password help" above "Reset
+  /// your password".
+  final String? caption;
 
   /// One sentence on what the step is for, under the title.
   final String? help;
@@ -51,9 +55,8 @@ class AuthPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    // A phone pins the button over the keyboard; a wide window leaves the content column short, so there the
-    // button would sit far below the fields and it goes inline under them instead.
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    // The step's button is pinned under the content at every width, so it is always the last thing under
+    // the fields however tall the window is, and on a phone it stays above the keyboard.
     final button = primaryLabel == null
         ? null
         : FilledButton(
@@ -74,29 +77,32 @@ class AuthPage extends StatelessWidget {
         bottom: false,
         child: PageHeaderScope(
           showOnPhone: true,
+          // 440 wide, as the design's `.vm-auth` draws it. The box is top-aligned: PageScaffold has no
+          // option to centre in the viewport, and a guessed min-height pushed the last row under the
+          // pinned button on the two-factor step (measured by its own test).
           child: PageScaffold(
-            maxWidth: AppLayout.contentNarrow,
+            maxWidth: AppAuth.width,
             onBack: onBack,
-            bottomAction: wide || button == null
+            bottomAction: button == null
                 ? null
-                : BottomActionBar(
-                    maxWidth: AppLayout.contentNarrow,
-                    child: button,
-                  ),
+                : BottomActionBar(maxWidth: AppAuth.width, child: button),
             children: [
-              Semantics(
-                header: title == null,
-                child: Text(
-                  'Velomine',
-                  style: text.displayMedium?.copyWith(color: scheme.primary),
-                  textAlign: TextAlign.center,
-                ),
+              Text(
+                'Velomine',
+                semanticsLabel: title == null ? 'Velomine' : null,
+                style: VelomineText.of(context).wordmark,
               ),
-              if (eyebrow case final eyebrow?) Eyebrow(eyebrow),
+              if (caption case final caption?)
+                Text(
+                  caption,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               if (title case final title?)
                 Semantics(
                   header: true,
-                  child: Text(title, style: text.headlineMedium),
+                  child: Text(title, style: text.headlineLarge),
                 ),
               if (help case final help?)
                 Text(
@@ -106,11 +112,6 @@ class AuthPage extends StatelessWidget {
                   ),
                 ),
               ...children,
-              // Under the fields, where the member has just been typing.
-              if (wide && button != null) ...[
-                const SizedBox(height: AppSpacing.lg),
-                button,
-              ],
             ],
           ),
         ),
@@ -131,5 +132,28 @@ class AuthFailure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InlineError(message, key: Key(keyName), showIcon: true);
+  }
+}
+
+/// The word "or" between a form and another way in, such as single sign-on.
+class AuthOr extends StatelessWidget {
+  const AuthOr({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final rule = Expanded(child: Divider(color: scheme.outlineVariant));
+    return Row(
+      spacing: AppSpacing.md,
+      children: [
+        rule,
+        Text(
+          context.l10n.authOr,
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+        rule,
+      ],
+    );
   }
 }

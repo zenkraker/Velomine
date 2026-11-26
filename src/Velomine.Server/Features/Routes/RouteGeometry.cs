@@ -31,6 +31,38 @@ public static class RouteGeometry
     /// <summary>The most points a request may send to be stored; the server thins them to <see cref="MaxStoredPoints"/>.</summary>
     public const int MaxAcceptedPoints = 5000;
 
+    /// <summary>The most points a route list carries for its card's map: the shape, not the detail.</summary>
+    public const int MaxPreviewPoints = 100;
+
+    /// <summary>
+    /// A stored line thinned for a list card: every n-th point, always with the first and the last, so a card's map
+    /// draws the same line at a fraction of the weight.
+    /// </summary>
+    public static (double[] Latitude, double[] Longitude) Preview(double[] latitude, double[] longitude)
+    {
+        var count = Math.Min(latitude.Length, longitude.Length);
+        if (count == 0) return ([], []);
+        if (count <= MaxPreviewPoints) return ([.. latitude[..count]], [.. longitude[..count]]);
+
+        var stride = (int)Math.Ceiling(count / (double)MaxPreviewPoints);
+        var lat = new List<double>(MaxPreviewPoints + 1);
+        var lng = new List<double>(MaxPreviewPoints + 1);
+        for (var i = 0; i < count; i += stride)
+        {
+            lat.Add(latitude[i]);
+            lng.Add(longitude[i]);
+        }
+
+        // The finish is the point a rider looks for, so it is never the one a stride drops.
+        if (lat[^1] != latitude[count - 1] || lng[^1] != longitude[count - 1])
+        {
+            lat.Add(latitude[count - 1]);
+            lng.Add(longitude[count - 1]);
+        }
+
+        return ([.. lat], [.. lng]);
+    }
+
     /// <summary>A line shorter than this is a mistake (a ride that never left the house), not a route.</summary>
     public const double MinDistanceM = 100;
 

@@ -79,7 +79,8 @@ class Session {
        supporter = SupporterApi(client),
        notifications = NotificationsApi(client),
        routes = RoutesApi(client),
-       server = ServerApi(client) {
+       server = ServerApi(client),
+       training = TrainingApi(client) {
     auth.onSignedOut = sessionExpired;
   }
 
@@ -107,6 +108,9 @@ class Session {
   /// The club's route library and the draft of a ride's line.
   final RoutesApi routes;
   final ServerApi server;
+
+  /// The rider's races and other events.
+  final TrainingApi training;
   final SessionAuth auth;
   final AppSso appSso;
   final bool useCookies;
@@ -394,6 +398,13 @@ class Session {
     } on Object {
       // Keeps the name it had; the next start reads it again.
     }
+  }
+
+  /// Applies the member the server just returned, after a setting was saved. The caller already has the answer,
+  /// so nothing is read again and a failed save never reaches here.
+  void adoptMe(MeResponse updated) {
+    me = updated;
+    _notify();
   }
 
   /// Returns null on success, or the reason it failed. A non-null challenge means the account has a second factor:

@@ -156,6 +156,17 @@ enum FailureAction {
   loadSupporter,
   activateSupporter,
   saveSupporter,
+  addEvent,
+  saveEvent,
+  deleteEvent,
+  loadTraining,
+  saveTrainingPlan,
+  turnOffTraining,
+  matchTrainingSession,
+  makeTrainingEasy,
+  backToTrainingPlan,
+  moveTrainingSession,
+  skipTrainingSession,
 }
 
 class Failure {
@@ -331,6 +342,17 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.loadSupporter => l10n.actionLoadSupporter,
       FailureAction.activateSupporter => l10n.actionActivateSupporter,
       FailureAction.saveSupporter => l10n.actionSaveSupporter,
+      FailureAction.addEvent => l10n.actionAddEvent,
+      FailureAction.saveEvent => l10n.actionSaveEvent,
+      FailureAction.deleteEvent => l10n.actionDeleteEvent,
+      FailureAction.loadTraining => l10n.actionLoadTraining,
+      FailureAction.saveTrainingPlan => l10n.actionSaveTrainingPlan,
+      FailureAction.turnOffTraining => l10n.actionTurnOffTraining,
+      FailureAction.matchTrainingSession => l10n.actionMatchTrainingSession,
+      FailureAction.makeTrainingEasy => l10n.actionMakeTrainingEasy,
+      FailureAction.backToTrainingPlan => l10n.actionBackToTrainingPlan,
+      FailureAction.moveTrainingSession => l10n.actionMoveTrainingSession,
+      FailureAction.skipTrainingSession => l10n.actionSkipTrainingSession,
     };
 
 /// The sentence for a failure in the language on screen.

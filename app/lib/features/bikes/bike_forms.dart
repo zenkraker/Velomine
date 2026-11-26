@@ -54,7 +54,7 @@ double _metresPerUnit(Units units) => units == Units.imperial ? 1609.344 : 1000;
 double? _number(String value) =>
     double.tryParse(value.trim().replaceAll(',', '.'));
 
-enum _BikeProblem { name, year, wheelRange, initialDistance }
+enum _BikeProblem { name, year, wheelRange, initialDistance, weight }
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -71,6 +71,7 @@ class BikeFormData {
     this.frameSize,
     required this.kind,
     required this.wheelMm,
+    this.weightKg,
     required this.initialKm,
     this.purchasedOn,
     this.units = Units.metric,
@@ -84,6 +85,9 @@ class BikeFormData {
   final String? frameSize;
   final String kind;
   final int wheelMm;
+
+  /// The bike's own weight in kilograms; null uses the default for its kind.
+  final double? weightKg;
 
   /// The distance the member typed, in [units].
   final double initialKm;
@@ -102,6 +106,7 @@ class BikeFormData {
     frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
+    weightKg: Optional.present(weightKg),
     initialDistanceM: initialDistanceM,
     purchasedOn: Optional.present(purchasedOn),
   );
@@ -115,6 +120,7 @@ class BikeFormData {
     frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
+    weightKg: Optional.present(weightKg),
     initialDistanceM: initialDistanceM,
     purchasedOn: Optional.present(purchasedOn),
     isActive: Optional.present(isActive),
@@ -156,6 +162,9 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
   late final _wheel = TextEditingController(
     text: '${widget.bike?.wheelCircumferenceMm ?? 2105}',
   );
+  late final _weight = TextEditingController(
+    text: widget.bike?.weightKg?.toString() ?? '',
+  );
   late final _initial = TextEditingController(
     text: widget.bike == null || widget.bike!.initialDistanceM == 0
         ? ''
@@ -177,12 +186,14 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
     _spec.dispose();
     _size.dispose();
     _wheel.dispose();
+    _weight.dispose();
     _initial.dispose();
     super.dispose();
   }
 
   void _submit() {
     final wheel = int.tryParse(_wheel.text.trim());
+    final weight = _weight.text.trim().isEmpty ? null : _number(_weight.text);
     final initial = _initial.text.trim().isEmpty ? 0.0 : _number(_initial.text);
     final year = _year.text.trim().isEmpty
         ? null
@@ -194,6 +205,8 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
       setState(() => _problem = _BikeProblem.year);
     } else if (wheel == null || wheel < 1000 || wheel > 2600) {
       setState(() => _problem = _BikeProblem.wheelRange);
+    } else if (weight != null && (weight < 3 || weight > 40)) {
+      setState(() => _problem = _BikeProblem.weight);
     } else if (initial == null || initial < 0) {
       setState(() => _problem = _BikeProblem.initialDistance);
     } else {
@@ -208,6 +221,7 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
           frameSize: _text(_size.text),
           kind: _kind,
           wheelMm: wheel,
+          weightKg: weight,
           initialKm: initial,
           purchasedOn: _purchased,
           units: _units,
@@ -224,6 +238,7 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
       _BikeProblem.name => l10n.errorBikeName,
       _BikeProblem.year => l10n.errorModelYear,
       _BikeProblem.wheelRange => l10n.errorWheelRange,
+      _BikeProblem.weight => l10n.errorBikeWeight,
       _BikeProblem.initialDistance => l10n.errorInitialDistance,
     };
     return FormSheet(
@@ -232,10 +247,10 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
       onSave: _submit,
       error: problem,
       children: [
-        TextField(
-          key: const Key('bike-name'),
+        AppTextField(
+          fieldKey: const Key('bike-name'),
           controller: _name,
-          decoration: InputDecoration(labelText: l10n.name),
+          label: l10n.name,
         ),
         DropdownButtonFormField<String>(
           key: const Key('bike-kind'),
@@ -252,17 +267,17 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
           spacing: AppSpacing.md,
           children: [
             Expanded(
-              child: TextField(
-                key: const Key('bike-brand'),
+              child: AppTextField(
+                fieldKey: const Key('bike-brand'),
                 controller: _brand,
-                decoration: InputDecoration(labelText: l10n.brand),
+                label: l10n.brand,
               ),
             ),
             Expanded(
-              child: TextField(
-                key: const Key('bike-model'),
+              child: AppTextField(
+                fieldKey: const Key('bike-model'),
                 controller: _model,
-                decoration: InputDecoration(labelText: l10n.model),
+                label: l10n.model,
               ),
             ),
           ],
@@ -301,6 +316,13 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
           keyboardType: TextInputType.number,
           label: l10n.wheelCircumference,
           helper: l10n.wheelHelper,
+        ),
+        AppTextField(
+          fieldKey: const Key('bike-weight'),
+          controller: _weight,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          label: l10n.bikeWeight,
+          helper: l10n.bikeWeightHelper,
         ),
         Wrap(
           spacing: AppSpacing.sm,
@@ -490,15 +512,13 @@ class _TemplateNameSheetState extends State<_TemplateNameSheet> {
       onSave: _submit,
       error: _missing ? l10n.errorTemplateName : null,
       children: [
-        TextField(
-          key: const Key('template-name'),
+        AppTextField(
+          fieldKey: const Key('template-name'),
           controller: _name,
           autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.templateName,
-            hintText: l10n.templateNameHint,
-          ),
-          onSubmitted: (_) => _submit(),
+          label: l10n.templateName,
+          hint: l10n.templateNameHint,
+          onDone: (_) => _submit(),
         ),
       ],
     );
@@ -685,16 +705,13 @@ class _PartFormState extends ConsumerState<_PartForm> {
           },
           displayStringForOption: (p) =>
               [p.brand, p.model].where((s) => s.isNotEmpty).join(' '),
-          fieldViewBuilder:
-              (context, controller, focusNode, onFieldSubmitted) => TextField(
-                key: const Key('part-search'),
-                controller: controller,
-                focusNode: focusNode,
-                decoration: InputDecoration(
-                  labelText: l10n.findPart,
-                  hintText: l10n.findPartHint,
-                ),
-              ),
+          fieldViewBuilder: (context, controller, focusNode, _) => AppTextField(
+            fieldKey: const Key('part-search'),
+            controller: controller,
+            focusNode: focusNode,
+            label: l10n.findPart,
+            hint: l10n.findPartHint,
+          ),
           onSelected: _applyKnownPart,
         ),
         DropdownButtonFormField<String>(
@@ -718,17 +735,17 @@ class _PartFormState extends ConsumerState<_PartForm> {
           spacing: AppSpacing.md,
           children: [
             Expanded(
-              child: TextField(
-                key: const Key('part-brand'),
+              child: AppTextField(
+                fieldKey: const Key('part-brand'),
                 controller: _brand,
-                decoration: InputDecoration(labelText: l10n.brand),
+                label: l10n.brand,
               ),
             ),
             Expanded(
-              child: TextField(
-                key: const Key('part-model'),
+              child: AppTextField(
+                fieldKey: const Key('part-model'),
                 controller: _model,
-                decoration: InputDecoration(labelText: l10n.model),
+                label: l10n.model,
               ),
             ),
           ],
@@ -737,26 +754,20 @@ class _PartFormState extends ConsumerState<_PartForm> {
           spacing: AppSpacing.md,
           children: [
             Expanded(
-              child: TextField(
-                key: const Key('part-mpn'),
+              child: AppTextField(
+                fieldKey: const Key('part-mpn'),
                 controller: _mpn,
-                decoration: InputDecoration(
-                  labelText: l10n.mpn,
-                  helperText: l10n.mpnHelper,
-                  helperMaxLines: 3,
-                ),
+                label: l10n.mpn,
+                helper: l10n.mpnHelper,
               ),
             ),
             Expanded(
-              child: TextField(
-                key: const Key('part-gtin'),
+              child: AppTextField(
+                fieldKey: const Key('part-gtin'),
                 controller: _gtin,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.gtin,
-                  helperText: l10n.gtinHelper,
-                  helperMaxLines: 3,
-                ),
+                label: l10n.gtin,
+                helper: l10n.gtinHelper,
               ),
             ),
           ],
@@ -815,35 +826,31 @@ class _PartFormState extends ConsumerState<_PartForm> {
           spacing: AppSpacing.md,
           children: [
             Expanded(
-              child: TextField(
-                key: const Key('part-km'),
+              child: AppTextField(
+                fieldKey: const Key('part-km'),
                 controller: _km,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: InputDecoration(
-                  labelText: distanceUnit(
-                    ref.watch(unitsChoiceViewModelProvider),
-                  ),
-                ),
+                label: distanceUnit(ref.watch(unitsChoiceViewModelProvider)),
               ),
             ),
             Expanded(
-              child: TextField(
-                key: const Key('part-hours'),
+              child: AppTextField(
+                fieldKey: const Key('part-hours'),
                 controller: _hours,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: InputDecoration(labelText: l10n.hours),
+                label: l10n.hours,
               ),
             ),
             Expanded(
-              child: TextField(
-                key: const Key('part-months'),
+              child: AppTextField(
+                fieldKey: const Key('part-months'),
                 controller: _months,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: l10n.months),
+                label: l10n.months,
               ),
             ),
           ],

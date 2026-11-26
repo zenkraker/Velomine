@@ -48,4 +48,4 @@ final class RideDetailDataProvider
   }
 }
 
-String _$rideDetailDataHash() => r'b33c465e16017c50c55109e6744e8910fb2d26be';
+String _$rideDetailDataHash() => r'7586829fa105a6ea5e20108abc1cd63aedbf93da';

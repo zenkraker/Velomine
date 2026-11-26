@@ -185,6 +185,111 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("user_tokens", "accounts");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.FtpHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("Watts")
+                        .HasColumnType("integer")
+                        .HasColumnName("watts");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ftp_history");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_ftp_history_ride_id");
+
+                    b.HasIndex("UserId", "SetAt", "Id")
+                        .IsDescending(false, true, true)
+                        .HasDatabaseName("ix_ftp_history_user_id_set_at_id");
+
+                    b.ToTable("ftp_history", "accounts", t =>
+                        {
+                            t.HasCheckConstraint("ck_ftp_history_source", "source IN ('manual', 'estimate', 'test', 'earlier')");
+
+                            t.HasCheckConstraint("ck_ftp_history_watts", "watts BETWEEN 30 AND 1000");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.HeartRateHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Bpm")
+                        .HasColumnType("integer")
+                        .HasColumnName("bpm");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_heart_rate_history");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_heart_rate_history_ride_id");
+
+                    b.HasIndex("UserId", "Kind", "SetAt", "Sequence")
+                        .IsDescending(false, false, true, true)
+                        .HasDatabaseName("ix_heart_rate_history_user_id_kind_set_at_sequence");
+
+                    b.ToTable("heart_rate_history", "accounts", t =>
+                        {
+                            t.HasCheckConstraint("ck_heart_rate_history_bpm", "bpm BETWEEN 80 AND 230");
+
+                            t.HasCheckConstraint("ck_heart_rate_history_kind", "kind IN ('max', 'threshold')");
+
+                            t.HasCheckConstraint("ck_heart_rate_history_ride", "ride_id IS NULL OR source = 'measured'");
+
+                            t.HasCheckConstraint("ck_heart_rate_history_source", "source IN ('manual', 'measured', 'cleared')");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Accounts.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -239,9 +344,21 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("first_day_of_week");
 
+                    b.Property<DateOnly?>("FtpReminderSnoozedUntil")
+                        .HasColumnType("date")
+                        .HasColumnName("ftp_reminder_snoozed_until");
+
                     b.Property<int?>("FtpW")
                         .HasColumnType("integer")
                         .HasColumnName("ftp_w");
+
+                    b.PrimitiveCollection<double[]>("HeartRateMaxZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("heart_rate_max_zone_bounds");
+
+                    b.PrimitiveCollection<double[]>("HeartRateThresholdZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("heart_rate_threshold_zone_bounds");
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean")
@@ -264,6 +381,18 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lockout_end");
 
+                    b.Property<int?>("MaxHeartRateBpm")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_heart_rate_bpm");
+
+                    b.Property<Guid?>("MaxHeartRateRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("max_heart_rate_ride_id");
+
+                    b.Property<string>("MaxHeartRateSource")
+                        .HasColumnType("text")
+                        .HasColumnName("max_heart_rate_source");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)")
@@ -285,6 +414,15 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
+
+                    b.PrimitiveCollection<double[]>("PowerZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("power_zone_bounds");
+
+                    b.Property<string>("RiderMode")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("rider_mode");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
@@ -309,6 +447,18 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<bool>("TelemetryUsage")
                         .HasColumnType("boolean")
                         .HasColumnName("telemetry_usage");
+
+                    b.Property<int?>("ThresholdHeartRateBpm")
+                        .HasColumnType("integer")
+                        .HasColumnName("threshold_heart_rate_bpm");
+
+                    b.Property<Guid?>("ThresholdHeartRateRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("threshold_heart_rate_ride_id");
+
+                    b.Property<string>("ThresholdHeartRateSource")
+                        .HasColumnType("text")
+                        .HasColumnName("threshold_heart_rate_source");
 
                     b.Property<string>("TimeZone")
                         .HasMaxLength(64)
@@ -347,12 +497,18 @@ namespace Velomine.Server.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
+                    b.HasIndex("MaxHeartRateRideId")
+                        .HasDatabaseName("ix_users_max_heart_rate_ride_id");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("email_index");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("user_name_index");
+
+                    b.HasIndex("ThresholdHeartRateRideId")
+                        .HasDatabaseName("ix_users_threshold_heart_rate_ride_id");
 
                     b.ToTable("users", "accounts", t =>
                         {
@@ -362,7 +518,31 @@ namespace Velomine.Server.Data.Migrations
 
                             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
 
+                            t.HasCheckConstraint("ck_users_heart_rate_max_zone_bounds", "heart_rate_max_zone_bounds IS NULL OR cardinality(heart_rate_max_zone_bounds) = 4");
+
+                            t.HasCheckConstraint("ck_users_heart_rate_threshold_zone_bounds", "heart_rate_threshold_zone_bounds IS NULL OR cardinality(heart_rate_threshold_zone_bounds) = 4");
+
                             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
+
+                            t.HasCheckConstraint("ck_users_max_heart_rate_bpm", "max_heart_rate_bpm BETWEEN 120 AND 230");
+
+                            t.HasCheckConstraint("ck_users_max_heart_rate_ride", "max_heart_rate_ride_id IS NULL OR max_heart_rate_source = 'measured'");
+
+                            t.HasCheckConstraint("ck_users_max_heart_rate_source", "(max_heart_rate_bpm IS NULL) = (max_heart_rate_source IS NULL)");
+
+                            t.HasCheckConstraint("ck_users_max_heart_rate_source_value", "max_heart_rate_source IN ('manual', 'measured')");
+
+                            t.HasCheckConstraint("ck_users_power_zone_bounds", "power_zone_bounds IS NULL OR cardinality(power_zone_bounds) = 6");
+
+                            t.HasCheckConstraint("ck_users_rider_mode", "rider_mode IS NULL OR rider_mode IN ('just_riding', 'with_goals', 'training')");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_bpm", "threshold_heart_rate_bpm BETWEEN 90 AND 220");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_ride", "threshold_heart_rate_ride_id IS NULL OR threshold_heart_rate_source = 'measured'");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_source", "(threshold_heart_rate_bpm IS NULL) = (threshold_heart_rate_source IS NULL)");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_source_value", "threshold_heart_rate_source IN ('manual', 'measured')");
 
                             t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
 
@@ -457,6 +637,66 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.FtpSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EffortWatts")
+                        .HasColumnType("integer")
+                        .HasColumnName("effort_watts");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("method");
+
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("Watts")
+                        .HasColumnType("integer")
+                        .HasColumnName("watts");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ftp_suggestions");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_ftp_suggestions_ride_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_ftp_suggestions_open_user")
+                        .HasFilter("status = 'open'");
+
+                    b.ToTable("ftp_suggestions", "analytics", t =>
+                        {
+                            t.HasCheckConstraint("ck_ftp_suggestions_effort_watts", "effort_watts BETWEEN 30 AND 1000");
+
+                            t.HasCheckConstraint("ck_ftp_suggestions_method", "method IN ('20min', '30min', '60min')");
+
+                            t.HasCheckConstraint("ck_ftp_suggestions_status", "status IN ('open', 'accepted', 'dismissed', 'replaced')");
+
+                            t.HasCheckConstraint("ck_ftp_suggestions_watts", "watts BETWEEN 30 AND 1000");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Analytics.Goal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -508,6 +748,63 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_goals_period", "period IN ('week', 'month', 'year')");
 
                             t.HasCheckConstraint("ck_goals_target", "target > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.HeartRateSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Bpm")
+                        .HasColumnType("integer")
+                        .HasColumnName("bpm");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_heart_rate_suggestions");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_heart_rate_suggestions_ride_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_heart_rate_suggestions_user_id");
+
+                    b.HasIndex("UserId", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ux_heart_rate_suggestions_open_user_kind")
+                        .HasFilter("status = 'open'");
+
+                    b.ToTable("heart_rate_suggestions", "analytics", t =>
+                        {
+                            t.HasCheckConstraint("ck_heart_rate_suggestions_bpm", "bpm BETWEEN 80 AND 230");
+
+                            t.HasCheckConstraint("ck_heart_rate_suggestions_kind", "kind IN ('max', 'threshold')");
+
+                            t.HasCheckConstraint("ck_heart_rate_suggestions_status", "status IN ('open', 'accepted', 'dismissed', 'replaced')");
                         });
                 });
 
@@ -584,6 +881,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight_kg");
+
                     b.Property<int>("WheelCircumferenceMm")
                         .HasColumnType("integer")
                         .HasColumnName("wheel_circumference_mm");
@@ -596,7 +897,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ux_bikes_one_default_per_user")
                         .HasFilter("is_default");
 
-                    b.ToTable("bikes", "bikes");
+                    b.ToTable("bikes", "bikes", t =>
+                        {
+                            t.HasCheckConstraint("ck_bikes_weight_kg", "weight_kg IS NULL OR weight_kg BETWEEN 3 AND 40");
+                        });
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeComponent", b =>
@@ -1580,6 +1884,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("subject");
 
+                    b.Property<Guid?>("TrainingSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("training_session_id");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1607,6 +1915,9 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_notifications_ride_id");
+
+                    b.HasIndex("TrainingSessionId")
+                        .HasDatabaseName("ix_notifications_training_session_id");
 
                     b.HasIndex("UserId", "CreatedAt")
                         .HasDatabaseName("ix_notifications_user_id_created_at");
@@ -1815,6 +2126,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("commute");
 
+                    b.Property<double?>("DecouplingPct")
+                        .HasColumnType("double precision")
+                        .HasColumnName("decoupling_pct");
+
                     b.Property<string>("DedupKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -1842,6 +2157,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("duplicate_of");
 
+                    b.Property<double?>("EfficiencyFactor")
+                        .HasColumnType("double precision")
+                        .HasColumnName("efficiency_factor");
+
                     b.Property<double?>("ElapsedS")
                         .HasColumnType("double precision")
                         .HasColumnName("elapsed_s");
@@ -1864,6 +2183,18 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("error");
 
+                    b.Property<int?>("EstimatedAvgPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_avg_power_w");
+
+                    b.Property<int?>("EstimatedNormalizedPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_normalized_power_w");
+
+                    b.Property<double?>("EstimatedTss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("estimated_tss");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -1875,6 +2206,16 @@ namespace Velomine.Server.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("file_sha256");
+
+                    b.Property<string>("HeartRateNote")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("heart_rate_note");
+
+                    b.Property<string>("HeartRateThresholdNote")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("heart_rate_threshold_note");
 
                     b.Property<bool?>("HideCadence")
                         .HasColumnType("boolean")
@@ -1900,6 +2241,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("hide_temperature");
 
+                    b.Property<double?>("HrTss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("hr_tss");
+
                     b.Property<string>("IdempotencyKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -1920,6 +2265,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<int?>("LoadMaxHeartRate")
                         .HasColumnType("integer")
                         .HasColumnName("load_max_heart_rate");
+
+                    b.Property<int?>("LoadThresholdHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("load_threshold_heart_rate");
 
                     b.Property<int?>("MaxHeartRate")
                         .HasColumnType("integer")
@@ -1983,6 +2332,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
+
+                    b.Property<bool?>("Steady")
+                        .HasColumnType("boolean")
+                        .HasColumnName("steady");
 
                     b.Property<string>("Title")
                         .HasColumnType("text")
@@ -2174,6 +2527,10 @@ namespace Velomine.Server.Data.Migrations
                     b.PrimitiveCollection<float?[]>("Distance")
                         .HasColumnType("real[]")
                         .HasColumnName("distance");
+
+                    b.PrimitiveCollection<short?[]>("EstimatedPower")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("estimated_power");
 
                     b.PrimitiveCollection<short?[]>("HeartRate")
                         .HasColumnType("smallint[]")
@@ -2464,6 +2821,242 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<double?>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<double?>("ElevationGainM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("elevation_gain_m");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_events");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_events_ride_id");
+
+                    b.HasIndex("UserId", "Date")
+                        .HasDatabaseName("ix_events_user_id_date");
+
+                    b.ToTable("events", "training", t =>
+                        {
+                            t.HasCheckConstraint("ck_events_distance_m", "distance_m IS NULL OR distance_m >= 0");
+
+                            t.HasCheckConstraint("ck_events_elevation_gain_m", "elevation_gain_m IS NULL OR elevation_gain_m >= 0");
+
+                            t.HasCheckConstraint("ck_events_kind", "kind IN ('race', 'sportive', 'tour', 'other')");
+
+                            t.HasCheckConstraint("ck_events_name_length", "length(name) BETWEEN 1 AND 100");
+
+                            t.HasCheckConstraint("ck_events_notes_length", "notes IS NULL OR length(notes) <= 500");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingPlan", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.PrimitiveCollection<int[]>("Days")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("days");
+
+                    b.PrimitiveCollection<string[]>("DeclinedFileHashes")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("declined_file_hashes");
+
+                    b.Property<string>("Goal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<int>("HoursPerWeek")
+                        .HasColumnType("integer")
+                        .HasColumnName("hours_per_week");
+
+                    b.Property<bool>("IsOn")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_on");
+
+                    b.Property<DateOnly?>("LastPlannedFor")
+                        .HasColumnType("date")
+                        .HasColumnName("last_planned_for");
+
+                    b.PrimitiveCollection<DateOnly[]>("LighterWeeks")
+                        .IsRequired()
+                        .HasColumnType("date[]")
+                        .HasColumnName("lighter_weeks");
+
+                    b.Property<int?>("LongRideDay")
+                        .HasColumnType("integer")
+                        .HasColumnName("long_ride_day");
+
+                    b.Property<DateOnly?>("RemindedFor")
+                        .HasColumnType("date")
+                        .HasColumnName("reminded_for");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_plans");
+
+                    b.HasIndex("LastPlannedFor")
+                        .HasDatabaseName("ix_plans_last_planned_for")
+                        .HasFilter("is_on");
+
+                    b.ToTable("plans", "training", t =>
+                        {
+                            t.HasCheckConstraint("ck_training_plans_days", "cardinality(days) BETWEEN 1 AND 7 AND days <@ ARRAY[0,1,2,3,4,5,6]::integer[]");
+
+                            t.HasCheckConstraint("ck_training_plans_declined_files", "cardinality(declined_file_hashes) <= 20");
+
+                            t.HasCheckConstraint("ck_training_plans_goal", "goal IN ('aerobic', 'fitter', 'faster', 'event', 'keep')");
+
+                            t.HasCheckConstraint("ck_training_plans_hours", "hours_per_week BETWEEN 1 AND 30");
+
+                            t.HasCheckConstraint("ck_training_plans_long_ride_day", "long_ride_day IS NULL OR long_ride_day BETWEEN 0 AND 6");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.PrimitiveCollection<int[]>("BlockPercents")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("block_percents");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("EasyMovedTo")
+                        .HasColumnType("date")
+                        .HasColumnName("easy_moved_to");
+
+                    b.Property<string>("EasyReason")
+                        .HasColumnType("text")
+                        .HasColumnName("easy_reason");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<int>("Minutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("minutes");
+
+                    b.Property<string>("OriginalRecipe")
+                        .HasColumnType("text")
+                        .HasColumnName("original_recipe");
+
+                    b.Property<Guid?>("QuestionRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_ride_id");
+
+                    b.Property<string>("Recipe")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("recipe");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("SkipReason")
+                        .HasColumnType("text")
+                        .HasColumnName("skip_reason");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sessions");
+
+                    b.HasIndex("QuestionRideId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessions_question_ride_id")
+                        .HasFilter("question_ride_id IS NOT NULL");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_sessions_ride_id");
+
+                    b.HasIndex("UserId", "LocalDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessions_user_id_local_date");
+
+                    b.ToTable("sessions", "training", t =>
+                        {
+                            t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
+
+                            t.HasCheckConstraint("ck_training_sessions_easy_reason", "easy_reason IS NULL OR easy_reason IN ('slept_poorly', 'tired', 'sore', 'form_low', 'asked')");
+
+                            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 1 AND 1440");
+
+                            t.HasCheckConstraint("ck_training_sessions_original_recipe", "original_recipe IS NULL OR length(original_recipe) BETWEEN 2 AND 8");
+
+                            t.HasCheckConstraint("ck_training_sessions_recipe", "length(recipe) BETWEEN 2 AND 8");
+
+                            t.HasCheckConstraint("ck_training_sessions_skip_reason", "skip_reason IS NULL OR skip_reason IN ('tired', 'ill', 'no_time', 'other')");
+
+                            t.HasCheckConstraint("ck_training_sessions_skip_reason_only_when_skipped", "skip_reason IS NULL OR state = 'skipped'");
+
+                            t.HasCheckConstraint("ck_training_sessions_state", "state IN ('planned', 'done', 'easy', 'moved', 'skipped', 'missed')");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2490,6 +3083,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<int>("Motivation")
                         .HasColumnType("integer")
                         .HasColumnName("motivation");
+
+                    b.Property<int?>("Sleep")
+                        .HasColumnType("integer")
+                        .HasColumnName("sleep");
 
                     b.Property<int>("Soreness")
                         .HasColumnType("integer")
@@ -2521,6 +3118,8 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_daily_check_ins_mood", "mood BETWEEN 1 AND 5");
 
                             t.HasCheckConstraint("ck_daily_check_ins_motivation", "motivation BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_daily_check_ins_sleep", "sleep IS NULL OR sleep BETWEEN 1 AND 5");
 
                             t.HasCheckConstraint("ck_daily_check_ins_soreness", "soreness BETWEEN 1 AND 5");
 
@@ -2613,6 +3212,53 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_user_tokens_users_user_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.FtpHistory", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ftp_history_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ftp_history_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.HeartRateHistory", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_heart_rate_history_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_heart_rate_history_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.User", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("MaxHeartRateRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_users_rides_max_heart_rate_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("ThresholdHeartRateRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_users_rides_threshold_heart_rate_ride_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Accounts.UserSession", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Accounts.User", "User")
@@ -2625,6 +3271,23 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.FtpSuggestion", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ftp_suggestions_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ftp_suggestions_users_user_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Analytics.Goal", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
@@ -2635,6 +3298,23 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_goals_users_user_id");
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.HeartRateSuggestion", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_heart_rate_suggestions_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_heart_rate_suggestions_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
@@ -2853,6 +3533,12 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_notifications_rides_ride_id");
 
+                    b.HasOne("Velomine.Server.Features.Training.TrainingSession", null)
+                        .WithMany()
+                        .HasForeignKey("TrainingSessionId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_notifications_sessions_training_session_id");
+
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -3014,6 +3700,54 @@ namespace Velomine.Server.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_licences_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingEvent", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_events_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_events_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingPlan", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_plans_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingSession", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_sessions_rides_question_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_sessions_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sessions_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>

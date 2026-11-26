@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:velomine_api/api.dart';
 
+import '../../../core/format.dart';
 import '../../../core/units.dart';
 import 'geo.dart';
 
@@ -13,6 +14,7 @@ class Series {
     required this.unit,
     required this.values,
     this.decimals = 0,
+    this.baseline = false,
   });
 
   final String id;
@@ -20,6 +22,9 @@ class Series {
   final String unit;
   final List<double?> values;
   final int decimals;
+
+  /// Mark 0 on the chart: the balance is the one signal where 0 itself matters.
+  final bool baseline;
 
   Iterable<double> get present => values.whereType<double>();
 
@@ -29,8 +34,7 @@ class Series {
 
   double get average => present.reduce((a, b) => a + b) / present.length;
 
-  String format(double? v) =>
-      v == null ? '–' : '${v.toStringAsFixed(decimals)} $unit';
+  String format(double? v) => v == null ? '–' : '${decimal(v, decimals)} $unit';
 }
 
 /// A ride's samples in the shapes the screen draws: a route, and one [Series] per signal the ride has.
@@ -98,8 +102,16 @@ class RideSeries {
         ? altitude?.map((v) => v == null ? null : v * 3.280839895).toList()
         : altitude;
     final power = present(s.power?.map((v) => v?.toDouble()).toList());
+    // Estimated watts, drawn only when the ride had no power meter.
+    final estimatedPower = present(
+      s.estimatedPower.orElse(null)?.map((v) => v?.toDouble()).toList(),
+    );
     final heartRate = present(s.heartRate?.map((v) => v?.toDouble()).toList());
     final cadence = present(s.cadence?.map((v) => v?.toDouble()).toList());
+    // The W′ balance is in joules on the wire and reads in kJ, one decimal.
+    final balance = present(
+      s.wPrimeBalanceJ.orElse(null)?.map((v) => v / 1000).toList(),
+    );
 
     return RideSeries._(
       time,
@@ -134,8 +146,24 @@ class RideSeries {
           ),
         if (power != null)
           Series(id: 'power', name: 'Power', unit: 'W', values: power),
+        if (estimatedPower != null)
+          Series(
+            id: 'estimatedpower',
+            name: 'Estimated watts',
+            unit: 'W',
+            values: estimatedPower,
+          ),
         if (cadence != null)
           Series(id: 'cadence', name: 'Cadence', unit: 'rpm', values: cadence),
+        if (balance != null)
+          Series(
+            id: 'wprime',
+            name: "W′ balance",
+            unit: 'kJ',
+            values: balance,
+            decimals: 1,
+            baseline: true,
+          ),
       ],
     );
   }

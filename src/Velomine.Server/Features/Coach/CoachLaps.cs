@@ -64,7 +64,6 @@ public sealed class GetCoachRideLaps(VelomineDbContext db, TimeProvider time)
                 l.AvgSpeedMs, l.MaxSpeedMs, l.AvgPowerW, l.MaxPowerW,
                 l.AvgHeartRate, l.MaxHeartRate, l.AvgCadence, l.ElevationGainM))
             .ToListAsync(ct);
-        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ride, ct);
-        await Send.OkAsync(new RideLapsResponse([.. laps.Select(l => PrivacyRules.ForViewer(l, privacy))]), ct);
+        await Send.OkAsync(new RideLapsResponse([.. laps]), ct);
     }
 }

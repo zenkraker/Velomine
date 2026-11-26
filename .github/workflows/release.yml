@@ -4,9 +4,10 @@ name: Release
 # a release, then tags the commit and writes a GitHub Release with generated notes and the signed Android APK:
 #
 #   push to main  ->  the next patch version after the highest vX.Y.Z tag in its history (v0.2.0 -> v0.2.1)
-#   push to dev   ->  the same, for the dev environment: features and fixes land on dev, and a release of a commit
-#                     that main does not contain is marked a prerelease, so "latest" stays stable. Merging dev into
-#                     main (a merge commit, never a fast-forward) is the production release.
+#   push to dev   ->  the dev environment's images, tagged for the version main will release next, plus the run number:
+#                     v0.2.1-dev.57. Features and fixes land on dev; a release of a commit that main does not contain
+#                     is marked a prerelease, so "latest" stays stable, and it never takes a number main would use.
+#                     Merging dev into main (a merge commit, never a fast-forward) is the production release.
 #   tag vX.Y.Z    ->  that version, on any branch; push one by hand for a minor or major release
 #
 # Each version publishes ghcr.io/zenkraker/velomine-{server,web}:X.Y.Z, :X.Y and :sha-<commit>. Tags and OCI labels
@@ -75,7 +76,10 @@ jobs:
           IFS=. read -r major minor patch <<<"${latest:-v0.0.0}"
           # A tag on a branch this commit does not contain may hold the next number already: never reuse it.
           while git rev-parse -q --verify "refs/tags/$major.$minor.$((patch + 1))" >/dev/null; do patch=$((patch + 1)); done
-          echo "tag=$major.$minor.$((patch + 1))" >>"$GITHUB_OUTPUT"
+          next="$major.$minor.$((patch + 1))"
+          # A build ahead of main is the run-up to the next version, never a version main could also release.
+          [[ "$stable" == true ]] || next="$next-dev.$GITHUB_RUN_NUMBER"
+          echo "tag=$next" >>"$GITHUB_OUTPUT"
           echo "publish=true" >>"$GITHUB_OUTPUT"
 
   # Builds and smoke-tests the pair while CI runs, so a release waits for the longer of the two, not their sum. Nothing
@@ -109,7 +113,7 @@ jobs:
           flavor: latest=false
           tags: |
             type=semver,pattern={{version}},value=${{ needs.version.outputs.tag }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.version.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.version.outputs.tag }},enable=${{ needs.version.outputs.stable }}
             type=sha,format=long
           labels: |
             org.opencontainers.image.title=Velomine server
@@ -123,7 +127,7 @@ jobs:
           flavor: latest=false
           tags: |
             type=semver,pattern={{version}},value=${{ needs.version.outputs.tag }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.version.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.version.outputs.tag }},enable=${{ needs.version.outputs.stable }}
             type=sha,format=long
           labels: |
             org.opencontainers.image.title=Velomine web

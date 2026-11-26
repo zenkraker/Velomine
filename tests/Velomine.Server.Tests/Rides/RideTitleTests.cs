@@ -236,6 +236,9 @@ public sealed class RideTitleTests(PostgresFixture postgres)
         while (cursor is not null);
         Assert.Equal([rides[5].Id, rides[4].Id, rides[3].Id, rides[2].Id], seen);
 
+        // A cursor the server did not make is refused, not read as the first page.
+        Assert.Equal(HttpStatusCode.BadRequest, (await member.GetAsync("/api/v1/rides?cursor=nonsense", Ct)).StatusCode);
+
         var gravel = await ListAsync(member, $"?{range}&discipline=gravel");
         Assert.Equal([rides[3].Id], gravel.Rides.Select(r => r.Id));
         Assert.Empty((await ListAsync(member, $"?{range}&discipline=road")).Rides);

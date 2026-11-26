@@ -1,0 +1,306 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:velomine_api/api.dart';
+
+import '../../core/format.dart';
+import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/goal_gauge.dart';
+import '../../core/widgets/page_menu.dart';
+import '../../core/widgets/form_sheet.dart';
+import '../../core/units.dart';
+
+const goalPeriodIds = ['week', 'month', 'year'];
+
+/// The metrics a goal can count, in the order the form lists them.
+const goalMetricIds = ['distance', 'elevation', 'time', 'rides'];
+
+const _metresPerMile = 1609.344;
+const _metresPerFoot = 0.3048;
+
+/// What a goal can count, with the factor between what the member types and the
+/// server's SI value. A goal target is stored in metres, seconds or a count.
+double goalFactor(Units units, String metric) => switch (metric) {
+  'distance' => units == Units.imperial ? _metresPerMile : 1000.0,
+  'elevation' => units == Units.imperial ? _metresPerFoot : 1.0,
+  'time' => 3600.0,
+  'rides' => 1.0,
+  _ => 1.0,
+};
+
+String goalPeriodName(AppLocalizations l10n, String period) => switch (period) {
+  'week' => l10n.goalWeekly,
+  'month' => l10n.goalMonthly,
+  _ => l10n.goalYearly,
+};
+
+String goalMetricName(AppLocalizations l10n, String metric) => switch (metric) {
+  'distance' => l10n.goalMetricDistance,
+  'elevation' => l10n.goalMetricElevation,
+  'time' => l10n.goalMetricTime,
+  'rides' => l10n.goalMetricRides,
+  _ => metric,
+};
+
+String goalUnit(AppLocalizations l10n, Units units, String metric) =>
+    switch (metric) {
+      'distance' => units == Units.imperial ? 'mi' : 'km',
+      'elevation' => units == Units.imperial ? 'ft' : 'm',
+      'time' => 'h',
+      'rides' => l10n.goalUnitRides,
+      _ => '',
+    };
+
+/// A goal value (metres, seconds or a count) as the member reads it.
+String goalValue(
+  AppLocalizations l10n,
+  Units units,
+  String metric,
+  double value,
+) => switch (metric) {
+  'distance' => km(units, value),
+  'elevation' => elevation(units, value),
+  'time' => duration(value),
+  'rides' => l10n.goalRideCount(value.round()),
+  _ => value.toString(),
+};
+
+/// [value] in the server's SI unit, for the number the member typed in [metric].
+double _toMetric(Units units, String metric, double typed) =>
+    typed * goalFactor(units, metric);
+
+/// [value] in the member's unit, for the number a goal form starts from.
+double _fromMetric(Units units, String metric, double value) =>
+    value / goalFactor(units, metric);
+
+String _plain(double v) =>
+    v == v.roundToDouble() ? v.toInt().toString() : v.toString();
+
+/// Asks for a new goal (period, metric, target) or, when [goal] is given, a new target for it.
+/// Returns the period, metric and target in SI units, or null when cancelled.
+Future<({String period, String metric, double target})?> showGoalForm(
+  BuildContext context, {
+  GoalResponse? goal,
+}) => showSheet(context, builder: (_) => _GoalForm(goal: goal));
+
+class _GoalForm extends ConsumerStatefulWidget {
+  const _GoalForm({this.goal});
+
+  final GoalResponse? goal;
+
+  @override
+  ConsumerState<_GoalForm> createState() => _GoalFormState();
+}
+
+class _GoalFormState extends ConsumerState<_GoalForm> {
+  late String _period = widget.goal?.period ?? 'week';
+  late String _metric = widget.goal?.metric ?? 'distance';
+  late final _target = TextEditingController(
+    text: widget.goal == null
+        ? ''
+        : _plain(
+            _fromMetric(
+              ref.read(unitsChoiceViewModelProvider),
+              _metric,
+              widget.goal!.target,
+            ),
+          ),
+  );
+  bool _badTarget = false;
+
+  @override
+  void dispose() {
+    _target.dispose();
+    super.dispose();
+  }
+
+  void _submit(Units units) {
+    final value = double.tryParse(_target.text.trim().replaceAll(',', '.'));
+    if (value == null || value <= 0) {
+      setState(() => _badTarget = true);
+      return;
+    }
+    Navigator.pop(context, (
+      period: _period,
+      metric: _metric,
+      target: _toMetric(units, _metric, value),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
+    final editing = widget.goal != null;
+    return FormSheet(
+      title: editing ? l10n.goalChange : l10n.goalAdd,
+      saveKey: const Key('goal-save'),
+      onSave: () => _submit(units),
+      children: [
+        DropdownButtonFormField<String>(
+          key: const Key('goal-period'),
+          initialValue: _period,
+          decoration: InputDecoration(labelText: l10n.goalEvery),
+          items: [
+            for (final p in goalPeriodIds)
+              DropdownMenuItem(
+                value: p,
+                child: Text(switch (p) {
+                  'week' => l10n.goalEveryWeek,
+                  'month' => l10n.goalEveryMonth,
+                  _ => l10n.goalEveryYear,
+                }),
+              ),
+          ],
+          onChanged: editing
+              ? null
+              : (v) => setState(() => _period = v ?? _period),
+        ),
+        DropdownButtonFormField<String>(
+          key: const Key('goal-metric'),
+          initialValue: _metric,
+          decoration: InputDecoration(labelText: l10n.goalCount),
+          items: [
+            for (final metric in goalMetricIds)
+              DropdownMenuItem(
+                value: metric,
+                child: Text(goalMetricName(l10n, metric)),
+              ),
+          ],
+          onChanged: editing
+              ? null
+              : (v) => setState(() => _metric = v ?? _metric),
+        ),
+        AppTextField(
+          fieldKey: const Key('goal-target'),
+          controller: _target,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+          ],
+          label: l10n.goalTarget,
+          suffix: goalUnit(l10n, units, _metric),
+          errorText: _badTarget ? l10n.errorGoalTarget : null,
+          onDone: (_) => _submit(units),
+        ),
+      ],
+    );
+  }
+}
+
+/// One goal on one card: its name, a half-circle gauge with the percentage, the value against the target
+/// and one sentence that says what is left — or, when it is reached, by how much.
+class GoalCard extends ConsumerWidget {
+  const GoalCard({
+    super.key,
+    required this.goal,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final GoalResponse goal;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
+    final metric = goalMetricName(l10n, goal.metric);
+    final title = l10n.goalTitle(
+      goalPeriodName(l10n, goal.period),
+      metric.toLowerCase(),
+    );
+    final progress = (goal.percent / 100).clamp(0.0, 1.0).toDouble();
+    // The gauge stops at the target; the sentence carries what is left, or what the goal went past it by.
+    final difference = (goal.current - goal.target).abs();
+    final sentence = goal.reached
+        ? l10n.goalReachedBy(goalValue(l10n, units, goal.metric, difference))
+        : l10n.goalLeft(goalValue(l10n, units, goal.metric, difference));
+
+    return AppCard(
+      key: Key('goal-${goal.id}'),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.xl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title.isEmpty
+                      ? title
+                      : title[0].toUpperCase() + title.substring(1),
+                  style: text.titleMedium,
+                ),
+              ),
+              if (goal.reached)
+                Chip(
+                  key: Key('goal-reached-${goal.id}'),
+                  label: Text(l10n.goalReached),
+                  backgroundColor: scheme.primaryContainer,
+                  side: BorderSide.none,
+                ),
+              PageMenu(
+                buttonKey: Key('goal-menu-${goal.id}'),
+                entries: [
+                  PageMenuEntry(
+                    key: Key('goal-edit-${goal.id}'),
+                    icon: Icons.edit_outlined,
+                    label: l10n.goalChangeTarget,
+                    onSelected: onEdit,
+                  ),
+                  PageMenuEntry(
+                    key: Key('goal-delete-${goal.id}'),
+                    icon: Icons.delete_outline,
+                    label: l10n.goalDelete,
+                    destructive: true,
+                    onSelected: onDelete,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Center(
+            child: GoalGauge(
+              gaugeKey: Key('goal-gauge-${goal.id}'),
+              progress: progress,
+              height: AppGauge.height,
+            ),
+          ),
+          Text(
+            l10n.goalProgress(
+              goalValue(l10n, units, goal.metric, goal.current),
+              goalValue(l10n, units, goal.metric, goal.target),
+              goal.percent,
+            ),
+            key: Key('goal-progress-${goal.id}'),
+            style: text.bodySmall,
+          ),
+          Text(
+            sentence,
+            key: Key('goal-remaining-${goal.id}'),
+            style: text.bodyLarge?.copyWith(color: scheme.onSurface),
+          ),
+          Semantics(
+            label: l10n.goalSemantics(metric),
+            child: const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+}

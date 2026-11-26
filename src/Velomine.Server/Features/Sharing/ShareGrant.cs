@@ -9,6 +9,12 @@ public static class DataTypes
     public const string Wellbeing = "wellbeing";
 
     public static readonly string[] All = [Rides, Analytics, Routes, Wellbeing];
+
+    /// <summary>
+    /// The grants that let a viewer see this kind of data. Sharing rides gives the training built from them too (owner,
+    /// 21 Nov): a coach the rider shares rides with always sees their training numbers.
+    /// </summary>
+    public static string[] GrantedBy(string dataType) => dataType == Analytics ? [Analytics, Rides] : [dataType];
 }
 
 /// <summary>Who may look: nobody (no row) or the club's coaches. A whole-club audience is reserved for a member view.</summary>
@@ -30,6 +36,8 @@ public static class ViewKinds
     public const string Route = "route";
     public const string PowerCurve = "power-curve";
     public const string Wellbeing = "wellbeing";
+    /// <summary>The rider's auto plan for this week, read-only.</summary>
+    public const string Plan = "plan";
 }
 
 /// <summary>One rider's choice for one kind of data, in the club they belong to.</summary>
@@ -62,7 +70,7 @@ public sealed class ShareView
     /// <summary>Kept as it was at the time, so the log still reads well after a rename or a deleted account.</summary>
     public string ViewerName { get; set; } = "";
 
-    /// <summary>summary, training, ride, rides or route.</summary>
+    /// <summary>summary, training, ride, rides, route, power-curve, wellbeing or plan.</summary>
     public string What { get; set; } = "summary";
 
     /// <summary>The ride that was looked at, when the look was at one ride; null for a list, a summary or other data. Cleared when the ride is deleted.</summary>

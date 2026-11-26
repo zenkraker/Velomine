@@ -3,9 +3,11 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/l10n.dart';
 import '../../../core/tokens.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/badge.dart';
 import 'club_labels.dart';
 
-/// The top of the club page: the name, the person's role and how many ride here — the handful of
+/// The top of the club page: the club's name, the person's role and how many ride here — the handful of
 /// facts the rest of the page builds on.
 class ClubHeroCard extends StatelessWidget {
   const ClubHeroCard({super.key, required this.club});
@@ -17,40 +19,36 @@ class ClubHeroCard extends StatelessWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.surfaceContainerLow,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(
-              club.name,
-              style: text.headlineSmall,
-              semanticsLabel: club.name,
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Chip(
-                  label: Text(clubRoleName(l10n, club.myRole)),
-                  backgroundColor: scheme.primaryContainer,
-                  side: BorderSide.none,
-                  visualDensity: VisualDensity.compact,
-                ),
-                Text(
-                  l10n.clubMemberCount(club.members.length),
-                  style: text.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+    return AppCard(
+      key: const Key('club-hero'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(
+            club.name,
+            key: const Key('club-hero-name'),
+            style: text.titleMedium,
+          ),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              AppBadge(
+                clubRoleName(l10n, club.myRole),
+                key: const Key('club-role'),
+                tone: club.myRole == 'owner'
+                    ? AppBadgeTone.good
+                    : AppBadgeTone.neutral,
+              ),
+              Text(
+                l10n.clubMemberCount(club.members.length),
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

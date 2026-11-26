@@ -1,7 +1,8 @@
 import 'package:flutter/animation.dart' show Cubic, Curve;
 
 /// Layout constants shared by every screen, so a gap or a corner is the same number everywhere.
-/// Colours and type come from the theme; these are the numbers the theme does not carry.
+/// Colours and type come from the theme; these are the numbers the theme does not carry. Spacing and radii are
+/// the `space-*` and `radius-*` tokens of docs/design/tokens.json (test/design_tokens_test.dart checks them).
 abstract final class AppSpacing {
   static const double xs = 4;
   static const double sm = 8;
@@ -22,6 +23,9 @@ abstract final class AppRadius {
 
   /// A card that needs to stand out of the page, for an overlay or a selected state.
   static const double xlarge = 32;
+
+  /// A pill: buttons, chips, segmented controls, the nav pill.
+  static const double pill = 999;
 }
 
 /// Where the layout changes shape: a phone, a tablet, a desktop window.
@@ -65,11 +69,9 @@ abstract final class AppHeader {
   static const double titleLineHeight = 1.4;
   static const double textLineHeight = 1.4;
 
-  /// How many lines of subtitle the large block reserves room for.
-  static const int subtitleLines = 2;
-
-  /// A subtitle longer than this many characters may wrap, so the block reserves [subtitleLines].
-  static const int longSubtitle = 60;
+  /// The most the toolbar's buttons grow with the text scale: the row is one fixed height, so a button
+  /// that grew with it would not fit beside the title.
+  static const double maxToolbarTextScale = 1.3;
 }
 
 abstract final class AppMotion {
@@ -115,12 +117,22 @@ abstract final class AppLoading {
 
   /// The size of the icon before an error line.
   static const double errorIcon = 18;
+
+  /// The box around an indicator shown inside a row, such as "Reading file".
+  static const double inlineIndicator = 16;
+}
+
+/// Where a number came from: the size of [SourceNote].
+abstract final class AppSourceNote {
+  /// The line's height: a comfortable tap target where the note opens something.
+  static const double minHeight = 24;
 }
 
 /// The floating navigation pill the shell draws over a phone's content.
 abstract final class AppNav {
-  /// The collapsed rail's width: icons with labels under them.
-  static const double railWidth = 88;
+  /// The collapsed rail's width: icons with labels under them, wide enough for `nav-label` 15 on one
+  /// line in both languages ("Progressi" is the longest).
+  static const double railWidth = 104;
 
   /// The expanded rail's width: the brand, labels beside the icons, the club and the privacy note.
   static const double railExpandedWidth = 240;
@@ -140,16 +152,18 @@ abstract final class AppNav {
   /// The blur behind the translucent pill, where the device can afford it (see `pillBlurOf`).
   static const double pillBlur = 20;
 
+  /// The ground behind a rail destination's icon, a pill in the mock-up.
+  static const double railIndicatorWidth = 56;
+  static const double railIndicatorHeight = 32;
+
   /// The least height of the live-ride banner, a comfortable tap target.
   static const double bannerHeight = 56;
 
   /// The space between the live-ride banner and the pill under it.
   static const double bannerGap = AppSpacing.sm;
 
-  /// How opaque the pill's surface is over the blur.
-  static const double pillOpacity = 0.82;
-
-  /// How opaque it is with no blur: nearly solid, so the content behind never shows through unreadably.
+  /// How opaque the glass turns where the blur cannot run: nearly solid, so the content behind never
+  /// shows through unreadably.
   static const double pillOpacityNoBlur = 0.96;
 
   /// How far the pill slides down, in its own heights, when it hides: past the margin and safe area.
@@ -163,18 +177,100 @@ abstract final class AppNav {
 }
 
 /// The fixed sizes inside the Progress cards: chart heights and the label columns of their rows.
+/// The goal gauge: a half circle on a goal card.
+abstract final class AppGauge {
+  /// The arc's thickness, as the mock-up draws it.
+  static const double thickness = 14;
+
+  /// The height of the half circle, room for the percentage included.
+  static const double height = 96;
+}
+
 abstract final class AppProgress {
   static const double fitnessChartHeight = 170;
+
+  /// The readiness factor's effect bar: its length and thickness, and the column of the signed number.
+  static const double effectBarWidth = 72;
+  static const double effectBarHeight = 6;
   static const double loadChartHeight = 120;
   static const double detailWidth = 190;
   static const double effectWidth = 34;
   static const double scoreLabelWidth = 108;
   static const double dateWidth = 54;
+
+  /// The column of a zone's label ("Z2") before its range and its bar.
+  static const double zoneLabelWidth = 30;
+
+  /// A ride's zone row, as its mock-up draws it: the zone's name and word, its range, its bar and its time.
+  static const double zoneNameWidth = 120;
+  static const double zoneRangeWidth = 92;
+  static const double zoneBarHeight = 8;
+  static const double zoneTimeWidth = 56;
+
+  /// The easy/moderate/hard bar of the Fitness page, as its mock-up's `zone-bar` draws it.
+  static const double intensityBarHeight = 10;
 }
 
-/// The boxed [StatTile] in a grid of numbers.
-abstract final class AppStat {
-  static const double boxWidth = 150;
+/// The training screens: the shape strip of a session, and the date block of a week's row.
+abstract final class AppTraining {
+  static const double shapeHeight = 40;
+  static const double sessionShapeHeight = 48;
+  static const double dateWidth = 54;
+  static const double stripIcon = 16;
+}
+
+/// The sizes every chart draws with, so a chart looks the same on every page.
+abstract final class AppChart {
+  /// The height of a chart.
+  static const double height = 180;
+
+  /// A bar's width as a share of its slot; the rest is the gap between bars.
+  static const double barFraction = 0.52;
+
+  /// The most gridlines a chart draws, the bottom one included.
+  static const int maxGridLines = 4;
+
+  /// The room left of the plot for the y-axis labels.
+  static const double gutterLeft = 34;
+
+  /// The room above a bar for its value, and under a bar for its date: a 12 px label is 16 dp tall and
+  /// sits [AppSpacing.sm] under the plot, clear of the lowest value label that is centred on the plot's
+  /// edge, so the strip has to hold both or the date is cut off.
+  static const double valueLabelHeight = 16;
+  static const double dateLabelHeight = 24;
+
+  /// The dot on an area chart's latest point, and the width of its line.
+  static const double dotRadius = 6;
+  static const double lineWidth = 2;
+
+  /// The width a date label needs, which sets how many bars may carry one.
+  static const double minLabelWidth = 48;
+
+  /// The label step on a phone, and from the tablet width up.
+  static const int compactLabelStep = 3;
+  static const int mediumLabelStep = 2;
+
+  /// The colour dot before a legend's label.
+  static const double legendDot = 10;
+  static const double legendDotSmall = 9;
+
+  /// The thin colour bar of a legend, such as the heart-rate scale under a map.
+  static const double legendBar = 6;
+}
+
+/// The sizes inside a stat card.
+abstract final class AppStatCard {
+  /// The height of the chip after a number.
+  static const double stateHeight = 28;
+}
+
+/// The small badge beside a name or a title, as the mock-up's `vm-badge` draws it.
+abstract final class AppBadgeSize {
+  /// One line of the axis size, the badge never wraps.
+  static const double height = 24;
+
+  /// The room either side of the label: 10 px in the mock-up, between [AppSpacing.sm] and [AppSpacing.md].
+  static const double sidePadding = AppSpacing.sm + 2;
 }
 
 /// The club page's cards.
@@ -185,4 +281,30 @@ abstract final class AppClub {
 
   /// The map of the location picker, which sits in the page's scroll view.
   static const double pickerMapHeight = 420;
+}
+
+/// The auth screens: one narrow column under the wordmark, centred on the page (`docs/design/pages/sign-in/`).
+abstract final class AppAuth {
+  /// The measure of the column, narrower than a page of prose.
+  static const double width = 440;
+}
+
+/// The initials avatar that stands for a member in a row or a list (`docs/design/pages/README.md`, cards).
+abstract final class AppAvatar {
+  /// The circle's size, as the mock-up's `vm-avatar` draws it.
+  static const double size = 40;
+}
+
+/// The grid of named numbers on a list card (`.vm-facts` in the mock-ups): as many columns as fit at
+/// least [minColumn] wide, a caption over a body-weight number.
+abstract final class AppFacts {
+  static const double minColumn = 110;
+}
+
+/// The glyph sizes the screens draw outside a button: a row's leading icon, a banner's, an empty drop area's.
+abstract final class AppIconSize {
+  static const double small = 16;
+  static const double medium = 20;
+  static const double large = 40;
+  static const double xlarge = 48;
 }

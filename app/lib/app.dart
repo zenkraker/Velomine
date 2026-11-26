@@ -9,12 +9,15 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:velomine_api/api.dart';
 
+import 'core/widgets/loading_state.dart';
+import 'core/widgets/page_scaffold.dart';
 import 'core/back_guard.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
 import 'core/map_defaults.dart';
 import 'core/motion.dart';
 import 'core/providers.dart';
+import 'core/rider_mode.dart';
 import 'core/server_config.dart';
 import 'core/session.dart';
 import 'core/solo_hint.dart';
@@ -57,7 +60,13 @@ import 'features/profile/profile_screen.dart';
 import 'features/profile/sessions_screen.dart';
 import 'features/profile/two_factor_screen.dart';
 import 'features/privacy/privacy_screen.dart';
+import 'features/goals/goals_screen.dart';
+import 'features/progress/fitness_screen.dart';
+import 'features/progress/power_screen.dart';
 import 'features/progress/progress_screen.dart';
+import 'features/progress/totals_screen.dart';
+import 'features/progress/wellbeing_screen.dart';
+import 'features/progress/events_screen.dart';
 import 'features/recording/recording_screen.dart';
 import 'features/rides/bulk/ride_drop_area.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
@@ -65,6 +74,10 @@ import 'features/rides/incoming/incoming_rides_area.dart';
 import 'features/rides/import/import_screen.dart';
 import 'features/rides/rides_view_model.dart';
 import 'features/rides/rides_screen.dart';
+import 'features/training/session_screen.dart';
+import 'features/training/training_screen.dart';
+import 'features/training/training_setup_screen.dart';
+import 'features/training/training_view_model.dart';
 import 'home_shell.dart';
 import 'core/l10n.dart';
 
@@ -175,7 +188,10 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       if (session.pendingJoinCode != null && club.loaded && club.club == null) {
         return path == '/join' ? null : '/join';
       }
-      if (path.startsWith('/club/athletes') && club.club == null) {
+      // Only once the club has loaded: a page opened by its address starts without one.
+      if (path.startsWith('/club/athletes') &&
+          club.loaded &&
+          club.club == null) {
         return '/club';
       }
       if (path == '/clubs' && club.loaded && club.club != null) {
@@ -192,6 +208,15 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       if (path == '/reset-password' || path == '/verify-email') return null;
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
+      // The Training destination exists only while auto training is on; the setup is how it is turned on. Before
+      // the plan has loaded nothing is known, so a deep link waits on the page instead of losing its address.
+      final training = ref.read(trainingViewModelProvider);
+      if ((path == '/training' || path.startsWith('/training/sessions')) &&
+          training.load.completed &&
+          !(training.on &&
+              (session.serverInfo?.autoTrainingEnabled ?? false))) {
+        return '/rides';
+      }
       if (path == '/admin' && !session.isAdmin) return '/rides';
       return null;
     },
@@ -213,21 +238,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             BackGuard(location: state.uri.path, child: const RegisterScreen()),
       ),
       GoRoute(
-        path: '/clubs',
-        builder: (context, state) => BackGuard(
-          location: state.uri.path,
-          child: NearbyClubsScreen(
-            onBack: () => context.go('/club'),
-            tileUrl:
-                ref.read(sessionProvider).serverInfo?.mapTileUrl ??
-                defaultMapTileUrl,
-            attribution:
-                ref.read(sessionProvider).serverInfo?.mapAttribution ??
-                defaultMapAttribution,
-          ),
-        ),
-      ),
-      GoRoute(
         path: '/forgot-password',
         builder: (context, state) => BackGuard(
           location: state.uri.path,
@@ -237,12 +247,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       GoRoute(
         path: '/verify-email',
         builder: (context, state) {
-          final fragment = state.uri.fragment.isNotEmpty
-              ? state.uri.fragment
-              : Uri.base.fragment;
-          final params = fragment.isNotEmpty
-              ? Uri.splitQueryString(fragment)
-              : state.uri.queryParameters;
+          final params = state.uri.queryParameters;
           return BackGuard(
             location: state.uri.path,
             child: VerifyEmailScreen(
@@ -255,12 +260,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       GoRoute(
         path: '/reset-password',
         builder: (context, state) {
-          final fragment = state.uri.fragment.isNotEmpty
-              ? state.uri.fragment
-              : Uri.base.fragment;
-          final params = fragment.isNotEmpty
-              ? Uri.splitQueryString(fragment)
-              : state.uri.queryParameters;
+          final params = state.uri.queryParameters;
           return BackGuard(
             location: state.uri.path,
             child: ResetPasswordScreen(
@@ -302,23 +302,62 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(
             path: '/rides/:id',
-            builder: (context, state) => RideDetailScreen(
-              key: ValueKey(state.pathParameters['id']),
-              id: state.pathParameters['id']!,
-              onDeleted: () {
-                ref.read(ridesViewModelProvider.notifier).refresh();
-                _backOrGo(context, '/rides');
-              },
-              tileUrl:
-                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
-                  defaultMapTileUrl,
-              attribution:
-                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
-                  defaultMapAttribution,
+            builder: (context, state) => Consumer(
+              builder: (context, ref, _) => RideDetailScreen(
+                key: ValueKey(state.pathParameters['id']),
+                id: state.pathParameters['id']!,
+                // This is the member's own ride, so their mode decides what it opens with.
+                layout: ref.watch(riderLayoutProvider),
+                onDeleted: () {
+                  ref.read(ridesViewModelProvider.notifier).refresh();
+                  _backOrGo(context, '/rides');
+                },
+                serverUrl: ref.read(sessionProvider).serverUrl,
+                openLink: ref.read(linkOpenerProvider),
+                tileUrl:
+                    ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                    defaultMapTileUrl,
+                attribution:
+                    ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                    defaultMapAttribution,
+              ),
             ),
           ),
           GoRoute(path: '/record', builder: (_, _) => const RecordingScreen()),
+          GoRoute(path: '/training', builder: (_, _) => const TrainingScreen()),
+          GoRoute(
+            path: '/training/setup',
+            builder: (_, _) => const TrainingSetupScreen(),
+          ),
+          GoRoute(
+            path: '/training/sessions/:id',
+            builder: (context, state) => SessionScreen(
+              key: ValueKey(state.pathParameters['id']),
+              id: state.pathParameters['id']!,
+            ),
+          ),
           GoRoute(path: '/progress', builder: (_, _) => const ProgressScreen()),
+          GoRoute(
+            path: '/progress/fitness',
+            builder: (_, _) => const FitnessScreen(),
+          ),
+          GoRoute(
+            path: '/progress/power',
+            builder: (_, _) => const PowerScreen(),
+          ),
+          GoRoute(
+            path: '/progress/totals',
+            builder: (_, _) => const TotalsScreen(),
+          ),
+          GoRoute(
+            path: '/progress/wellbeing',
+            builder: (_, _) => const WellbeingScreen(),
+          ),
+          GoRoute(path: '/goals', builder: (_, _) => const GoalsScreen()),
+          GoRoute(
+            path: '/progress/events',
+            builder: (_, _) => const EventsScreen(),
+          ),
           GoRoute(
             path: '/club',
             builder: (context, _) => ClubScreen(
@@ -423,6 +462,12 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             builder: (context, _) => RoutesScreen(
               onOpen: (id) => context.push('/club/routes/$id'),
               onAdd: () => context.push('/club/routes/new'),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
             ),
           ),
           GoRoute(
@@ -472,31 +517,49 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(
             path: '/club/athletes',
-            builder: (context, _) => CoachAthletesScreen(
-              clubId: ref.read(clubViewModelProvider).club!.id,
-              onOpen: (id) => context.push('/club/athletes/$id'),
+            builder: (context, _) => _withClub(
+              (clubId) => CoachAthletesScreen(
+                clubId: clubId,
+                onOpen: (id) => context.push('/club/athletes/$id'),
+              ),
             ),
           ),
           GoRoute(
             path: '/club/athletes/:id',
-            builder: (context, state) => CoachAthleteScreen(
-              key: ValueKey(state.pathParameters['id']),
-              clubId: ref.read(clubViewModelProvider).club!.id,
-              userId: state.pathParameters['id']!,
-              onOpenRide: (rideId) => context.push(
-                '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
+            builder: (context, state) => _withClub(
+              (clubId) => CoachAthleteScreen(
+                key: ValueKey(state.pathParameters['id']),
+                clubId: clubId,
+                userId: state.pathParameters['id']!,
+                onOpenRide: (rideId) => context.push(
+                  '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
+                ),
               ),
             ),
           ),
           GoRoute(
             path: '/club/athletes/:id/rides/:rideId',
-            builder: (context, state) => CoachRideScreen(
-              key: ValueKey(
-                '${state.pathParameters['id']}-${state.pathParameters['rideId']}',
+            builder: (context, state) => _withClub(
+              (clubId) => CoachRideScreen(
+                key: ValueKey(
+                  '${state.pathParameters['id']}-${state.pathParameters['rideId']}',
+                ),
+                clubId: clubId,
+                userId: state.pathParameters['id']!,
+                rideId: state.pathParameters['rideId']!,
+                tileUrl:
+                    ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                    defaultMapTileUrl,
+                attribution:
+                    ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                    defaultMapAttribution,
               ),
-              clubId: ref.read(clubViewModelProvider).club!.id,
-              userId: state.pathParameters['id']!,
-              rideId: state.pathParameters['rideId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/clubs',
+            builder: (context, state) => NearbyClubsScreen(
+              onBack: () => context.go('/club'),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,
@@ -631,6 +694,8 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       _followSession();
     });
     ref.listen(clubViewModelProvider, (_, _) => _router.refresh());
+    // Turning auto training on or off adds or removes the Training destination.
+    ref.listen(trainingViewModelProvider, (_, _) => _router.refresh());
     return MaterialApp.router(
       title: 'Velomine',
       theme: dayTheme(),
@@ -677,3 +742,14 @@ void _backOrGo(BuildContext context, String fallback) {
     context.go(fallback);
   }
 }
+
+/// A page of the club's coach views, drawn once the club is known: opened by its address, the page
+/// starts before the club has loaded, and a missing club would otherwise throw.
+Widget _withClub(Widget Function(String clubId) build) => Consumer(
+  builder: (context, ref, _) {
+    final club = ref.watch(clubViewModelProvider).club;
+    return club == null
+        ? const PageScaffold(children: [LoadingState.rows()])
+        : build(club.id);
+  },
+);

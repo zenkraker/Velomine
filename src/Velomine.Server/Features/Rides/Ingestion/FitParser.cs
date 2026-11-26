@@ -44,7 +44,7 @@ public static class FitParser
                 record.GetEnhancedAltitude() ?? record.GetAltitude(),
                 record.GetEnhancedSpeed() ?? record.GetSpeed(),
                 record.GetDistance(),
-                record.GetHeartRate(),
+                PlausibleHeartRate(record.GetHeartRate()),
                 record.GetPower() is { } power ? (short?)Math.Min(power, short.MaxValue) : null,
                 record.GetCadence(),
                 record.GetTemperature())));
@@ -160,7 +160,7 @@ public static class FitParser
         var eventList = timerEvents.ToList();
         var pauseEnd = eventList.Select(e => e.Time).DefaultIfEmpty(last).Max();
         var hasPositions = records.Any(r => r.Sample.Latitude is not null && r.Sample.Longitude is not null);
-        var dimensions = Dimensions(sport, subSport, hasPositions);
+        var dimensions = Dimensions(sport, subSport, hasPositions, device);
         var lastS = (last - first).TotalSeconds;
         var parsedLaps = (laps ?? [])
             .OrderBy(l => l.Start)
@@ -194,9 +194,10 @@ public static class FitParser
 
     /// <summary>
     /// Maps the session's sport and sub-sport onto the four dimensions. A sub-sport is the activity profile the
-    /// rider picked on the device; when it is absent, nothing about the surface is guessed.
+    /// rider picked on the device; when it is absent, nothing about the surface is guessed. A file written by Zwift is
+    /// virtual even without the virtual sub-sport: its coordinates are a virtual world laid over real places.
     /// </summary>
-    private static RideDimensions Dimensions(Sport? sport, SubSport? subSport, bool hasPositions)
+    private static RideDimensions Dimensions(Sport? sport, SubSport? subSport, bool hasPositions, string? device)
     {
         string? discipline = subSport switch
         {
@@ -218,6 +219,7 @@ public static class FitParser
         {
             SubSport.IndoorCycling or SubSport.Spin => Environments.Indoor,
             SubSport.VirtualActivity => Environments.Virtual,
+            _ when device == nameof(Manufacturer.Zwift) => Environments.Virtual,
             _ => hasPositions ? Environments.Outdoor : null,
         };
 
@@ -225,6 +227,13 @@ public static class FitParser
 
         return new RideDimensions(discipline, assist, environment, commute);
     }
+
+    /// <summary>
+    /// A heart rate a rider can have. A record whose heart-rate field is defined but never set carries the profile's
+    /// "no value" byte, 255, and devices write it for a ride recorded without a strap; without this the ride would
+    /// read 255 bpm in its streams, its average and its maximum.
+    /// </summary>
+    private static short? PlausibleHeartRate(byte? value) => value is >= 30 and <= 250 ? value : null;
 
     /// <summary>Turns timer stop/start events into paused intervals relative to the first sample.</summary>
     private static IReadOnlyList<PauseInterval> BuildPauses(

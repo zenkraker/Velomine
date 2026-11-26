@@ -1,0 +1,180 @@
+{
+  // A development container for Velomine: everything the toolchain, the agents and the
+  // editor write stays in this container and its volumes, not in your home folder.
+  // The image is the toolchain: Dockerfile, devcontainer.json and devcontainer-lock.json pin every version.
+  // Setup and limits: docs/development.md.
+  "name": "Velomine",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0"
+    },
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "24"
+    },
+    // Docker for `just up` (PostgreSQL, Dex, the server) and the tests' Testcontainers.
+    // Runs its own daemon inside the container, so the host's Docker is never mounted.
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {}
+  },
+  // The container's own Docker daemon needs this; the privilege stays inside the container.
+  "privileged": true,
+  // One volume holds what agents and editors keep: logins, settings, sessions, history.
+  // Delete it (`docker volume rm velomine-state`) and all of it is gone.
+  "mounts": ["source=velomine-state,target=/home/vscode/.state,type=volume"],
+  "containerEnv": {
+    "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-amd64",
+    "ANDROID_HOME": "/opt/android-sdk",
+    "ANDROID_SDK_ROOT": "/opt/android-sdk",
+    "FLUTTER_ROOT": "/opt/flutter",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "NUGET_PACKAGES": "${containerWorkspaceFolder}/.dev/nuget/packages",
+    "NUGET_HTTP_CACHE_PATH": "${containerWorkspaceFolder}/.dev/nuget/http-cache",
+    "DOTNET_CLI_HOME": "${containerWorkspaceFolder}/.dev/dotnet",
+    "PUB_CACHE": "${containerWorkspaceFolder}/.dev/pub-cache",
+    "npm_config_cache": "${containerWorkspaceFolder}/.dev/npm",
+    "GRADLE_USER_HOME": "${containerWorkspaceFolder}/.dev/gradle",
+    "ANDROID_USER_HOME": "${containerWorkspaceFolder}/.dev/android",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.state/claude",
+    "PI_CODING_AGENT_DIR": "/home/vscode/.state/pi",
+    "XDG_CONFIG_HOME": "/home/vscode/.state/config",
+    "XDG_DATA_HOME": "/home/vscode/.state/data",
+    "XDG_STATE_HOME": "/home/vscode/.state/state",
+    "XDG_CACHE_HOME": "/home/vscode/.state/cache"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteEnv": {
+    "PATH": "/home/vscode/.state/npm-global/bin:/opt/flutter/bin:${containerEnv:PUB_CACHE}/bin:/opt/android-sdk/platform-tools:${containerEnv:PATH}"
+  },
+  // Web app and API from `just up`; Dex on 5556.
+  "forwardPorts": [8080, 5556],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "cdervis.vscode-pi",
+        "dart-code.dart-code",
+        "dart-code.flutter",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-ossdata.vscode-pgsql",
+        "ms-azuretools.vscode-containers"
+      ],
+      "settings": {
+        "dart.flutterSdkPath": "/opt/flutter",
+        // Pendant: the subagent profiles (machine-scoped, so a dev container can set them).
+        // Pendant keeps them in VS Code settings, not in the Pi folder. pendant.pinnedModels is
+        // application-scoped and cannot be set here; sign in to Settings Sync for it.
+      "pendant.subagents.delegation": "automatic",
+      "pendant.subagents.defaultModel": "deepseek/deepseek-flash",
+      "pendant.subagents.profiles": [
+        {
+          "name": "explore",
+          "background": true,
+          "description": "Find and explain relevant code and resources.",
+          "instructions": "Use codegraph_explore first to navigate the code (symbols, call paths, source); read or grep files only for what it did not show. Explore the task efficiently. Read and search only. Return findings with file references and unresolved questions.",
+          "tools": [
+            "read",
+            "grep",
+            "find",
+            "ls",
+            "mcp__codegraph__codegraph_explore"
+          ]
+        },
+        {
+          "name": "plan",
+          "background": true,
+          "description": "Design an implementation approach without changing files.",
+          "instructions": "Use codegraph_explore first to navigate the code (symbols, call paths, source); read or grep files only for what it did not show. Investigate the task and produce a concrete implementation plan with risks and validation. Read and search only.",
+          "tools": [
+            "read",
+            "grep",
+            "find",
+            "ls",
+            "mcp__codegraph__codegraph_explore"
+          ]
+        },
+        {
+          "name": "general-purpose",
+          "description": "Carry out a delegated task with the inherited Pi environment.",
+          "instructions": "Use codegraph_explore first to navigate the code (symbols, call paths, source); read or grep files only for what it did not show. Complete the assigned task using the inherited Pi tools and resources. Coordinate overlapping files with the parent. Return a concise report with changes and verification.",
+          "background": true
+        },
+        {
+          "name": "dev",
+          "background": true,
+          "description": "Implement code changes in this repo, navigating with the CodeGraph MCP.",
+          "instructions": "Use codegraph_explore first to navigate the code (symbols, call paths, source); read or grep files only for what it did not show. Then make the smallest complete change, follow AGENTS.md, run the relevant checks and return a concise report with changed files and verification. Coordinate overlapping files with the parent. For Flutter/Dart work in app/, use the dart MCP (analyze_files, lsp, hot_reload, widget_inspector) and hot reload a running app after editing app/lib/.",
+          "tools": [
+            "read",
+            "grep",
+            "find",
+            "ls",
+            "bash",
+            "edit",
+            "write",
+            "tool_search",
+            "mcp__codegraph__codegraph_explore",
+            "mcp__dart__analyze_files",
+            "mcp__dart__lsp",
+            "mcp__dart__roots",
+            "mcp__dart__pub",
+            "mcp__dart__read_package_uris",
+            "mcp__dart__rip_grep_packages",
+            "mcp__dart__dtd",
+            "mcp__dart__hot_reload",
+            "mcp__dart__hot_restart",
+            "mcp__dart__get_runtime_errors",
+            "mcp__dart__widget_inspector",
+            "mcp__dart__flutter_driver_command",
+            "mcp__dart__vm_service"
+          ],
+          "skills": [
+            "ponytail"
+          ]
+        },
+        {
+          "name": "reviewer",
+          "description": "Independently review changes for actionable defects.",
+          "instructions": "Use codegraph_explore first to navigate the code (symbols, call paths, source); read or grep files only for what it did not show. Review the provided diff, target, context and evidence independently. Read and search only; do not fix files. Report only actionable defects with severity, file and line, triggering condition, and consequence. Explain coverage limits and say when no findings were found.",
+          "tools": [
+            "read",
+            "grep",
+            "find",
+            "ls",
+            "mcp__codegraph__codegraph_explore"
+          ],
+          "skills": [
+            "ponytail-review"
+          ],
+          "background": true
+        },
+        {
+          "name": "verifier",
+          "background": true,
+          "description": "Run focused checks and report observed results.",
+          "instructions": "Run the focused checks requested by the parent. Report exact commands, exit codes, observed failures and evidence. Do not repair code, change configuration or delegate. Shell execution is available for validation and is not a read-only guarantee.",
+          "disallowedTools": [
+            "write",
+            "edit",
+            "pendant_agent",
+            "pendant_agent_wait",
+            "pendant_agent_status",
+            "pendant_agent_message",
+            "pendant_agent_stop",
+            "subagent",
+            "Agent",
+            "subagent_run",
+            "subagent_continue"
+          ]
+        }
+      ]
+      }
+    }
+  }
+}

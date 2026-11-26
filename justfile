@@ -9,11 +9,10 @@ export COMPOSE_FILE := "docker-compose.yml:compose.development.yaml"
 default:
     @just --list
 
-# one-time setup: .NET tools, Flutter packages, Android emulator
+# one-time setup: .NET tools and Flutter packages
 setup:
     dotnet tool restore
     cd app && flutter pub get
-    avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}" -d {{device}}
 
 # build and start the whole stack, with Dex, in Docker on http://localhost:8080; run it again after any change
 up:
@@ -36,9 +35,11 @@ db:
     docker compose exec postgres psql -U velomine velomine
 
 # run the app on the Android emulator: starts it if needed, then hot-reloads against the stack from `just up`
+# (needs the Android emulator and a system image, which the dev container does not have: use `just phone` there)
 emu:
     #!/usr/bin/env bash
     set -euo pipefail
+    avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}" -d {{device}}
     device=$(adb devices | awk '/^emulator-/ {print $1; exit}')
     if [ -z "$device" ]; then
       flutter emulators --launch {{avd}}
@@ -63,6 +64,7 @@ phone address="":
 
 # add an EF Core migration: just migration AddSomething
 migration name:
+    dotnet tool restore
     dotnet ef migrations add {{name}} --project src/Velomine.Server --output-dir Data/Migrations
 
 # regenerate the Dart API client after changing an endpoint
@@ -77,27 +79,13 @@ codegen:
 android-test:
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
 
-# count the duplicated UI patterns the shared-widget rule keeps down; lower is better
-ui-dupes:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd app/lib
-    count() { printf '%-22s %s\n' "$1" "$(grep -rn "$2" features core --include=*.dart | wc -l)"; }
-    count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
-    count "Card(" 'Card('
-    count "TextField(" 'TextField(\|TextFormField('
-    count "showSnackBar" 'showSnackBar'
-    count "SegmentedButton" 'SegmentedButton'
-    count "TextStyle(" 'TextStyle('
-    count "Color(0x" 'Color(0x'
-    count "EdgeInsets.all(n)" 'EdgeInsets.all([0-9]'
-    count "SizedBox(height: n)" 'SizedBox(height: [0-9]'
-    count "SizedBox(width: n)" 'SizedBox(width: [0-9]'
-    count "spacing: n" 'spacing: [0-9]'
-
 # every check to run before a commit
 check:
-    dotnet format Velomine.slnx --verify-no-changes
-    dotnet test --solution Velomine.slnx
+    @just check-server
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
+
+# the server half of `check`: enough for a change that touches no file under app/
+check-server:
+    dotnet format Velomine.slnx --verify-no-changes
+    dotnet test --solution Velomine.slnx

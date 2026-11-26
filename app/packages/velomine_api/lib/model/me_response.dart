@@ -22,6 +22,8 @@ class MeResponse {
     required this.telemetryCrash,
     required this.telemetryUsage,
     required this.units,
+    required this.riderMode,
+    required this.riderModeSupported,
   });
 
   final String id;
@@ -42,6 +44,10 @@ class MeResponse {
 
   final String units;
 
+  final String? riderMode;
+
+  final bool? riderModeSupported;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is MeResponse &&
     other.id == id &&
@@ -52,7 +58,9 @@ class MeResponse {
     other.telemetryConsentRequired == telemetryConsentRequired &&
     other.telemetryCrash == telemetryCrash &&
     other.telemetryUsage == telemetryUsage &&
-    other.units == units;
+    other.units == units &&
+    other.riderMode == riderMode &&
+    other.riderModeSupported == riderModeSupported;
 
   @override
   int get hashCode =>
@@ -65,10 +73,12 @@ class MeResponse {
     (telemetryConsentRequired.hashCode) +
     (telemetryCrash.hashCode) +
     (telemetryUsage.hashCode) +
-    (units.hashCode);
+    (units.hashCode) +
+    (riderMode == null ? 0 : riderMode!.hashCode) +
+    (riderModeSupported == null ? 0 : riderModeSupported!.hashCode);
 
   @override
-  String toString() => 'MeResponse[id=$id, email=$email, displayName=$displayName, roles=$roles, language=$language, telemetryConsentRequired=$telemetryConsentRequired, telemetryCrash=$telemetryCrash, telemetryUsage=$telemetryUsage, units=$units]';
+  String toString() => 'MeResponse[id=$id, email=$email, displayName=$displayName, roles=$roles, language=$language, telemetryConsentRequired=$telemetryConsentRequired, telemetryCrash=$telemetryCrash, telemetryUsage=$telemetryUsage, units=$units, riderMode=$riderMode, riderModeSupported=$riderModeSupported]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -85,6 +95,16 @@ class MeResponse {
       json[r'telemetryCrash'] = this.telemetryCrash;
       json[r'telemetryUsage'] = this.telemetryUsage;
       json[r'units'] = this.units;
+    if (this.riderMode != null) {
+      json[r'riderMode'] = this.riderMode;
+    } else {
+      json[r'riderMode'] = null;
+    }
+    if (this.riderModeSupported != null) {
+      json[r'riderModeSupported'] = this.riderModeSupported;
+    } else {
+      json[r'riderModeSupported'] = null;
+    }
     return json;
   }
 
@@ -101,6 +121,10 @@ class MeResponse {
     bool? telemetryCrash,
     bool? telemetryUsage,
     String? units,
+    String? riderMode,
+    bool riderModeSetToNull = false,
+    bool? riderModeSupported,
+    bool riderModeSupportedSetToNull = false,
   }) => MeResponse(
     id: id ?? this.id,
     email: email ?? this.email,
@@ -111,6 +135,8 @@ class MeResponse {
     telemetryCrash: telemetryCrash ?? this.telemetryCrash,
     telemetryUsage: telemetryUsage ?? this.telemetryUsage,
     units: units ?? this.units,
+    riderMode: riderModeSetToNull ? null : riderMode ?? this.riderMode,
+    riderModeSupported: riderModeSupportedSetToNull ? null : riderModeSupported ?? this.riderModeSupported,
   );
 
   /// Returns a new [MeResponse] instance and imports its values from
@@ -141,6 +167,8 @@ class MeResponse {
         assert(json[r'telemetryUsage'] != null, 'Required key "MeResponse[telemetryUsage]" has a null value in JSON.');
         assert(json.containsKey(r'units'), 'Required key "MeResponse[units]" is missing from JSON.');
         assert(json[r'units'] != null, 'Required key "MeResponse[units]" has a null value in JSON.');
+        assert(json.containsKey(r'riderMode'), 'Required key "MeResponse[riderMode]" is missing from JSON.');
+        assert(json.containsKey(r'riderModeSupported'), 'Required key "MeResponse[riderModeSupported]" is missing from JSON.');
         return true;
       }());
 
@@ -156,6 +184,8 @@ class MeResponse {
         telemetryCrash: mapValueOfType<bool>(json, r'telemetryCrash')!,
         telemetryUsage: mapValueOfType<bool>(json, r'telemetryUsage')!,
         units: mapValueOfType<String>(json, r'units')!,
+        riderMode: mapValueOfType<String>(json, r'riderMode'),
+        riderModeSupported: mapValueOfType<bool>(json, r'riderModeSupported'),
       );
     }
     return null;
@@ -212,6 +242,8 @@ class MeResponse {
     'telemetryCrash',
     'telemetryUsage',
     'units',
+    'riderMode',
+    'riderModeSupported',
   };
 }
 

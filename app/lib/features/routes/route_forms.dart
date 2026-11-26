@@ -13,9 +13,13 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/segmented_control.dart';
+import '../rides/ride_title.dart';
 import 'route_widgets.dart';
 import 'routes_state.dart';
 import 'routes_view_model.dart';
@@ -75,8 +79,8 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
 
     final draft = s.draft;
     return PageScaffold(
-      eyebrow: l10n.routesEyebrow,
       title: l10n.addRouteTitle,
+      parent: l10n.clubRoutesCaption,
       subtitle: l10n.addRouteHelp,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: draft == null
@@ -99,25 +103,25 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                     },
             ),
       children: [
+        // The card is titled as the mock-up titles it, and holds the source control with what that source
+        // offers under it.
         SectionCard(
-          title: l10n.addRouteFromRide,
+          title: l10n.addRouteSourceTitle,
           children: [
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                ChoiceChip(
-                  key: const Key('choose-route-from-ride'),
+            SegmentedControl<String>(
+              buttonKey: const Key('route-source'),
+              segments: [
+                ButtonSegment(
+                  value: 'ride',
                   label: Text(l10n.addRouteFromRide),
-                  selected: _source == 'ride',
-                  onSelected: (_) => setState(() => _source = 'ride'),
                 ),
-                ChoiceChip(
-                  key: const Key('choose-route-from-file'),
+                ButtonSegment(
+                  value: 'file',
                   label: Text(l10n.addRouteFromFile),
-                  selected: _source == 'file',
-                  onSelected: (_) => setState(() => _source = 'file'),
                 ),
               ],
+              selected: _source,
+              onChanged: (value) => setState(() => _source = value),
             ),
             if (_source == 'file')
               Align(
@@ -139,43 +143,62 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
             if (_source == 'ride') ...[
               if (s.ridesLoad.running && s.rides.isEmpty)
                 const LoadingState()
+              // A load that failed is not an account without rides: say what happened and offer the retry.
+              else if (s.ridesLoad.failure case final failure?)
+                ErrorState(
+                  message: failureText(l10n, failure),
+                  actionKey: const Key('add-route-rides-error'),
+                  onRetry: notifier.loadRides,
+                )
               else if (s.rides.isEmpty)
                 EmptyState(
                   key: const Key('no-rides-for-route'),
                   message: l10n.addRouteNoRides,
                   icon: Icons.directions_bike,
+                  framed: false,
                 )
               else
                 for (final ride in s.rides)
                   ListTile(
                     key: Key('route-ride-${ride.id}'),
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      s.draftForRideId == ride.id
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
+                    leading: const Icon(Icons.directions_bike),
+                    // The ride's own name, as the mock-up draws the row; the day and its distance are the detail.
+                    title: Text(
+                      rideTitle(l10n, ride),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
-                    title: Text(ride.fileName),
                     subtitle: Text(
                       [
-                        dateTime(ride.startTime),
+                        dateOnly(ride.startTime ?? ride.uploadedAt),
                         km(
                           ref.watch(unitsChoiceViewModelProvider),
                           ride.distanceM,
                         ),
                       ].join(' · '),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
+                    // The chosen row is the raised one and carries the mock-up's badge: no radio.
+                    selected: s.draftForRideId == ride.id,
+                    trailing: s.draftForRideId == ride.id
+                        ? AppBadge(
+                            l10n.addRouteChosen,
+                            key: Key('route-chosen-${ride.id}'),
+                            tone: AppBadgeTone.good,
+                          )
+                        : null,
                     enabled: !s.draftLoad.running,
                     onTap: () => notifier.fromRide(ride.id),
                   ),
             ],
-            if (s.draftLoad.running) const LoadingState(),
           ],
         ),
         if (draft != null) ...[
           SectionCard(
             title: l10n.addRoutePreview,
-            description: l10n.addRoutePrivacyNote,
             children: [
               RoutePreview(
                 latitude: draft.latitude,
@@ -184,11 +207,12 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                 tileUrl: widget.tileUrl,
                 attribution: widget.attribution,
               ),
+              // The note belongs under the line, as the mock-up draws it. The line's distance is on the ride's row.
               Text(
-                routeLineOf(
-                  ref.watch(unitsChoiceViewModelProvider),
-                  draft.distanceM,
-                  draft.climbingM,
+                l10n.addRoutePrivacyNote,
+                key: const Key('add-route-privacy-note'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -206,27 +230,17 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                 controller: _description,
                 label: l10n.addRouteDescription,
               ),
-              DropdownButtonFormField<String>(
-                key: const Key('route-surface'),
-                initialValue: _surface,
-                decoration: InputDecoration(labelText: l10n.addRouteSurface),
-                items: [
-                  for (final surface in routeSurfaceIds)
-                    DropdownMenuItem(
-                      value: surface,
-                      child: Text(routeSurfaceName(l10n, surface)),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _surface = value);
-                },
+              _SurfaceChoice(
+                fieldKey: const Key('route-surface'),
+                surface: _surface,
+                onChanged: (value) => setState(() => _surface = value),
               ),
             ],
           ),
           if (s.action.failure case final failure?)
-            ErrorState(
-              message: failureText(l10n, failure),
-              actionKey: const Key('add-route-error'),
+            InlineError(
+              failureText(l10n, failure),
+              key: const Key('add-route-error'),
             ),
         ],
       ],
@@ -273,9 +287,17 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
     );
 
     if (detail == null) {
-      return s.load.running
-          ? const LoadingState()
-          : EmptyState(message: l10n.failureMissing, icon: Icons.route);
+      return PageScaffold(
+        title: l10n.editRouteTitle,
+        parent: l10n.clubRoutesCaption,
+        maxWidth: AppLayout.contentNarrow,
+        children: [
+          if (s.load.running)
+            const LoadingState()
+          else
+            EmptyState(message: l10n.failureMissing, icon: Icons.route),
+        ],
+      );
     }
     if (!_filled) {
       _filled = true;
@@ -285,8 +307,8 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
     }
 
     return PageScaffold(
-      eyebrow: l10n.routesEyebrow,
       title: l10n.editRouteTitle,
+      parent: l10n.clubRoutesCaption,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
         buttonKey: const Key('save-route-edit'),
@@ -304,8 +326,9 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
               },
       ),
       children: [
+        // The page title already names the screen, so the card names what it holds, as the add page does.
         SectionCard(
-          title: l10n.editRouteTitle,
+          title: l10n.addRouteDetails,
           children: [
             AppTextField(
               fieldKey: const Key('edit-route-name'),
@@ -317,28 +340,58 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
               controller: _description,
               label: l10n.addRouteDescription,
             ),
-            DropdownButtonFormField<String>(
-              key: const Key('edit-route-surface'),
-              initialValue: _surface,
-              decoration: InputDecoration(labelText: l10n.addRouteSurface),
-              items: [
-                for (final surface in routeSurfaceIds)
-                  DropdownMenuItem(
-                    value: surface,
-                    child: Text(routeSurfaceName(l10n, surface)),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _surface = value);
-              },
+            _SurfaceChoice(
+              fieldKey: const Key('edit-route-surface'),
+              surface: _surface,
+              onChanged: (value) => setState(() => _surface = value),
             ),
           ],
         ),
         if (s.action.failure case final failure?)
-          ErrorState(
-            message: failureText(l10n, failure),
-            actionKey: const Key('edit-route-error'),
+          InlineError(
+            failureText(l10n, failure),
+            key: const Key('edit-route-error'),
           ),
+      ],
+    );
+  }
+}
+
+/// The surface, as a segmented control under its label.
+class _SurfaceChoice extends StatelessWidget {
+  const _SurfaceChoice({
+    required this.fieldKey,
+    required this.surface,
+    required this.onChanged,
+  });
+
+  final Key fieldKey;
+  final String surface;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.sm,
+      children: [
+        Text(
+          l10n.addRouteSurface,
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        SegmentedControl<String>(
+          buttonKey: fieldKey,
+          segments: [
+            for (final id in routeSurfaceIds)
+              ButtonSegment(value: id, label: Text(routeSurfaceName(l10n, id))),
+          ],
+          selected: surface,
+          onChanged: onChanged,
+        ),
       ],
     );
   }

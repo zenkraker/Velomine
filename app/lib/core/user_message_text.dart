@@ -12,6 +12,7 @@ String userMessageText(AppLocalizations l10n, UserMessage message) =>
     switch (message) {
       FailureMessage(:final failure) => failureText(l10n, failure),
       SavedMessage() => l10n.saved,
+      TemplateAppliedMessage() => l10n.templateApplied,
       CopiedMessage() => l10n.linkCopied,
       RequestSentMessage() => l10n.nearbyRequestSent,
     };

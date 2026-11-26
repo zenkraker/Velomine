@@ -40,6 +40,7 @@ void main() {
       wPerKg: 3.7,
     ),
     vo2Max: null,
+    criticalPower: null,
   );
 
   testWidgets('PowerSummary_ShouldAnnounceBestPowersAndFtp_WhenRendered', (
@@ -81,6 +82,88 @@ void main() {
     );
     semantics.dispose();
   });
+
+  testWidgets(
+    'PowerSummary_ShouldShowCriticalPowerAndItsDurations_WhenTheFitExists',
+    (tester) async {
+      await tester.pumpWidget(
+        powered(
+          PowerSummary(
+            curve: curve.copyWith(
+              criticalPower: CriticalPowerEstimate(
+                cpW: 250,
+                wPrimeJ: 20000,
+                peakW: 900,
+                r2: 0.998,
+                durations: const [120, 300, 600, 1200],
+              ),
+            ),
+            days: 90,
+            onDays: (_) async {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byKey(const Key('critical-power-row')), findsOneWidget);
+      expect(find.textContaining('Peak 900 W'), findsOneWidget);
+      expect(
+        find.text(
+          'Fitted from your best 2 minutes, 5 minutes, 10 minutes and 20 '
+          'minutes in this range',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('critical-power-unavailable')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'PowerSummary_ShouldLeavePeakOut_WhenTheServerHasNoOneSecondBest',
+    (tester) async {
+      await tester.pumpWidget(
+        powered(
+          PowerSummary(
+            curve: curve.copyWith(
+              criticalPower: CriticalPowerEstimate(
+                cpW: 250,
+                wPrimeJ: 20000,
+                peakW: null,
+                r2: 0.998,
+                durations: const [120, 300, 600, 1200],
+              ),
+            ),
+            days: 90,
+            onDays: (_) async {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // The card keeps critical power and W′ only, with no peak at all.
+      expect(find.byKey(const Key('critical-power-row')), findsOneWidget);
+      expect(find.textContaining('Peak'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'PowerSummary_ShouldExplainTheMissingFit_WhenTheRiderHasPowerButNoFit',
+    (tester) async {
+      await tester.pumpWidget(
+        powered(PowerSummary(curve: curve, days: 90, onDays: (_) async {})),
+      );
+      await tester.pump();
+
+      expect(
+        find.text(
+          'Not enough hard efforts of 2 to 20 minutes in this range to work '
+          'out critical power.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('critical-power-row')), findsNothing);
+    },
+  );
 
   testWidgets('FullRouteMap_ShouldAnnounceDistanceAndClimbing_WhenRendered', (
     tester,

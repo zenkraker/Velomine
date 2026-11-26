@@ -15,9 +15,10 @@ public enum AccountDeletionResult
     SoleClubOwner,
 }
 /// <summary>
-/// Deletes an account and everything the member owns. The database does the cascade (rides and their samples, bikes and
-/// parts, goals, notifications, sign-ins); this also removes the original ride files that nothing else uses, so no
-/// member data is left on disk. Used when an admin deletes an account and when a member deletes their own.
+/// Deletes an account and everything the member owns. The database does the cascade (rides and their samples, the
+/// FTP suggestions they made, bikes and parts, goals, notifications, sign-ins, FTP history); this also removes the
+/// original ride files that nothing else uses, so no member data is left on disk. Used when an admin deletes an
+/// account and when a member deletes their own.
 /// </summary>
 public sealed class AccountDeletion(VelomineDbContext db, UserManager<User> users, RideFileStore files, ImportStore imports)
 {

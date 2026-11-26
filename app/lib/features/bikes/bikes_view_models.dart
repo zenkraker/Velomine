@@ -205,7 +205,12 @@ class BikeDetailViewModel extends _$BikeDetailViewModel {
       () =>
           ref.read(bikesDataProvider).completeReminder(id, reminderId, doneOn),
     );
-    if (done) await loadLog();
+    if (done) {
+      state = state.copyWith(
+        messages: [...state.messages, SavedMessage(_messageId++)],
+      );
+      await loadLog();
+    }
     return done;
   }
 
@@ -351,15 +356,24 @@ class BikeDetailViewModel extends _$BikeDetailViewModel {
           : ([...state.templates, saved]..sort(
               (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
             )),
+      messages: [...state.messages, SavedMessage(_messageId++)],
     );
     return true;
   }
 
   /// Fills the bike with the template's parts, leaving alone any kind of part
   /// it already has.
-  Future<bool> applyTemplate(String templateId) => _change(
-    () => ref.read(bikesDataProvider).applyTemplate(id, templateId, _today()),
-  );
+  Future<bool> applyTemplate(String templateId) async {
+    final done = await _change(
+      () => ref.read(bikesDataProvider).applyTemplate(id, templateId, _today()),
+    );
+    if (done) {
+      state = state.copyWith(
+        messages: [...state.messages, TemplateAppliedMessage(_messageId++)],
+      );
+    }
+    return done;
+  }
 
   /// Takes the old part off the day [replacement] is fitted and fits it, in one step on the server, which also writes
   /// the service log entry ([logTitle] is its wording in the member's language).

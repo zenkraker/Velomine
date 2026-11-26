@@ -135,6 +135,9 @@ class TwoFactorViewModel extends _$TwoFactorViewModel {
     if (result case Failed(:final failure)) _fail(failure);
   }
 
+  /// The key went to the clipboard.
+  void copied() => state = state.copyWith(message: CopiedMessage(++_messageId));
+
   void messageShown(int id) {
     if (state.message?.id == id) state = state.copyWith(clearMessage: true);
   }

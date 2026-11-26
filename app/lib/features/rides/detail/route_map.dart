@@ -4,6 +4,7 @@ import '../../../core/l10n.dart';
 import '../../../core/map_defaults.dart';
 import '../../../core/widgets/chart_chrome.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_card.dart';
 import 'full_route_map.dart';
 import 'geo.dart';
 import 'lap_range.dart';
@@ -23,6 +24,10 @@ class RouteMap extends StatefulWidget {
     this.tileUrl,
     this.attribution,
     this.elevationGainM,
+    this.virtualWorld = false,
+    this.title,
+    this.date,
+    this.facts = const [],
   });
 
   final RideSeries data;
@@ -33,6 +38,19 @@ class RouteMap extends StatefulWidget {
 
   /// The ride's climbing, when the caller knows it; the full map reads it out.
   final double? elevationGainM;
+
+  /// A ride in a virtual world such as Zwift: its coordinates are not a place on Earth, so the line is drawn
+  /// without map tiles and a caption says why.
+  final bool virtualWorld;
+
+  /// The glass card over the bottom of the map: the ride's name, its date and up to three facts. Null
+  /// [title] means no card.
+  final String? title;
+  final String? date;
+  final List<({String label, String value})> facts;
+
+  /// The tile address actually used: none for a virtual world.
+  String? get _tileUrl => virtualWorld ? null : tileUrl;
 
   @override
   State<RouteMap> createState() => _RouteMapState();
@@ -84,24 +102,41 @@ class _RouteMapState extends State<RouteMap> {
                       color: scheme.surfaceContainerHighest,
                       child: Stack(
                         children: [
-                          if (widget.tileUrl != null)
-                            for (final tile in view.tiles(widget.tileUrl!))
-                              Positioned(
-                                left: tile.left,
-                                top: tile.top,
-                                width: view.tilePixels,
-                                height: view.tilePixels,
-                                child: Image.network(
-                                  tile.url,
-                                  key: Key('tile-${tile.url}'),
-                                  headers: mapTileHeaders,
-                                  fit: BoxFit.fill,
-                                  webHtmlElementStrategy:
-                                      WebHtmlElementStrategy.fallback,
-                                  errorBuilder: (_, _, _) =>
-                                      const SizedBox.shrink(),
+                          if (widget._tileUrl != null)
+                            // The map is dimmed and desaturated so the route is the brightest thing on it.
+                            Positioned.fill(
+                              child: ColorFiltered(
+                                colorFilter: ColorFilter.matrix(
+                                  _dimTiles(
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark,
+                                  ),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    for (final tile in view.tiles(
+                                      widget._tileUrl!,
+                                    ))
+                                      Positioned(
+                                        left: tile.left,
+                                        top: tile.top,
+                                        width: view.tilePixels,
+                                        height: view.tilePixels,
+                                        child: Image.network(
+                                          tile.url,
+                                          key: Key('tile-${tile.url}'),
+                                          headers: mapTileHeaders,
+                                          fit: BoxFit.fill,
+                                          webHtmlElementStrategy:
+                                              WebHtmlElementStrategy.fallback,
+                                          errorBuilder: (_, _, _) =>
+                                              const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
+                            ),
                           Positioned.fill(
                             child: CustomPaint(
                               key: const Key('route-map'),
@@ -116,38 +151,70 @@ class _RouteMapState extends State<RouteMap> {
                               ),
                             ),
                           ),
-                          if (widget.tileUrl != null &&
+                          if (widget._tileUrl != null &&
                               widget.attribution != null &&
                               widget.attribution!.isNotEmpty)
                             Positioned(
-                              right: 0,
-                              bottom: 0,
+                              left: 0,
+                              top: 0,
                               child: MapAttribution(
                                 key: const Key('map-attribution'),
                                 text: widget.attribution!,
                               ),
                             ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: MapControl(
-                              key: const Key('open-full-map'),
-                              icon: Icons.open_in_full,
-                              tooltip: l10n.openFullMap,
-                              filled: false,
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => FullRouteMapScreen(
-                                    data: widget.data,
-                                    selected: widget.selected,
-                                    selectedLap: widget.selectedLap,
-                                    tileUrl: widget.tileUrl,
-                                    attribution: widget.attribution,
+                          if (widget.title case final title?)
+                            Positioned(
+                              left: AppSpacing.lg,
+                              right: AppSpacing.lg,
+                              bottom: AppSpacing.lg,
+                              // The card is part of the map's own tap: it carries no buttons.
+                              child: IgnorePointer(
+                                child: GlassCard(
+                                  key: const Key('map-facts'),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.xl,
+                                    vertical: AppSpacing.lg,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    spacing: AppSpacing.xs,
+                                    children: [
+                                      Text(
+                                        title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                      ),
+                                      if (widget.date case final date?)
+                                        Text(
+                                          date,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
+                                      if (widget.facts.isNotEmpty)
+                                        Wrap(
+                                          spacing: AppSpacing.lg,
+                                          runSpacing: AppSpacing.xs,
+                                          children: [
+                                            for (final fact in widget.facts)
+                                              Text(
+                                                '${fact.label} ${fact.value}',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall,
+                                              ),
+                                          ],
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     );
@@ -157,6 +224,15 @@ class _RouteMapState extends State<RouteMap> {
             ),
           ),
         ),
+        if (widget.virtualWorld)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              l10n.mapVirtualWorld,
+              key: const Key('map-virtual-caption'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         if (showHeartRate)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -179,13 +255,48 @@ class _RouteMapState extends State<RouteMap> {
           data: widget.data,
           selected: widget.selected,
           selectedLap: widget.selectedLap,
-          tileUrl: widget.tileUrl,
+          tileUrl: widget._tileUrl,
           attribution: widget.attribution,
           elevationGainM: widget.elevationGainM,
         ),
       ),
     );
   }
+}
+
+/// Lowers a map tile's saturation and brightness, so a route drawn over it stays the loudest thing.
+/// A dark theme dims harder: its tiles are already dark.
+List<double> _dimTiles(bool dark) {
+  const saturation = 0.45;
+  final brightness = dark ? 0.55 : 0.85;
+  const r = 0.2126, g = 0.7152, b = 0.0722;
+  final matrix = <double>[
+    (1 - saturation) * r + saturation,
+    (1 - saturation) * g,
+    (1 - saturation) * b,
+    0,
+    0,
+    (1 - saturation) * r,
+    (1 - saturation) * g + saturation,
+    (1 - saturation) * b,
+    0,
+    0,
+    (1 - saturation) * r,
+    (1 - saturation) * g,
+    (1 - saturation) * b + saturation,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+  ];
+  // Darken the three colour rows; the alpha row stays exactly as it was.
+  return [
+    for (var i = 0; i < matrix.length; i++)
+      i ~/ 5 < 3 ? matrix[i] * brightness : matrix[i].toDouble(),
+  ];
 }
 
 Series? _heartRateOf(RideSeries data) {
@@ -216,7 +327,7 @@ class _HeartRateLegend extends StatelessWidget {
         Expanded(
           child: Container(
             key: const Key('heart-rate-legend'),
-            height: 6,
+            height: AppChart.legendBar,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppSpacing.xs),
               gradient: LinearGradient(
@@ -229,7 +340,7 @@ class _HeartRateLegend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Text('$min–$max bpm', style: text.labelSmall),
+        Text(context.l10n.mapHeartRateLegend(min, max), style: text.labelSmall),
       ],
     );
   }

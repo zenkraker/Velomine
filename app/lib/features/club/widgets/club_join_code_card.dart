@@ -1,55 +1,32 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/l10n.dart';
-import '../../../core/widgets/page_menu.dart';
+import '../../../core/theme.dart';
 import '../../../core/widgets/section_card.dart';
 
-/// The club's join code, the link to copy and, in the card's menu, a new code (which ends the old one).
+/// The club's join code and the link to copy. A new code, which ends the old one, is in the page's `⋯` menu.
 class ClubJoinCodeCard extends StatelessWidget {
-  const ClubJoinCodeCard({
-    super.key,
-    required this.code,
-    required this.busy,
-    required this.onCopy,
-    required this.onNewCode,
-  });
+  const ClubJoinCodeCard({super.key, required this.code, required this.onCopy});
 
   final String code;
-  final bool busy;
   final VoidCallback onCopy;
-  final VoidCallback onNewCode;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
     return SectionCard(
       title: l10n.clubJoinCode,
-      menu: PageMenu(
-        buttonKey: const Key('join-code-actions'),
-        entries: [
-          PageMenuEntry(
-            key: const Key('new-join-code'),
-            label: l10n.clubNewCode,
-            icon: Icons.refresh,
-            destructive: true,
-            onSelected: busy ? () {} : onNewCode,
-          ),
-        ],
-      ),
       children: [
         SelectableText(
           code,
           key: const Key('join-code-value'),
-          style: Theme.of(context).textTheme.headlineSmall
-              ?.copyWith(letterSpacing: 4),
+          style: VelomineText.of(context).stat,
         ),
-        Text(
-          l10n.clubJoinCodeHelp,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(l10n.clubJoinCodeHelp, style: text.bodySmall),
         Align(
           alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
+          child: TextButton.icon(
             key: const Key('copy-join-link'),
             onPressed: onCopy,
             icon: const Icon(Icons.link),

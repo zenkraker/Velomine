@@ -92,6 +92,7 @@ class LocalRide {
     required this.state,
     required this.distanceM,
     required this.movingS,
+    this.rideType,
     this.accountId,
     this.error,
     this.uploadState,
@@ -111,6 +112,10 @@ class LocalRide {
   final String? accountId;
   final double distanceM;
   final double movingS;
+
+  /// The kind of ride the member chose when they started it (`road`, `gravel`, `mountain`, `indoor`,
+  /// `commute`), as the recorder wrote it beside the samples.
+  final String? rideType;
   final String? error;
 
   /// The background worker and the Dart queue keep this on the phone.
@@ -141,6 +146,7 @@ class LocalRide {
       state: map['state'] as String? ?? 'interrupted',
       distanceM: (map['distanceM'] as num?)?.toDouble() ?? 0,
       movingS: (map['movingS'] as num?)?.toDouble() ?? 0,
+      rideType: map['rideType'] as String?,
       accountId: map['accountId'] as String?,
       error: map['error'] as String?,
       uploadState: map['uploadState'] as String?,

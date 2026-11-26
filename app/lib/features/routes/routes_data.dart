@@ -70,7 +70,8 @@ class RoutesData {
       (await _rides.listRides().guard(FailureAction.loadRides)).map(
         (page) => [
           for (final ride in page?.rides ?? const <RideResponse>[])
-            if (ride.status == 'ready') ride,
+            // A ride in a virtual world has no place on Earth to make a route from.
+            if (ride.status == 'ready' && ride.environment != 'virtual') ride,
         ],
       );
 }

@@ -70,7 +70,8 @@ class ClubRequestsCard extends StatelessWidget {
                   request.displayName,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
-                if (request.note != null) Text('“${request.note}”'),
+                // The note in the language's own quotation marks, not an English pair.
+                if (request.note != null) Text(l10n.noteQuoted(request.note!)),
                 Align(
                   alignment: Alignment.centerRight,
                   child: ToolbarRow(

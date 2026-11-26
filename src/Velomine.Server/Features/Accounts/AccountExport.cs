@@ -9,6 +9,7 @@ using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Features.Routes;
 
 namespace Velomine.Server.Features.Accounts;
@@ -22,7 +23,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
-    public async Task WriteAsync(Guid userId, Stream output, CancellationToken ct)
+    public async Task WriteAsync(Guid userId, Stream output, TimeProvider time, CancellationToken ct)
     {
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
         var bikes = await db.Bikes.AsNoTracking().Include(b => b.Components).Where(b => b.UserId == userId).OrderBy(b => b.CreatedAt).ToListAsync(ct);
@@ -63,6 +64,20 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(l => l.UserId == userId || db.ClubMemberships.Any(m => m.UserId == userId && m.ClubId == l.ClubId))
             .OrderBy(l => l.ActivatedAt)
             .ToListAsync(ct);
+        var ftpHistory = await db.FtpHistory.AsNoTracking()
+            .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
+        var ftpSuggestions = await db.FtpSuggestions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
+        var heartRateSuggestions = await db.HeartRateSuggestions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
+        var heartRateHistory = await db.HeartRateHistory.AsNoTracking()
+            .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ThenBy(h => h.Sequence).ToListAsync(ct);
+        var events = await db.Events.AsNoTracking()
+            .Where(e => e.UserId == userId).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync(ct);
+        var trainingPlan = await db.TrainingPlans.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        var trainingSessions = await db.TrainingSessions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.LocalDate).ThenBy(s => s.Id).ToListAsync(ct);
+        var results = await SessionScore.ForAsync(db, trainingSessions, user, time, ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -80,6 +95,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             fileNames[ride.FileSha256] = entryName;
         }
 
+        var heartRates = HeartRates.For(user, time);
         await AddJsonAsync(zip, "profile.json", new
         {
             user.Email,
@@ -88,9 +104,19 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.FtpW,
             user.WeightKg,
             user.BirthYear,
-            user.MaxHeartRate,
+            // Both numbers in use, with where each came from and the ride that measured it, so the export says what
+            // the zones used. Written out one by one: a tuple's fields are not serialized at all.
+            HeartRate = new { Max = heartRates.Max, Threshold = heartRates.Threshold },
+            // The rider's own zone bounds, as fractions of the reference; null where the standard bounds apply.
+            ZoneBounds = new
+            {
+                Power = user.PowerZoneBounds,
+                HeartRateMax = user.HeartRateMaxZoneBounds,
+                HeartRateThreshold = user.HeartRateThresholdZoneBounds,
+            },
             user.Language,
             user.Units,
+            user.RiderMode,
             user.TimeZone,
             FirstDayOfWeek = WeekDays.Name(user.FirstDayOfWeek),
             user.EmailNotifications,
@@ -108,8 +134,12 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             b.Name,
             b.Brand,
             b.Model,
+            b.ModelYear,
+            b.BuildSpec,
+            b.FrameSize,
             b.Kind,
             b.WheelCircumferenceMm,
+            b.WeightKg,
             b.InitialDistanceM,
             b.PurchasedOn,
             b.IsDefault,
@@ -155,13 +185,88 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         await AddJsonAsync(zip, "rides.json", rides.Select(r => new
         {
             Ride = RideResponse.From(r),
+            // The threshold the stored heart-rate effort came from, so the export says what it was read with.
+            r.LoadThresholdHeartRate,
+            // The watts estimated from speed and slope, and the load they gave, which the API does not serve.
+            r.EstimatedNormalizedPowerW,
+            r.EstimatedTss,
             // Where the original file is in this ZIP; null when the file was not on disk.
             File = fileNames.GetValueOrDefault(r.FileSha256),
             r.FileSha256,
         }), ct);
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
+        await AddJsonAsync(zip, "ftp-history.json", ftpHistory.Select(h => new { h.Watts, h.SetAt, h.Source, h.RideId }), ct);
+        await AddJsonAsync(zip, "heart-rate-history.json", heartRateHistory.Select(h => new { h.Kind, h.Bpm, h.SetAt, h.Source, h.RideId }), ct);
+        await AddJsonAsync(zip, "ftp-suggestions.json", ftpSuggestions.Select(s => new
+        {
+            s.RideId,
+            s.Watts,
+            s.Method,
+            s.EffortWatts,
+            s.CreatedAt,
+            s.Status,
+        }), ct);
+        await AddJsonAsync(zip, "heart-rate-suggestions.json", heartRateSuggestions.Select(s => new
+        {
+            s.RideId,
+            s.Kind,
+            s.Bpm,
+            s.CreatedAt,
+            s.Status,
+        }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
+        await AddJsonAsync(zip, "events.json", events.Select(e => new
+        {
+            e.Id,
+            e.Name,
+            Date = e.Date.ToString("yyyy-MM-dd"),
+            e.Kind,
+            e.DistanceM,
+            e.ElevationGainM,
+            e.Notes,
+            e.RideId,
+            e.CreatedAt,
+        }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
+        // The session score is computed from the ride that was the session and never stored (docs/training-models.md,
+        // L8), so the export works it out here exactly as the app's session page does.
+        await AddJsonAsync(zip, "training-plan.json", new
+        {
+            Plan = trainingPlan is null ? null : new
+            {
+                Goal = trainingPlan.Goal,
+                Days = trainingPlan.Days.Select(d => WeekDays.Name((DayOfWeek)d)),
+                trainingPlan.HoursPerWeek,
+                LongRideDay = trainingPlan.LongRideDay is { } day ? WeekDays.Name((DayOfWeek)day) : null,
+                trainingPlan.LastPlannedFor,
+                trainingPlan.IsOn,
+                // The weeks the planner made lighter, and the ride files the rider said were not the session it asked
+                // about, kept so the same file is never asked about twice.
+                trainingPlan.LighterWeeks,
+                trainingPlan.DeclinedFileHashes,
+                trainingPlan.UpdatedAt,
+            },
+            Sessions = trainingSessions.Select(s => new
+            {
+                s.Id,
+                s.LocalDate,
+                s.Recipe,
+                s.Minutes,
+                s.BlockPercents,
+                s.State,
+                s.SkipReason,
+                s.RideId,
+                // The ride the rider is being asked about ("Was this your Thursday strong and steady?").
+                s.QuestionRideId,
+                // Why the day was made easy, where the hard session went, and the recipe it rode before, so the
+                // export says what the plan did as well as what it holds.
+                s.EasyReason,
+                s.EasyMovedTo,
+                s.OriginalRecipe,
+                Score = results.GetValueOrDefault(s.Id)?.Score,
+                s.CreatedAt,
+            }),
+        }, ct);
         await AddJsonAsync(zip, "imports.json", imports.Select(i => new
         {
             i.Id,
@@ -186,6 +291,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 c.Mood,
                 c.Stress,
                 c.Motivation,
+                c.Sleep,
                 c.CreatedAt,
                 c.UpdatedAt,
             }),
@@ -286,8 +392,14 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         bikes.json          your bikes, their parts, maintenance reminders and service log
         rides.json          every ride: its numbers, its status, and where its original file is in this ZIP
         goals.json          your goals
+        ftp-history.json    every FTP you have had, when you set it and how
+        ftp-suggestions.json  the FTPs Velomine noticed in your rides, and what you did with each
+        heart-rate-history.json  every maximum and threshold heart rate you set, when, and how
+        heart-rate-suggestions.json  the heart-rate numbers Velomine noticed in your rides, and what you did with each
         notifications.json  your notifications
+        events.json         the races, sportives and tours you added, with the ride that was each one
         sessions.json       where you are signed in: the device label and the times, never an address
+        training-plan.json  your auto-training setup and every session it planned, with how each went
         imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         privacy.json        your privacy switches, start and end trimming, and your saved zones

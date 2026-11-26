@@ -31,6 +31,8 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.Property(r => r.Discipline).HasMaxLength(16);
         ride.Property(r => r.Assist).HasMaxLength(16);
         ride.Property(r => r.Environment).HasMaxLength(16);
+        ride.Property(r => r.HeartRateNote).HasMaxLength(32);
+        ride.Property(r => r.HeartRateThresholdNote).HasMaxLength(32);
         ride.Property(r => r.Version).IsRowVersion();
         ride.Ignore(r => r.Privacy);
 
@@ -80,6 +82,7 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         streams.Property(s => s.Distance).HasColumnType("real[]");
         streams.Property(s => s.HeartRate).HasColumnType("smallint[]");
         streams.Property(s => s.Power).HasColumnType("smallint[]");
+        streams.Property(s => s.EstimatedPower).HasColumnType("smallint[]");
         streams.Property(s => s.Cadence).HasColumnType("smallint[]");
         streams.Property(s => s.Temperature).HasColumnType("smallint[]");
     }

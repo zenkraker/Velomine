@@ -8,7 +8,6 @@ import '../../l10n/generated/app_localizations.dart';
 import 'auth_state.dart';
 import 'auth_view_models.dart';
 import 'password_field.dart';
-import '../../core/tokens.dart';
 
 String resetProblemText(AppLocalizations l10n, ResetProblem problem) =>
     switch (problem) {
@@ -19,8 +18,8 @@ String resetProblemText(AppLocalizations l10n, ResetProblem problem) =>
       ResetProblem.failed => l10n.passwordChangeFailed,
     };
 
-/// The page the one-time email link opens. The token and email come from the URL fragment, so the browser never
-/// sends them to the server; the reset call carries them in its body instead.
+/// The page the one-time email link opens. The token and email come from the link's query string, which Flutter web
+/// keeps (it drops a `#fragment`); the reset call carries them in its body.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({
     super.key,
@@ -61,8 +60,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final s = ref.watch(resetPasswordViewModelProvider);
     final l10n = context.l10n;
     return AuthPage(
-      eyebrow: l10n.authEyebrowReset,
       title: l10n.resetPasswordTitle,
+      caption: l10n.resetPasswordCaption,
       help: s.done ? null : l10n.resetPasswordHelp,
       onBack: () => context.go('/sign-in'),
       primaryLabel: s.done ? l10n.goToSignIn : l10n.setNewPassword,
@@ -80,7 +79,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             label: l10n.newPassword,
             autofillHints: const [AutofillHints.newPassword],
           ),
-          const SizedBox(height: AppSpacing.md),
           PasswordField(
             fieldKey: const Key('reset-confirm'),
             visibilityKey: const Key('reset-confirm-visibility'),
@@ -90,17 +88,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             onSubmitted: (_) => _reset(),
           ),
           if (s.problem != null) ...[
-            const SizedBox(height: AppSpacing.md),
             AuthFailure(
               keyName: 'reset-error',
               message: resetProblemText(l10n, s.problem!),
             ),
           ],
-          TextButton(
-            key: const Key('reset-ask-again'),
-            onPressed: () => context.go('/forgot-password'),
-            child: Text(l10n.forgotPassword),
-          ),
         ],
       ],
     );

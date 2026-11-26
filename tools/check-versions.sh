@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# Fails when the pinned Flutter release differs between flake.nix and app/Dockerfile (the web image).
-# AGENTS.md: "The Flutter version and checksum in flake.nix and the Dockerfile change in the same commit."
-# CI reads the pin from app/Dockerfile (.github/actions/setup-flutter), so these two are all there is to compare.
+# Fails when the pinned Flutter release differs between app/Dockerfile (the web image, and the pin CI reads) and
+# .devcontainer/Dockerfile (the development image).
+# AGENTS.md: "The Flutter version and checksum in app/Dockerfile and .devcontainer/Dockerfile change in the same commit."
+# CI reads the pin from app/Dockerfile (.github/actions/setup-flutter), so it is the reference.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-flake_version="$(sed -n 's/^ *flutterVersion = "\(.*\)";/\1/p' flake.nix)"
-flake_sha="$(sed -n '/flutterTarball/,/};/s/^ *sha256 = "\(.*\)";/\1/p' flake.nix)"
-docker_version="$(sed -n 's/^ARG FLUTTER_VERSION=//p' app/Dockerfile)"
-docker_sha="$(sed -n 's/^ARG FLUTTER_SHA256=//p' app/Dockerfile)"
+ref_version="$(sed -n 's/^ARG FLUTTER_VERSION=//p' app/Dockerfile)"
+ref_sha="$(sed -n 's/^ARG FLUTTER_SHA256=//p' app/Dockerfile)"
+dev_version="$(sed -n 's/^ARG FLUTTER_VERSION=//p' .devcontainer/Dockerfile)"
+dev_sha="$(sed -n 's/^ARG FLUTTER_SHA256=//p' .devcontainer/Dockerfile)"
 
 status=0
-check() {
+check() { # what, reference, other, other's name
   if [[ -z "$2" || "$2" != "$3" ]]; then
-    echo "Flutter $1 differs: flake.nix '${2}' vs app/Dockerfile '${3}'" >&2
+    echo "Flutter $1 differs: app/Dockerfile '${2}' vs ${4} '${3}'" >&2
     status=1
   fi
 }
-check version "$flake_version" "$docker_version"
-check checksum "$flake_sha" "$docker_sha"
-[[ $status -eq 0 ]] && echo "Flutter ${docker_version}: flake.nix and app/Dockerfile agree."
+check version "$ref_version" "$dev_version" .devcontainer/Dockerfile
+check checksum "$ref_sha" "$dev_sha" .devcontainer/Dockerfile
+[[ $status -eq 0 ]] && echo "Flutter ${ref_version}: app/Dockerfile and .devcontainer/Dockerfile agree."
 exit $status

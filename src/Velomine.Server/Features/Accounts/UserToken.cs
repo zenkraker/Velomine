@@ -42,6 +42,15 @@ public sealed class ExportTokens(IDataProtectionProvider provider, TimeProvider 
     public override TimeSpan Lifetime => TimeSpan.FromMinutes(2);
 }
 
+/// <summary>Short-lived download links for one ride's file, opened by the browser for the same reason.</summary>
+public sealed class RideFileTokens(IDataProtectionProvider provider, TimeProvider time)
+    : UserToken(provider, time)
+{
+    protected override string Purpose => "velomine.ride-file";
+
+    public override TimeSpan Lifetime => TimeSpan.FromMinutes(2);
+}
+
 /// <summary>
 /// The short-lived proof that a password was just checked, handed back by the code step. The code step cannot be
 /// attempted with only an email known.

@@ -13,10 +13,13 @@ class RideDetailState {
     this.series,
     this.feel,
     this.views,
+    this.profile,
+    this.heartRateSuggestions = const [],
     this.notFound = false,
     this.load = const CommandState.idle(),
     this.action = const CommandState.idle(),
     this.feelCommand = const CommandState.idle(),
+    this.fileLink = const CommandState.idle(),
     this.messages = const [],
   });
 
@@ -37,6 +40,12 @@ class RideDetailState {
   /// Who looked at this ride, most recent first; null when it could not be loaded.
   final List<ShareViewResponse>? views;
 
+  /// The member's profile, for the value a heart-rate note measured or the one a suggestion is above.
+  final ProfileResponse? profile;
+
+  /// The member's open heart-rate suggestions, to find the one this ride caused.
+  final List<HeartRateSuggestionResponse> heartRateSuggestions;
+
   final bool notFound;
   final CommandState<RideResponse?> load;
 
@@ -45,6 +54,9 @@ class RideDetailState {
 
   /// Saving or removing the ride feel.
   final VoidCommand feelCommand;
+
+  /// Making the address the browser downloads the ride's file from.
+  final CommandState<String?> fileLink;
 
   final List<UserMessage> messages;
 
@@ -55,10 +67,13 @@ class RideDetailState {
     RideSeries? series,
     RideFeelResponse? feel,
     List<ShareViewResponse>? views,
+    ProfileResponse? profile,
+    List<HeartRateSuggestionResponse>? heartRateSuggestions,
     bool? notFound,
     CommandState<RideResponse?>? load,
     VoidCommand? action,
     VoidCommand? feelCommand,
+    CommandState<String?>? fileLink,
     List<UserMessage>? messages,
   }) => RideDetailState(
     ride: ride ?? this.ride,
@@ -67,10 +82,13 @@ class RideDetailState {
     series: series ?? this.series,
     feel: feel ?? this.feel,
     views: views ?? this.views,
+    profile: profile ?? this.profile,
+    heartRateSuggestions: heartRateSuggestions ?? this.heartRateSuggestions,
     notFound: notFound ?? this.notFound,
     load: load ?? this.load,
     action: action ?? this.action,
     feelCommand: feelCommand ?? this.feelCommand,
+    fileLink: fileLink ?? this.fileLink,
     messages: messages ?? this.messages,
   );
 }

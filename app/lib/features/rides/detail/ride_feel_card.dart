@@ -3,6 +3,8 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/l10n.dart';
 import '../../../core/tokens.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_text_field.dart';
 
 /// How hard the ride felt and an optional note. Owner-only; coaches see the RPE but never the note.
 class RideFeelCard extends StatefulWidget {
@@ -77,102 +79,94 @@ class _RideFeelCardState extends State<RideFeelCard> {
     if (feel == null) return const SizedBox.shrink();
 
     if (feel.consentRequired) {
-      return Card(
+      return AppCard(
         key: const Key('ride-feel-card'),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Text(l10n.wellbeingConsentNeeded, style: text.bodySmall),
-        ),
+        child: Text(l10n.wellbeingConsentNeeded, style: text.bodySmall),
       );
     }
 
     final showForm = _editing || feel.rpe == null;
-    return Card(
+    return AppCard(
       key: const Key('ride-feel-card'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(l10n.wellbeingRpe, style: text.titleMedium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(l10n.wellbeingRpe, style: text.titleMedium)),
+              if (!showForm && feel.rpe != null)
+                TextButton(
+                  key: const Key('ride-feel-edit'),
+                  onPressed: () => setState(() => _editing = true),
+                  child: Text(l10n.wellbeingEdit),
                 ),
-                if (!showForm && feel.rpe != null)
-                  TextButton(
-                    key: const Key('ride-feel-edit'),
-                    onPressed: () => setState(() => _editing = true),
-                    child: Text(l10n.wellbeingEdit),
+            ],
+          ),
+          if (!showForm && feel.rpe != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              l10n.wellbeingRpeSaved(feel.rpe!),
+              key: const Key('ride-feel-saved'),
+              style: text.titleSmall,
+            ),
+            if (feel.notes case final notes? when notes.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(notes, style: text.bodySmall),
+            ],
+          ] else ...[
+            Text(l10n.wellbeingRpeHint, style: text.bodySmall),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (var i = 1; i <= 10; i++)
+                  ChoiceChip(
+                    key: Key('ride-feel-$i'),
+                    label: Text('$i'),
+                    selected: _rpe == i,
+                    onSelected: widget.saving
+                        ? null
+                        : (_) => setState(() => _rpe = i),
                   ),
               ],
             ),
-            if (!showForm && feel.rpe != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                l10n.wellbeingRpeSaved(feel.rpe!),
-                key: const Key('ride-feel-saved'),
-                style: text.titleSmall,
-              ),
-              if (feel.notes case final notes? when notes.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(notes, style: text.bodySmall),
-              ],
-            ] else ...[
-              Text(l10n.wellbeingRpeHint, style: text.bodySmall),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  for (var i = 1; i <= 10; i++)
-                    ChoiceChip(
-                      key: Key('ride-feel-$i'),
-                      label: Text('$i'),
-                      selected: _rpe == i,
-                      onSelected: widget.saving
-                          ? null
-                          : (_) => setState(() => _rpe = i),
-                    ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                key: const Key('ride-feel-notes'),
-                controller: _notes,
-                maxLength: 500,
-                maxLines: 2,
-                decoration: InputDecoration(labelText: l10n.wellbeingNotes),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  FilledButton(
-                    key: const Key('ride-feel-save'),
-                    onPressed: widget.saving || _rpe == null ? null : _save,
-                    child: Text(l10n.wellbeingRpeSave),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              fieldKey: const Key('ride-feel-notes'),
+              controller: _notes,
+              maxLength: 500,
+              maxLines: 2,
+              label: l10n.wellbeingNotes,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                FilledButton(
+                  key: const Key('ride-feel-save'),
+                  onPressed: widget.saving || _rpe == null ? null : _save,
+                  child: Text(l10n.wellbeingRpeSave),
+                ),
+                if (feel.rpe != null) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton(
+                    onPressed: widget.saving ? null : _delete,
+                    child: Text(l10n.wellbeingRpeDelete),
                   ),
-                  if (feel.rpe != null) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    TextButton(
-                      onPressed: widget.saving ? null : _delete,
-                      child: Text(l10n.wellbeingRpeDelete),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () => setState(() {
-                        _editing = false;
-                        _rpe = feel.rpe;
-                        _notes.text = feel.notes ?? '';
-                      }),
-                      child: Text(l10n.cancel),
-                    ),
-                  ],
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _editing = false;
+                      _rpe = feel.rpe;
+                      _notes.text = feel.notes ?? '';
+                    }),
+                    child: Text(l10n.cancel),
+                  ),
                 ],
-              ),
-            ],
+              ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

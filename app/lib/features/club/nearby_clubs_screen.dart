@@ -7,15 +7,18 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import 'location_picker.dart';
 import 'nearby_clubs_state.dart';
 import 'nearby_clubs_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/segmented_control.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_scaffold.dart';
 
@@ -52,7 +55,6 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
         initial: initial,
         tileUrl: widget.tileUrl,
         attribution: widget.attribution,
-        locationService: ref.read(locationServiceProvider),
       ),
     ),
   );
@@ -100,46 +102,35 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
       ref.read(nearbyClubsViewModelProvider.notifier).messageShown,
     );
 
-    // The page is outside the shell, so it asks for the header on a phone too.
-    return Scaffold(
-      body: PageHeaderScope(
-        showOnPhone: true,
-        child: Builder(
-          builder: (context) {
-            final position = s.position;
-            final nextRadius = position == null
-                ? null
-                : ref.read(nearbyClubsViewModelProvider.notifier).nextRadius();
-            return PageScaffold(
-              title: l10n.nearbyTitle,
-              onBack: widget.onBack,
-              maxWidth: AppLayout.contentNarrow,
-              refresh: position == null || s.locating
-                  ? null
-                  : () => ref
-                        .read(nearbyClubsViewModelProvider.notifier)
-                        .refresh(),
+    final position = s.position;
+    final nextRadius = position == null
+        ? null
+        : ref.read(nearbyClubsViewModelProvider.notifier).nextRadius();
+    return PageScaffold(
+      title: l10n.nearbyTitle,
+      parent: l10n.navClub,
+      onBack: widget.onBack,
+      maxWidth: AppLayout.contentNarrow,
+      refresh: position == null || s.locating
+          ? null
+          : () => ref.read(nearbyClubsViewModelProvider.notifier).refresh(),
+      children: [
+        if (s.locating)
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                if (s.locating)
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const LoadingState(),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(l10n.nearbyLocating),
-                      ],
-                    ),
-                  )
-                else if (position == null)
-                  ..._whereAreYou(s)
-                else
-                  ..._clubs(s, position, nextRadius),
+                const LoadingState(),
+                const SizedBox(height: AppSpacing.lg),
+                Text(l10n.nearbyLocating),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+          )
+        else if (position == null)
+          ..._whereAreYou(s)
+        else
+          ..._clubs(s, position, nextRadius),
+      ],
     );
   }
 
@@ -152,9 +143,9 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
           l10n.locationCurrentUnavailable,
           key: const Key('nearby-location-denied'),
         ),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      Wrap(
         spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
         children: [
           FilledButton.tonalIcon(
             key: const Key('nearby-use-device'),
@@ -204,26 +195,23 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
             ),
         ],
       ),
-      Row(
-        children: [
-          Expanded(
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              children: [
-                for (final km in NearbyClubsViewModel.radii)
-                  ChoiceChip(
-                    key: Key('radius-$km'),
-                    label: Text(l10n.nearbyRadius(km)),
-                    selected: s.radiusKm == km,
-                    onSelected: s.action.running || s.load.running
-                        ? null
-                        : (_) => notifier.setRadius(km),
-                  ),
-              ],
+      // The radius is one choice, not a filter, so it is the app's segmented control; the two position
+      // buttons keep their own row under it, where they fit at 390 dp.
+      SegmentedControl<int>(
+        buttonKey: const Key('nearby-radius'),
+        segments: [
+          for (final km in NearbyClubsViewModel.radii)
+            ButtonSegment(
+              value: km,
+              label: Text(l10n.nearbyRadius(km), key: Key('radius-$km')),
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
+        ],
+        selected: s.radiusKm,
+        onChanged: (km) => notifier.setRadius(km),
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
           IconButton.filledTonal(
             key: const Key('nearby-relocate'),
             tooltip: l10n.nearbyUseDevice,
@@ -246,9 +234,9 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
           onRetry: s.load.running ? null : () => notifier.refresh(),
         ),
       if (s.request != null)
-        Card(
+        AppCard(
           key: const Key('pending-join-request'),
-          color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -260,7 +248,8 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                   style: theme.textTheme.titleMedium,
                 ),
                 Text(l10n.nearbyPendingBody),
-                if (s.request!.note != null) Text('“${s.request!.note}”'),
+                if (s.request!.note != null)
+                  Text(l10n.noteQuoted(s.request!.note!)),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -294,13 +283,22 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
             ),
           ),
       ] else
-        for (final club in s.clubs)
-          _ClubRow(
-            club: club,
-            requested: s.request?.clubId == club.id,
-            busy: s.action.running,
-            onAsk: () => _ask(club),
+        // The clubs are the rows of one card, nearest first.
+        AppCard(
+          key: const Key('nearby-clubs-card'),
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final club in s.clubs)
+                _ClubRow(
+                  club: club,
+                  requested: s.request?.clubId == club.id,
+                  busy: s.action.running,
+                  onAsk: () => _ask(club),
+                ),
+            ],
           ),
+        ),
     ];
   }
 }
@@ -332,12 +330,12 @@ class _JoinRequestSheetState extends State<_JoinRequestSheet> {
       saveLabel: l10n.nearbyRequestSend,
       onSave: () => Navigator.of(context).pop(_note.text),
       children: [
-        TextField(
-          key: const Key('join-request-note'),
+        AppTextField(
+          fieldKey: const Key('join-request-note'),
           controller: _note,
+          label: l10n.nearbyRequestNote,
           maxLength: 300,
           maxLines: 3,
-          decoration: InputDecoration(labelText: l10n.nearbyRequestNote),
         ),
       ],
     );
@@ -360,25 +358,24 @@ class _ClubRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Card(
+    return ListTile(
       key: Key('nearby-club-${club.id}'),
-      child: ListTile(
-        title: Text(club.name),
-        subtitle: Text(
-          '${l10n.clubMemberCount(club.memberCount)} · '
-          '${l10n.nearbyDistance(club.distanceKm.round())}',
-        ),
-        trailing: requested
-            ? Chip(
-                key: Key('requested-${club.id}'),
-                label: Text(l10n.nearbyRequested),
-              )
-            : FilledButton.tonal(
-                key: Key('ask-${club.id}'),
-                onPressed: busy ? null : onAsk,
-                child: Text(l10n.nearbyAsk),
-              ),
+      title: Text(club.name),
+      subtitle: Text(
+        '${l10n.clubMemberCount(club.memberCount)} · '
+        '${l10n.nearbyDistance(club.distanceKm.round())}',
       ),
+      trailing: requested
+          ? AppBadge(
+              l10n.nearbyRequested,
+              key: Key('requested-${club.id}'),
+              tone: AppBadgeTone.good,
+            )
+          : FilledButton.tonal(
+              key: Key('ask-${club.id}'),
+              onPressed: busy ? null : onAsk,
+              child: Text(l10n.nearbyAsk),
+            ),
     );
   }
 }

@@ -171,6 +171,7 @@ void main() {
       List<double?>? speed,
       List<int?>? power,
       List<int?>? cadence,
+      List<int>? wPrimeBalance,
     }) {
       final n = 60;
       return RideStreamsResponse(
@@ -184,6 +185,7 @@ void main() {
         power: power ?? List<int?>.filled(n, 200),
         cadence: cadence ?? <int?>[],
         temperature: const [],
+        wPrimeBalanceJ: Optional.present(wPrimeBalance),
       );
     }
 
@@ -218,6 +220,18 @@ void main() {
 
       expect(speed.average, closeTo(36, 0.2));
       expect(speed.max, closeTo(36, 0.5));
+    });
+
+    test('RideSeries_ShouldReadTheWPrimeBalanceInKj_WhenTheStreamsHaveOne', () {
+      final balance = RideSeries.from(
+        streams(wPrimeBalance: [for (var i = 0; i < 60; i++) 20000 - i * 100]),
+        Units.metric,
+      ).series.firstWhere((s) => s.id == 'wprime');
+
+      expect(balance.values.first, closeTo(20, 1e-9));
+      expect(balance.values.last, closeTo(14.1, 1e-9));
+      expect(balance.format(balance.values.first), '20.0 kJ');
+      expect(balance.baseline, isTrue);
     });
 
     test('RideSeries_ShouldOmitAllGapSignals_WhenEveryValueIsNull', () {

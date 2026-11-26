@@ -55,6 +55,21 @@ public sealed class PowerCurveTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task PowerCurve_ShouldUseTheEightMinuteBest_WhenThereIsNoTwentyMinuteEffort()
+    {
+        await using var api = await StartAsync();
+        var (client, _) = await NewMemberAsync(api);
+        await SetProfileAsync(client, 200, 75);
+        // Ten minutes at 200 W: an 8-minute best and no 20-minute one, so the estimate is 90 % of it.
+        await UploadAsync(client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
+
+        var curve = await client.GetFromJsonAsync<PowerCurveResponse>("/api/v1/analytics/power-curve?days=90", Ct);
+
+        Assert.Equal(180, curve!.Ftp!.Watts);
+        Assert.Equal("8min", curve.Ftp.Method);
+    }
+
+    [Fact]
     public async Task PowerCurve_ShouldHideWeightDerivedNumbers_WhenTheCoachLooks()
     {
         await using var api = await StartAsync();

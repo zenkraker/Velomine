@@ -36,14 +36,13 @@ Small. Sampling starts at 5 % (`Telemetry:TraceSampleRatio`), so the trace volum
 Developer/Team quota. Metrics are a small `Meter` set bridged to Sentry by `MeterListener`.
 
 ## Risk and exit plan
-All instrumentation uses BCL types. Point `AddSentryOtlpExporter` at an OTel Collector or replace it with
-`AddOtlpExporter` for Grafana/SigNoz; the feature code does not change. If the beta path misbehaves,
-remove the exporter and enable Sentry's `TracesSampleRate` instead.
+All instrumentation uses BCL types, and the exporter is the SDK's `AddOtlpExporter`: point the standard
+`OTEL_EXPORTER_OTLP_*` variables at an OTel Collector or any OTLP backend; the feature code does not change.
 
 ## Recommendation
-Approve with conditions: traces only through OTLP (Sentry does not accept OTLP metrics); metrics go
-through `MeterListener` to Sentry; 5–10 % sampling; the redaction processor is mandatory; no raw path,
-query string, header, IP, user or ride identifier in any attribute.
+Approve with conditions: the binding conditions are in the `AGENTS.md` table (traces, metrics and logs over
+OTLP only, 5–10 % sampling, the trace and log redaction processors mandatory). No raw path, query string,
+header, IP, user or ride identifier in any attribute.
 
 ## Update 2026-11-12
 

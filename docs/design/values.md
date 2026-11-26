@@ -59,7 +59,7 @@ member owns the data, and nobody pays again to see their own history.
 
 ### 6. Interoperability over lock-in
 
-- Import FIT, GPX and TCX today, and a Strava export when that import ships.
+- Import FIT, GPX and TCX, and a Strava export, all read on the server.
 - Export everything, always, without a support ticket.
 - A documented API for clubs that want to integrate their own tools.
 - Open standards where they exist: FIT, GPX, ICS, OIDC.
@@ -139,7 +139,7 @@ Before building or shipping something, ask:
 | Clubs and coaches | The member decides what to share (rides, training, routes, wellbeing) and with whom (the club's coaches today). Every share is revocable and every view is logged. |
 | Health | A daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride. Menstrual-cycle tracking is planned as optional, highly protected context. |
 | Body data | Weight is a single profile field, not a tracked series: W/kg, the VO2max estimate and calories need it. |
-| Brand | Velomine, direction D: Contour × Night Ride. Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
+| Brand | Velomine, direction D: Contour × Night Ride. Night is asphalt with Volt; day is a warm off-white with olive, and iron oxide as the signal colour. The values are in `docs/design/tokens.json`. |
 | Languages | English and Italian first, as an account setting that follows the member to every device. |
 
 ### What makes Velomine different
@@ -150,7 +150,7 @@ Before building or shipping something, ask:
 | Cycling analytics (NP, IF, TSS, TRIMP, power curve, FTP and VO2max estimates, fitness/fatigue/form) | Turns recorded streams into training guidance. |
 | Readiness view from load, check-in and recent RPE | The point of collecting wellbeing data. |
 | Clubs and coaches, private by default | Coaching without making anything public. |
-| Privacy zones and per-stream switches | Keeps home and saved places out of every shared view; the owner always sees the full track. |
+| Privacy zones and start and end trimming | Keeps home and saved places out of every shared view; a coach otherwise reads every number of the ride, and the owner always sees the full track. |
 | Component wear by km, hours or months | Warns before a part fails, not after. |
 | Native phone recorder with standard Bluetooth sensors | No vendor app or account needed for any sensor. |
 

@@ -22,6 +22,7 @@ class BikeResponse {
     required this.frameSize,
     required this.kind,
     required this.wheelCircumferenceMm,
+    required this.weightKg,
     required this.initialDistanceM,
     required this.purchasedOn,
     required this.isDefault,
@@ -50,6 +51,8 @@ class BikeResponse {
   final String kind;
 
   final int wheelCircumferenceMm;
+
+  final double? weightKg;
 
   final double initialDistanceM;
 
@@ -80,6 +83,7 @@ class BikeResponse {
     other.frameSize == frameSize &&
     other.kind == kind &&
     other.wheelCircumferenceMm == wheelCircumferenceMm &&
+    other.weightKg == weightKg &&
     other.initialDistanceM == initialDistanceM &&
     other.purchasedOn == purchasedOn &&
     other.isDefault == isDefault &&
@@ -102,6 +106,7 @@ class BikeResponse {
     (frameSize == null ? 0 : frameSize!.hashCode) +
     (kind.hashCode) +
     (wheelCircumferenceMm.hashCode) +
+    (weightKg == null ? 0 : weightKg!.hashCode) +
     (initialDistanceM.hashCode) +
     (purchasedOn == null ? 0 : purchasedOn!.hashCode) +
     (isDefault.hashCode) +
@@ -113,7 +118,7 @@ class BikeResponse {
     (serviceSoonCount.hashCode);
 
   @override
-  String toString() => 'BikeResponse[id=$id, name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isDefault=$isDefault, isActive=$isActive, rideCount=$rideCount, distanceM=$distanceM, movingS=$movingS, serviceDueCount=$serviceDueCount, serviceSoonCount=$serviceSoonCount]';
+  String toString() => 'BikeResponse[id=$id, name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, weightKg=$weightKg, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isDefault=$isDefault, isActive=$isActive, rideCount=$rideCount, distanceM=$distanceM, movingS=$movingS, serviceDueCount=$serviceDueCount, serviceSoonCount=$serviceSoonCount]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -146,6 +151,11 @@ class BikeResponse {
     }
       json[r'kind'] = this.kind;
       json[r'wheelCircumferenceMm'] = this.wheelCircumferenceMm;
+    if (this.weightKg != null) {
+      json[r'weightKg'] = this.weightKg;
+    } else {
+      json[r'weightKg'] = null;
+    }
       json[r'initialDistanceM'] = this.initialDistanceM;
     if (this.purchasedOn != null) {
       json[r'purchasedOn'] = _dateFormatter.format(this.purchasedOn!);
@@ -179,6 +189,8 @@ class BikeResponse {
     bool frameSizeSetToNull = false,
     String? kind,
     int? wheelCircumferenceMm,
+    double? weightKg,
+    bool weightKgSetToNull = false,
     double? initialDistanceM,
     DateTime? purchasedOn,
     bool purchasedOnSetToNull = false,
@@ -199,6 +211,7 @@ class BikeResponse {
     frameSize: frameSizeSetToNull ? null : frameSize ?? this.frameSize,
     kind: kind ?? this.kind,
     wheelCircumferenceMm: wheelCircumferenceMm ?? this.wheelCircumferenceMm,
+    weightKg: weightKgSetToNull ? null : weightKg ?? this.weightKg,
     initialDistanceM: initialDistanceM ?? this.initialDistanceM,
     purchasedOn: purchasedOnSetToNull ? null : purchasedOn ?? this.purchasedOn,
     isDefault: isDefault ?? this.isDefault,
@@ -234,6 +247,7 @@ class BikeResponse {
         assert(json[r'kind'] != null, 'Required key "BikeResponse[kind]" has a null value in JSON.');
         assert(json.containsKey(r'wheelCircumferenceMm'), 'Required key "BikeResponse[wheelCircumferenceMm]" is missing from JSON.');
         assert(json[r'wheelCircumferenceMm'] != null, 'Required key "BikeResponse[wheelCircumferenceMm]" has a null value in JSON.');
+        assert(json.containsKey(r'weightKg'), 'Required key "BikeResponse[weightKg]" is missing from JSON.');
         assert(json.containsKey(r'initialDistanceM'), 'Required key "BikeResponse[initialDistanceM]" is missing from JSON.');
         assert(json[r'initialDistanceM'] != null, 'Required key "BikeResponse[initialDistanceM]" has a null value in JSON.');
         assert(json.containsKey(r'purchasedOn'), 'Required key "BikeResponse[purchasedOn]" is missing from JSON.');
@@ -264,6 +278,7 @@ class BikeResponse {
         frameSize: mapValueOfType<String>(json, r'frameSize'),
         kind: mapValueOfType<String>(json, r'kind')!,
         wheelCircumferenceMm: mapValueOfType<int>(json, r'wheelCircumferenceMm')!,
+        weightKg: mapValueOfType<double>(json, r'weightKg'),
         initialDistanceM: mapValueOfType<double>(json, r'initialDistanceM')!,
         purchasedOn: mapDateTime(json, r'purchasedOn', r''),
         isDefault: mapValueOfType<bool>(json, r'isDefault')!,
@@ -329,6 +344,7 @@ class BikeResponse {
     'frameSize',
     'kind',
     'wheelCircumferenceMm',
+    'weightKg',
     'initialDistanceM',
     'purchasedOn',
     'isDefault',

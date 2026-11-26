@@ -17,6 +17,55 @@ public sealed record FtpEstimate(int Watts, string Method, DateOnly From, double
 /// <summary>VO2max estimated from a five-minute effort and the member's weight.</summary>
 public sealed record Vo2MaxEstimate(double Value, string Method, DateOnly From);
 
+/// <summary>
+/// Critical power and W′ from the two-parameter model P(t) = CP + W′ / t (Monod &amp; Scherrer 1965; Poole et al.
+/// 2016). <see cref="Durations"/> lists the window lengths the fit actually used.
+/// </summary>
+public sealed record CriticalPowerEstimate(int CpW, int WPrimeJ, int? PeakW, double R2, int[] Durations)
+{
+    /// <summary>The window lengths the fit uses: 2, 5, 10 and 20 minutes.</summary>
+    public static readonly int[] FitDurations = [120, 300, 600, 1200];
+
+    /// <summary>
+    /// Ordinary least squares on x = 1/t and y = P: the intercept is CP, the slope W′. Null unless three of the four
+    /// points exist and the fit is a believable one (see the story's ranges for CP, W′ and R²).
+    /// </summary>
+    public static CriticalPowerEstimate? Fit(IReadOnlyList<PowerCurvePoint> points)
+    {
+        var used = FitDurations
+            .Select(d => (Duration: d, Point: points.FirstOrDefault(p => p.Seconds == d)))
+            .Where(x => x.Point is { Watts: > 0 })
+            .ToArray();
+        if (used.Length < 3) return null;
+
+        var xs = used.Select(x => 1.0 / x.Duration).ToArray();
+        var ys = used.Select(x => (double)x.Point!.Watts).ToArray();
+        var meanX = xs.Average();
+        var meanY = ys.Average();
+        var sxx = xs.Sum(x => (x - meanX) * (x - meanX));
+        var sxy = xs.Zip(ys, (x, y) => (x - meanX) * (y - meanY)).Sum();
+
+        var wPrime = sxy / sxx;
+        var cp = meanY - wPrime * meanX;
+
+        var total = ys.Sum(y => (y - meanY) * (y - meanY));
+        var residual = xs.Zip(ys, (x, y) => y - (cp + wPrime * x)).Sum(e => e * e);
+        var r2 = total <= 0 ? 0 : 1 - residual / total;
+
+        // Three distinct windows always give a positive sxx; this only guards a division by zero.
+        if (sxx <= 0 || !double.IsFinite(cp) || !double.IsFinite(wPrime)) return null;
+        if (r2 < 0.90 || cp <= 0 || wPrime <= 0 || cp is < 50 or > 600 || wPrime is < 3000 or > 50_000) return null;
+
+        var peak = points.FirstOrDefault(p => p.Seconds == 1)?.Watts;
+        return new CriticalPowerEstimate(
+            (int)Math.Round(cp),
+            (int)Math.Round(wPrime),
+            peak > 0 ? peak : null,
+            Math.Round(r2, 3),
+            [.. used.Select(x => x.Duration)]);
+    }
+}
+
 public sealed record PowerCurveResponse(
     int DayCount,
     DateOnly From,
@@ -27,7 +76,8 @@ public sealed record PowerCurveResponse(
     double? WeightKg,
     PowerCurvePoint[] Points,
     FtpEstimate? Ftp,
-    Vo2MaxEstimate? Vo2Max);
+    Vo2MaxEstimate? Vo2Max,
+    CriticalPowerEstimate? CriticalPower);
 
 public sealed class PowerCurveRequest
 {
@@ -70,6 +120,11 @@ public static class FitnessQueries
     private const int FtpWindowS = 1200;
     private const int FtpFallbackWindowS = 480;
     private const int Vo2MaxWindowS = 300;
+
+    /// <summary>The rider's current critical power and W′, over the last 90 days as of the request. Null when the fit is rejected.</summary>
+    public static async Task<CriticalPowerEstimate?> CriticalPowerAsync(
+        VelomineDbContext db, MemberClock clock, Guid userId, CancellationToken ct) =>
+        (await PowerCurveAsync(db, clock, userId, 90, includeBodyMetrics: false, ct)).CriticalPower;
 
     public static async Task<PowerCurveResponse> PowerCurveAsync(
         VelomineDbContext db,
@@ -136,6 +191,7 @@ public static class FitnessQueries
         var best5 = Best(rows, Vo2MaxWindowS);
         if (includeBodyMetrics && weight is { } bodyKg && best5 is not null)
         {
+            // Hawley & Noakes 1992: VO2max = 10.8 x W/kg + 7 (ml/kg/min).
             vo2Max = new Vo2MaxEstimate(
                 Math.Round(10.8 * (best5.Watts / bodyKg) + 7, 1),
                 "5min",
@@ -152,7 +208,8 @@ public static class FitnessQueries
             includeBodyMetrics ? weight : null,
             points,
             ftp,
-            vo2Max);
+            vo2Max,
+            CriticalPowerEstimate.Fit(points));
     }
 
     private static Row? Best(List<Row> rows, int duration) =>

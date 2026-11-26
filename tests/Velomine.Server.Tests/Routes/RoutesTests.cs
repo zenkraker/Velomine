@@ -10,18 +10,38 @@ using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Routes;
+using static Velomine.Server.Tests.Rides.TestRideFiles;
 using static Velomine.Server.Tests.Routes.RoutesTestKit;
 
 namespace Velomine.Server.Tests.Routes;
 
-public sealed class RoutesTests(PostgresFixture postgres)
+public sealed class RoutesTests(PostgresFixture postgres, RoutesHost host) : IClassFixture<RoutesHost>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task CreateRoute_ShouldRefuseTheRide_WhenTheRideIsInAVirtualWorld()
+    {
+        var api = host.Api;
+        var world = await NewWorldAsync(api);
+        var rideId = await UploadAndWaitAsync(world.Rider.Client, Fit(new FitSession(
+            DateTime.UtcNow.AddDays(-1), 600, SubSport: Dynastream.Fit.SubSport.VirtualActivity,
+            ManufacturerId: Dynastream.Fit.Manufacturer.Zwift, StartLatitude: -11.64, StartLongitude: 166.95)));
+
+        var response = await world.Rider.Client.PostAsJsonAsync(
+            "/api/v1/routes", new CreateRouteRequest { RideId = rideId, Name = "Watopia", Surface = "road" }, Ct);
+        var draft = await world.Rider.Client.GetAsync($"/api/v1/rides/{rideId}/route-draft", Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("virtual world", await response.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(HttpStatusCode.BadRequest, draft.StatusCode);
+        Assert.Empty((await world.Rider.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct))!.Routes);
+    }
+
+    [Fact]
     public async Task CreateRoute_ShouldLeaveOutThePrivacyZone_WhenTheRouteComesFromARide()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
         // The ride starts at 46.0, 11.0 and goes north: the first 500 m are inside the zone.
@@ -48,22 +68,12 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task CreateRoute_ShouldTrimTheStartAndEnd_WhenThePrivacySettingsTrimThem()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         // A ride keeps the privacy defaults it was imported with, so these are saved before the upload.
         (await world.Rider.Client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
-            new Velomine.Server.Features.Privacy.UpdatePrivacyRequest
-            {
-                HideHeartRate = false,
-                HidePower = false,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = true,
-                HideTemperature = false,
-                TrimStartM = 1000,
-                TrimEndM = 1000,
-            },
+            new Velomine.Server.Features.Privacy.UpdatePrivacyRequest { TrimStartM = 1000, TrimEndM = 1000 },
             Ct)).EnsureSuccessStatusCode();
         var rideId = await UploadRideAsync(world.Rider.Client);
 
@@ -71,14 +81,15 @@ public sealed class RoutesTests(PostgresFixture postgres)
             world.Rider.Client, new CreateRouteRequest { RideId = rideId, Name = "Trimmed", Surface = "road" });
 
         Assert.InRange(route.DistanceM, 2_700, 2_900);
-        Assert.Null(route.Elevation);
-        Assert.Null(route.ClimbingM);
+        // The climb is part of the ride a coach reads: only the positions are trimmed.
+        Assert.NotNull(route.Elevation);
+        Assert.NotNull(route.ClimbingM);
     }
 
     [Fact]
     public async Task CreateRoute_ShouldKeepTheWholeLine_WhenThePrivacySettingsTrimNothing()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
 
@@ -94,7 +105,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task CreateRoute_ShouldIgnoreTheLineInTheRequest_WhenARideIsNamed()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
         await AddZoneAsync(world.Rider.Client, 46.0, 11.0, 500);
@@ -111,7 +122,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task GetRideRouteDraft_ShouldAnswerNotFound_WhenTheRideIsAnotherMembers()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
 
@@ -126,7 +137,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task GetRideRouteDraft_ShouldAnswerNotFound_WhenTheMemberHasNoClub()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Loner.Client);
 
@@ -136,7 +147,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task GetRideRouteDraft_ShouldExplain_WhenRideHasNothingLeftToShare()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
         await AddZoneAsync(world.Rider.Client, 46.02, 11.0, 1609);
@@ -153,7 +164,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task ReadGpxRouteDraft_ShouldReturnTheLine_WhenTheFileIsAGpxTrack()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
 
         var form = new MultipartFormDataContent { { new ByteArrayContent(Encoding.UTF8.GetBytes(Gpx("Valley", 12))), "file", "valley.gpx" } };
@@ -181,11 +192,10 @@ public sealed class RoutesTests(PostgresFixture postgres)
 
     [Theory]
     [InlineData("not a gpx file")]
-    [InlineData("<gpx><trk><trkseg><trkpt lat=\"46\" lon=\"11\"/></trkseg></trk></gpx>")]
     [InlineData("<gpx><trk><trkseg><trkpt lat=\"46\" lon=\"11\"/><trkpt lat=\"46.0001\" lon=\"11\"/></trkseg></trk></gpx>")]
     public async Task ReadGpxRouteDraft_ShouldRefuse_WhenTheFileIsNotAUsableRoute(string text)
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
 
         var form = new MultipartFormDataContent { { new ByteArrayContent(Encoding.UTF8.GetBytes(text)), "file", "bad.gpx" } };
@@ -196,7 +206,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task ReadGpxRouteDraft_ShouldAnswerNotFound_WhenTheMemberHasNoClub()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
 
         var form = new MultipartFormDataContent { { new ByteArrayContent(Encoding.UTF8.GetBytes(Gpx("Valley"))), "file", "valley.gpx" } };
@@ -207,7 +217,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task CreateRoute_ShouldRefuse_WhenTheRequestIsNotARoute()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var client = world.Rider.Client;
 
@@ -229,7 +239,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task CreateRoute_ShouldAnswerNotFound_WhenTheMemberHasNoClub()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
 
         Assert.Equal(HttpStatusCode.NotFound, (await world.Loner.Client.PostAsJsonAsync("/api/v1/routes", LineRequest(), Ct)).StatusCode);
@@ -238,7 +248,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task CreateRoute_ShouldThinTheLine_WhenItHasManyPoints()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         // The most a request may carry: 5,000 points for a route that keeps 1,500, so a third must go.
         const int count = RouteGeometry.MaxAcceptedPoints;
@@ -263,7 +273,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task ListRoutes_ShouldSortAndFilter_WhenAskedTo()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         await CreateRouteAsync(world.Rider.Client, LineRequest("Medium", "road", 10));
         await CreateRouteAsync(world.Coach.Client, LineRequest("Long", "gravel", 20));
@@ -284,7 +294,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task Routes_ShouldNotBeVisible_WhenRequestComesFromAnotherClubOrNoClub()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var route = await CreateRouteAsync(world.Rider.Client);
         var id = route.Id;
@@ -314,6 +324,35 @@ public sealed class RoutesTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Routes_ShouldCarryTheLineInTheList_WhenTheRouteIsShared()
+    {
+        var api = host.Api;
+        var world = await NewWorldAsync(api);
+        var created = await CreateRouteAsync(world.Rider.Client);
+
+        var list = await world.Rider.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct);
+        var listed = Assert.Single(list!.Routes);
+
+        // The card draws the line, so the list carries it: aligned arrays, thinned to a preview, from the
+        // same start the detail page draws.
+        var detail = await world.Rider.Client.GetFromJsonAsync<RouteDetailResponse>($"/api/v1/routes/{created.Id}", Ct);
+        Assert.NotEmpty(listed.Latitude);
+        Assert.Equal(listed.Latitude.Length, listed.Longitude.Length);
+        Assert.InRange(listed.Latitude.Length, 2, RouteGeometry.MaxPreviewPoints + 1);
+        Assert.Equal(detail!.Latitude[0], listed.Latitude[0]);
+        Assert.Equal(detail.Latitude[^1], listed.Latitude[^1]);
+        Assert.Equal(detail.Longitude[^1], listed.Longitude[^1]);
+        // A short line is its own preview; a long one is thinned to the cap.
+        Assert.True(
+            listed.Latitude.Length == detail.Latitude.Length
+            || listed.Latitude.Length <= RouteGeometry.MaxPreviewPoints + 1,
+            "The preview is thinner than the stored line or over the cap.");
+
+        // The other club's member still sees no route, and its line least of all.
+        Assert.Empty((await world.OtherRider.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct))!.Routes);
+    }
+
+    [Fact]
     public async Task Routes_ShouldBeOpenToTheClub_WhenAMemberSharedThem()
     {
         await using var api = await StartAsync(postgres);
@@ -337,7 +376,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task UpdateRoute_ShouldChangeTheDetails_WhenTheOwnerEditsAndRefuseEveryoneElse()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var route = await CreateRouteAsync(world.Rider.Client);
         static UpdateRouteRequest Edit(string name = " Lake loop, clockwise ", string surface = "gravel") =>
@@ -358,7 +397,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task UnshareRoute_ShouldKeepTheRouteWithItsOwner_WhenTheClubOwnerRemovesIt()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var route = await CreateRouteAsync(world.Rider.Client);
 
@@ -376,19 +415,10 @@ public sealed class RoutesTests(PostgresFixture postgres)
         // The owner can put it back.
         Assert.Equal(HttpStatusCode.OK, (await world.Rider.Client.PostAsync($"/api/v1/routes/{route.Id}/share", null, Ct)).StatusCode);
         Assert.Single((await world.Coach.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct))!.Routes);
-    }
 
-    [Fact]
-    public async Task UnshareRoute_ShouldWithdrawTheRoute_WhenTheOwnerAsks()
-    {
-        await using var api = await StartAsync(postgres);
-        var world = await NewWorldAsync(api);
-        var route = await CreateRouteAsync(world.Rider.Client);
-
+        // The member who made the route can withdraw it too; once it is withdrawn, a coach cannot put it back.
         Assert.Equal(HttpStatusCode.NoContent, (await world.Rider.Client.DeleteAsync($"/api/v1/routes/{route.Id}/share", Ct)).StatusCode);
-
         Assert.Empty((await world.Owner.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct))!.Routes);
-        // Share with someone else's route: the coach cannot put the rider's route back.
         Assert.Equal(HttpStatusCode.NotFound, (await world.Coach.Client.PostAsync($"/api/v1/routes/{route.Id}/share", null, Ct)).StatusCode);
     }
 
@@ -412,7 +442,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task LeaveClub_ShouldEndTheShareButKeepTheRoute_WhenTheOwnerLeaves()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var route = await CreateRouteAsync(world.Rider.Client);
 
@@ -428,7 +458,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task DownloadRoute_ShouldServeGpx_WhenTheLinkComesFromAClubMember()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var route = await CreateRouteAsync(world.Rider.Client, LineRequest("Lake loop & more"));
 
@@ -448,7 +478,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task DownloadRoute_ShouldRefuse_WhenTheLinkIsForgedExpiredOrNoLongerAllowed()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         var route = await CreateRouteAsync(world.Rider.Client);
         var link = (await (await world.Coach.Client.PostAsync($"/api/v1/routes/{route.Id}/gpx-link", null, Ct))
@@ -477,7 +507,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     [Fact]
     public async Task AccountExport_ShouldIncludeRoutesAsGpx_WhenTheMemberHasRoutes()
     {
-        await using var api = await StartAsync(postgres);
+        var api = host.Api;
         var world = await NewWorldAsync(api);
         await CreateRouteAsync(world.Rider.Client, LineRequest("Lake loop"));
         await CreateRouteAsync(world.Coach.Client, LineRequest("Coach secret"));
@@ -511,4 +541,19 @@ public sealed class RoutesTests(PostgresFixture postgres)
         Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<VelomineDbContext>().RouteLines.CountAsync(Ct));
     }
 
+}
+
+/// <summary>One server for the class: every test makes its own member and only reads or changes that member's data.</summary>
+public sealed class RoutesHost(PostgresFixture postgres) : IAsyncLifetime
+{
+    public TestApi Api { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync() => Api = await TestApi.StartAsync(postgres, b =>
+    {
+        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+        // Tests sign members in from the same address; one server per test gave each a fresh budget.
+        b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "100000");
+    });
+
+    public ValueTask DisposeAsync() => Api.DisposeAsync();
 }

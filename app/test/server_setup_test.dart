@@ -8,6 +8,10 @@ import 'package:velomine/features/auth/server_setup_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/root.dart';
+import 'package:velomine/core/providers.dart';
+
+import 'fake_server.dart';
 
 ServerInfoResponse info() => ServerInfoResponse(
   name: 'Velomine',
@@ -19,6 +23,7 @@ ServerInfoResponse info() => ServerInfoResponse(
   sentryDsn: null,
   telemetryTermsVersion: 1,
   demo: false,
+  autoTrainingEnabled: true,
 );
 
 class _MemoryStore implements ServerConfigStore {
@@ -153,4 +158,72 @@ void main() {
 
     expect(find.text('https://old.example'), findsOneWidget);
   });
+
+  testWidgets(
+    'ServerSetupScreen_ShouldWarnAboutPlainHttp_WhenTheSchemeIsTyped',
+    (tester) async {
+      await pump(tester, check: (_) async => info());
+      final field = find.byKey(const Key('server-url'));
+
+      await tester.enterText(field, 'http:');
+      await tester.pump();
+      expect(find.byKey(const Key('server-insecure')), findsOneWidget);
+
+      await tester.enterText(field, 'https://velo.example');
+      await tester.pump();
+      expect(find.byKey(const Key('server-insecure')), findsNothing);
+    },
+  );
+
+  testWidgets('ServerSetupScreen_ShouldBeSkipped_WhenTheWindowIsTheWeb', (
+    tester,
+  ) async {
+    // The web app is served by its own server, so it never asks which one to use.
+    final server = FakeServer();
+    final session = server.session(useCookies: true);
+    await tester.runAsync(session.restore);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isWebProvider.overrideWithValue(true),
+          serverConfigStoreProvider.overrideWithValue(_MemoryStore()),
+          sessionProvider.overrideWith((ref) => session),
+        ],
+        child: const VelomineRoot(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ServerSetupScreen), findsNothing);
+    expect(find.byKey(const Key('sign-in')), findsOneWidget);
+  });
+
+  testWidgets('ServerSetupScreen_ShouldShowItsCaption_WhenItOpens', (
+    tester,
+  ) async {
+    await pump(tester, check: (_) async => info());
+
+    expect(find.text('Server'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Server')).dy,
+      lessThan(
+        tester.getTopLeft(find.text('Which server does your club use?')).dy,
+      ),
+    );
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'ServerSetupScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pump(tester, check: (_) async => info());
+
+        expect(find.byKey(const Key('server-save')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

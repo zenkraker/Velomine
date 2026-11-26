@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Wellbeing;
@@ -23,6 +24,9 @@ public sealed class SaveCheckInRequest
 
     /// <summary>1 none, 5 high.</summary>
     public required int Motivation { get; set; }
+
+    /// <summary>1 very poorly, 5 very well; left out by a build that predates it.</summary>
+    public int? Sleep { get; set; }
 }
 
 public sealed class SaveCheckInValidator : Validator<SaveCheckInRequest>
@@ -34,6 +38,7 @@ public sealed class SaveCheckInValidator : Validator<SaveCheckInRequest>
         RuleFor(x => x.Mood).InclusiveBetween(1, 5);
         RuleFor(x => x.Stress).InclusiveBetween(1, 5);
         RuleFor(x => x.Motivation).InclusiveBetween(1, 5);
+        RuleFor(x => x.Sleep).InclusiveBetween(1, 5).When(x => x.Sleep is not null);
     }
 }
 
@@ -78,9 +83,20 @@ public sealed class SaveCheckIn(VelomineDbContext db, TimeProvider time)
         checkIn.Mood = req.Mood;
         checkIn.Stress = req.Stress;
         checkIn.Motivation = req.Motivation;
+        checkIn.Sleep = req.Sleep;
         checkIn.UpdatedAt = now;
         await db.SaveChangesAsync(ct);
         VelomineMetrics.CheckInsSaved.Add(1);
+
+        // The answers change today at once: the worst of them, or a readiness in F2's rest band, makes today's hard
+        // session an endurance one (W6). Only the reason leaves this slice, never the answers.
+        var plan = await db.TrainingPlans.FirstOrDefaultAsync(p => p.UserId == userId && p.IsOn, ct);
+        if (plan is not null)
+        {
+            var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+            await SessionAdaptation.AfterCheckInAsync(
+                db, user, plan, clock, time, req.Sleep, req.Fatigue, req.Soreness, ct);
+        }
 
         await Send.OkAsync(CheckInResponse.From(checkIn), ct);
     }

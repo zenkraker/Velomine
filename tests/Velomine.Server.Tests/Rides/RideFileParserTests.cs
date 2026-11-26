@@ -34,6 +34,16 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
+    public void FitParser_ShouldIgnoreTheHeartRate_WhenTheRecordCarriesTheInvalidByte()
+    {
+        // A record whose heart-rate field is defined but never set carries the profile's "no value" byte, 255,
+        // and devices write it for a ride recorded without a strap.
+        var ride = Assert.Single(RideFileParser.Parse(Fit(new FitSession(Start, 120, HeartRate: _ => 255))));
+
+        Assert.All(ride.Samples, sample => Assert.Null(sample.HeartRate));
+    }
+
+    [Fact]
     public void FitParser_ShouldReadTimerPausesAndMovingTime_WhenTheFileHasThem()
     {
         var ride = Assert.Single(RideFileParser.Parse(Fit(new FitSession(

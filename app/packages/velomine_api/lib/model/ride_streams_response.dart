@@ -23,6 +23,8 @@ class RideStreamsResponse {
     this.power = const [],
     this.cadence = const [],
     this.temperature = const [],
+    this.wPrimeBalanceJ = const Optional.present(const []),
+    this.estimatedPower = const Optional.present(const []),
   });
 
   final List<double> time;
@@ -45,6 +47,10 @@ class RideStreamsResponse {
 
   final List<int?>? temperature;
 
+  final Optional<List<int>?> wPrimeBalanceJ;
+
+  final Optional<List<int?>?> estimatedPower;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideStreamsResponse &&
     _deepEquality.equals(other.time, time) &&
@@ -56,7 +62,9 @@ class RideStreamsResponse {
     _deepEquality.equals(other.heartRate, heartRate) &&
     _deepEquality.equals(other.power, power) &&
     _deepEquality.equals(other.cadence, cadence) &&
-    _deepEquality.equals(other.temperature, temperature);
+    _deepEquality.equals(other.temperature, temperature) &&
+    _deepEquality.equals(other.wPrimeBalanceJ, wPrimeBalanceJ) &&
+    _deepEquality.equals(other.estimatedPower, estimatedPower);
 
   @override
   int get hashCode =>
@@ -70,10 +78,12 @@ class RideStreamsResponse {
     (heartRate == null ? 0 : heartRate!.hashCode) +
     (power == null ? 0 : power!.hashCode) +
     (cadence == null ? 0 : cadence!.hashCode) +
-    (temperature == null ? 0 : temperature!.hashCode);
+    (temperature == null ? 0 : temperature!.hashCode) +
+    (wPrimeBalanceJ.hashCode) +
+    (estimatedPower.hashCode);
 
   @override
-  String toString() => 'RideStreamsResponse[time=$time, latitude=$latitude, longitude=$longitude, altitude=$altitude, speed=$speed, distance=$distance, heartRate=$heartRate, power=$power, cadence=$cadence, temperature=$temperature]';
+  String toString() => 'RideStreamsResponse[time=$time, latitude=$latitude, longitude=$longitude, altitude=$altitude, speed=$speed, distance=$distance, heartRate=$heartRate, power=$power, cadence=$cadence, temperature=$temperature, wPrimeBalanceJ=$wPrimeBalanceJ, estimatedPower=$estimatedPower]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -123,6 +133,14 @@ class RideStreamsResponse {
     } else {
       json[r'temperature'] = null;
     }
+    if (this.wPrimeBalanceJ.isPresent) {
+      final value = this.wPrimeBalanceJ.value;
+      json[r'wPrimeBalanceJ'] = value;
+    }
+    if (this.estimatedPower.isPresent) {
+      final value = this.estimatedPower.value;
+      json[r'estimatedPower'] = value;
+    }
     return json;
   }
 
@@ -148,6 +166,8 @@ class RideStreamsResponse {
     bool cadenceSetToNull = false,
     List<int?>? temperature,
     bool temperatureSetToNull = false,
+    Optional<List<int>?>? wPrimeBalanceJ,
+    Optional<List<int?>?>? estimatedPower,
   }) => RideStreamsResponse(
     time: time ?? this.time,
     latitude: latitudeSetToNull ? null : latitude ?? this.latitude,
@@ -159,6 +179,8 @@ class RideStreamsResponse {
     power: powerSetToNull ? null : power ?? this.power,
     cadence: cadenceSetToNull ? null : cadence ?? this.cadence,
     temperature: temperatureSetToNull ? null : temperature ?? this.temperature,
+    wPrimeBalanceJ: wPrimeBalanceJ ?? this.wPrimeBalanceJ,
+    estimatedPower: estimatedPower ?? this.estimatedPower,
   );
 
   /// Returns a new [RideStreamsResponse] instance and imports its values from
@@ -217,6 +239,12 @@ class RideStreamsResponse {
         temperature: json[r'temperature'] is Iterable
             ? (json[r'temperature'] as Iterable).map((e) => (e as num?)?.toInt()).toList(growable: false)
             : const [],
+        wPrimeBalanceJ: json.containsKey(r'wPrimeBalanceJ') ? Optional.present(json[r'wPrimeBalanceJ'] is Iterable
+            ? (json[r'wPrimeBalanceJ'] as Iterable).cast<int>().toList(growable: false)
+            : const []) : const Optional.absent(),
+        estimatedPower: json.containsKey(r'estimatedPower') ? Optional.present(json[r'estimatedPower'] is Iterable
+            ? (json[r'estimatedPower'] as Iterable).cast<int>().toList(growable: false)
+            : const []) : const Optional.absent(),
       );
     }
     return null;

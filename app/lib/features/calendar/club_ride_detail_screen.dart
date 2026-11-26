@@ -12,6 +12,8 @@ import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/avatar.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
@@ -67,8 +69,8 @@ class ClubRideDetailScreen extends ConsumerWidget {
     // The real header while the ride is read, so the page is opaque from its first frame.
     if (s.load.running && s.detail == null) {
       return PageScaffold(
-        eyebrow: l10n.clubRidesEyebrow,
         title: l10n.clubRidesTitle,
+        parent: l10n.clubCalendarCaption,
         maxWidth: AppLayout.contentNarrow,
         children: const [
           LoadingState.rows(key: Key('club-ride-loading'), count: 4),
@@ -76,22 +78,36 @@ class ClubRideDetailScreen extends ConsumerWidget {
       );
     }
     if (s.notFound) {
-      return EmptyState(
-        key: const Key('club-ride-missing'),
-        message: l10n.failureMissing,
-        icon: Icons.event_busy,
+      return PageScaffold(
+        title: l10n.clubRidesTitle,
+        parent: l10n.clubCalendarCaption,
+        maxWidth: AppLayout.contentNarrow,
+        children: [
+          EmptyState(
+            key: const Key('club-ride-missing'),
+            message: l10n.failureMissing,
+            icon: Icons.event_busy,
+          ),
+        ],
       );
     }
     final detail = s.detail;
     if (detail == null) {
-      return ErrorState(
-        message: s.load.failure == null
-            ? l10n.couldNotLoadRide
-            : failureText(l10n, s.load.failure!),
-        actionKey: const Key('club-ride-error'),
-        onRetry: s.load.running
-            ? null
-            : ref.read(clubRideDetailViewModelProvider(id).notifier).load,
+      return PageScaffold(
+        title: l10n.clubRidesTitle,
+        parent: l10n.clubCalendarCaption,
+        maxWidth: AppLayout.contentNarrow,
+        children: [
+          ErrorState(
+            message: s.load.failure == null
+                ? l10n.couldNotLoadRide
+                : failureText(l10n, s.load.failure!),
+            actionKey: const Key('club-ride-error'),
+            onRetry: s.load.running
+                ? null
+                : ref.read(clubRideDetailViewModelProvider(id).notifier).load,
+          ),
+        ],
       );
     }
 
@@ -101,64 +117,60 @@ class ClubRideDetailScreen extends ConsumerWidget {
         ? null
         : ref.watch(routeDetailViewModelProvider(ride.routeId!)).detail;
     final busy = s.action.running;
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
     return PageScaffold(
-      eyebrow: l10n.clubRidesEyebrow,
       title: ride.title,
+      parent: l10n.clubCalendarCaption,
       titleKey: const Key('club-ride-title'),
-      subtitle: rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
+      subtitle: [
+        rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
+        if (ride.createdByName != null) l10n.ridePlannedBy(ride.createdByName!),
+      ].join(' · '),
       maxWidth: AppLayout.contentNarrow,
-      primaryAction: detail.canPlan
-          ? (wide
-                ? OutlinedButton.icon(
-                    key: const Key('edit-ride'),
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: Text(l10n.rideEdit),
-                  )
-                : IconButton.filled(
-                    key: const Key('edit-ride'),
-                    tooltip: l10n.rideEdit,
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                  ))
-          : null,
-      menu: detail.canPlan && !ride.isCancelled
+      // The page's one action is the member's own place in the ride, whether the planner rides it or not.
+      primaryAction: _joinAction(context, ref, detail, started, busy),
+      menu: detail.canPlan
           ? PageMenu(
               buttonKey: const Key('club-ride-actions'),
               entries: [
                 PageMenuEntry(
-                  key: const Key('cancel-ride'),
-                  icon: Icons.event_busy,
-                  label: l10n.rideCancel,
-                  destructive: true,
-                  onSelected: busy
-                      ? () {}
-                      : () => scheduleMicrotask(() {
-                          if (context.mounted) _cancel(context, ref);
-                        }),
+                  key: const Key('edit-ride'),
+                  icon: Icons.edit_outlined,
+                  label: l10n.rideEdit,
+                  onSelected: onEdit,
                 ),
+                if (!ride.isCancelled)
+                  PageMenuEntry(
+                    key: const Key('cancel-ride'),
+                    icon: Icons.event_busy,
+                    label: l10n.rideCancel,
+                    destructive: true,
+                    onSelected: busy
+                        ? () {}
+                        : () => scheduleMicrotask(() {
+                            if (context.mounted) _cancel(context, ref);
+                          }),
+                  ),
               ],
             )
           : null,
       children: [
-        if (ride.isCancelled)
-          Chip(
-            key: const Key('ride-cancelled'),
-            label: Text(l10n.rideCancelled),
-            backgroundColor: Theme.of(context).colorScheme.errorContainer,
-          ),
-        Text(rideStartText(context, ride.startsAt, ride.utcOffsetMinutes)),
-        Text(
-          [
-            ridePaceName(l10n, ride.pace),
-            if (ride.noDrop) l10n.rideNoDrop,
-            ridePlaces(l10n, ride),
-            if (ride.createdByName != null)
-              l10n.ridePlannedBy(ride.createdByName!),
-          ].join(' · '),
-          style: Theme.of(context).textTheme.bodySmall,
+        // The states read as the mock-up's badges, one line above the content.
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            if (ride.isCancelled)
+              AppBadge(l10n.rideCancelled, tone: AppBadgeTone.bad)
+            else ...[
+              AppBadge(ridePaceName(l10n, ride.pace)),
+              if (ride.noDrop) AppBadge(l10n.rideNoDrop),
+              if (ride.isFull)
+                AppBadge(l10n.rideFull, tone: AppBadgeTone.care)
+              else
+                AppBadge(ridePlaces(l10n, ride)),
+            ],
+          ],
         ),
         if (ride.isCancelled)
           Text(
@@ -169,6 +181,19 @@ class ClubRideDetailScreen extends ConsumerWidget {
           Text(l10n.rideFullReason, key: const Key('ride-full-reason')),
         if (started && !ride.isCancelled)
           Text(l10n.rideStartedReason, key: const Key('ride-started-reason')),
+        SectionCard(
+          title: l10n.rideMeeting,
+          children: [
+            MeetingMap(
+              latitude: detail.meetingLatitude,
+              longitude: detail.meetingLongitude,
+              tileUrl: tileUrl,
+              attribution: attribution,
+            ),
+            // The place is named under its map, as the mock-up draws the card.
+            Text(detail.ride.meetingName),
+          ],
+        ),
         if (ride.routeName != null && route != null)
           SectionCard(
             title: l10n.rideRoute,
@@ -184,18 +209,6 @@ class ClubRideDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
-        SectionCard(
-          title: l10n.rideMeeting,
-          children: [
-            Text(detail.ride.meetingName),
-            MeetingMap(
-              latitude: detail.meetingLatitude,
-              longitude: detail.meetingLongitude,
-              tileUrl: tileUrl,
-              attribution: attribution,
-            ),
-          ],
-        ),
         if (detail.notes != null && detail.notes!.isNotEmpty)
           SectionCard(title: l10n.rideNotes, children: [Text(detail.notes!)]),
         SectionCard(
@@ -204,29 +217,25 @@ class ClubRideDetailScreen extends ConsumerWidget {
             if (detail.participants.isEmpty)
               Text(l10n.rideNobodyIn, key: const Key('ride-nobody-in'))
             else
-              for (final participant in detail.participants)
-                ListTile(
-                  key: Key('participant-${participant.userId}'),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.account_circle_outlined),
-                  title: Text(participant.displayName),
-                ),
-          ],
-        ),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            if (!detail.canPlan)
-              _joinButton(context, ref, detail, started, busy),
+              // Who is in, as the mock-up draws it: their initials, and their name for a screen reader.
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  for (final participant in detail.participants)
+                    Avatar(
+                      participant.displayName,
+                      key: Key('participant-${participant.userId}'),
+                    ),
+                ],
+              ),
           ],
         ),
       ],
     );
   }
 
-  Widget _joinButton(
+  Widget _joinAction(
     BuildContext context,
     WidgetRef ref,
     ClubRideDetailResponse detail,

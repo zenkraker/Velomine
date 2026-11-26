@@ -23,6 +23,8 @@ class NotificationResponse {
     required this.plannedRideId,
     required this.createdAt,
     required this.isRead,
+    this.training = const Optional.absent(),
+    this.notice = const Optional.absent(),
   });
 
   final String id;
@@ -45,6 +47,22 @@ class NotificationResponse {
 
   final bool isRead;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<TrainingRideMatch?> training;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<TrainingSessionNotice?> notice;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is NotificationResponse &&
     other.id == id &&
@@ -56,7 +74,9 @@ class NotificationResponse {
     other.aboutUserId == aboutUserId &&
     other.plannedRideId == plannedRideId &&
     other.createdAt == createdAt &&
-    other.isRead == isRead;
+    other.isRead == isRead &&
+    other.training == training &&
+    other.notice == notice;
 
   @override
   int get hashCode =>
@@ -70,10 +90,12 @@ class NotificationResponse {
     (aboutUserId == null ? 0 : aboutUserId!.hashCode) +
     (plannedRideId == null ? 0 : plannedRideId!.hashCode) +
     (createdAt.hashCode) +
-    (isRead.hashCode);
+    (isRead.hashCode) +
+    (training == null ? 0 : training!.hashCode) +
+    (notice == null ? 0 : notice!.hashCode);
 
   @override
-  String toString() => 'NotificationResponse[id=$id, type=$type, subject=$subject, rideId=$rideId, bikeId=$bikeId, componentId=$componentId, aboutUserId=$aboutUserId, plannedRideId=$plannedRideId, createdAt=$createdAt, isRead=$isRead]';
+  String toString() => 'NotificationResponse[id=$id, type=$type, subject=$subject, rideId=$rideId, bikeId=$bikeId, componentId=$componentId, aboutUserId=$aboutUserId, plannedRideId=$plannedRideId, createdAt=$createdAt, isRead=$isRead, training=$training, notice=$notice]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -107,6 +129,14 @@ class NotificationResponse {
     }
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
       json[r'isRead'] = this.isRead;
+    if (this.training.isPresent) {
+      final value = this.training.value;
+      json[r'training'] = value;
+    }
+    if (this.notice.isPresent) {
+      final value = this.notice.value;
+      json[r'notice'] = value;
+    }
     return json;
   }
 
@@ -128,6 +158,8 @@ class NotificationResponse {
     bool plannedRideIdSetToNull = false,
     DateTime? createdAt,
     bool? isRead,
+    Optional<TrainingRideMatch?>? training,
+    Optional<TrainingSessionNotice?>? notice,
   }) => NotificationResponse(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -139,6 +171,8 @@ class NotificationResponse {
     plannedRideId: plannedRideIdSetToNull ? null : plannedRideId ?? this.plannedRideId,
     createdAt: createdAt ?? this.createdAt,
     isRead: isRead ?? this.isRead,
+    training: training ?? this.training,
+    notice: notice ?? this.notice,
   );
 
   /// Returns a new [NotificationResponse] instance and imports its values from
@@ -181,6 +215,8 @@ class NotificationResponse {
         plannedRideId: mapValueOfType<String>(json, r'plannedRideId'),
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         isRead: mapValueOfType<bool>(json, r'isRead')!,
+        training: json.containsKey(r'training') ? Optional.present(TrainingRideMatch.fromJson(json[r'training'])) : const Optional.absent(),
+        notice: json.containsKey(r'notice') ? Optional.present(TrainingSessionNotice.fromJson(json[r'notice'])) : const Optional.absent(),
       );
     }
     return null;

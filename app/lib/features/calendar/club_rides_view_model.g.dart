@@ -230,7 +230,7 @@ final class PlanRideViewModelProvider
   }
 }
 
-String _$planRideViewModelHash() => r'6f6e71370412475828b479bc757eeb1937ea3dcf';
+String _$planRideViewModelHash() => r'1e31092686ad172343ac035782b757a1d4a71400';
 
 /// Plans a ride, or changes one: the club's routes and, when editing, the ride as it is now.
 
@@ -321,7 +321,7 @@ final class CalendarFeedViewModelProvider
 }
 
 String _$calendarFeedViewModelHash() =>
-    r'77bbe5fdce96e1a4adf22e088c1ed27cd7db41b5';
+    r'160ff9f1674541a8fde95343b2f6d337a675306c';
 
 /// The member's private calendar address.
 

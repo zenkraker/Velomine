@@ -1,502 +1,452 @@
-import 'dart:async' show scheduleMicrotask;
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/providers.dart';
+import '../accounts/ftp_source_text.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../core/format.dart';
-import '../../core/placeholder_block.dart';
 import '../../core/l10n.dart';
-import '../../core/widgets/page_menu.dart';
-import '../../core/user_message_text.dart';
-import '../../core/widgets/card_grid.dart';
-import '../../core/widgets/empty_state.dart';
+import '../../core/placeholder_block.dart';
+import '../../core/theme.dart';
+import '../../core/tokens.dart';
+import '../../core/units.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/card_link.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/section_heading.dart';
-import '../../core/widgets/stat_tile.dart';
-import '../../core/widgets/toolbar_row.dart';
+import '../../core/widgets/segmented_control.dart';
+import '../../core/widgets/stat_card.dart';
 import '../rides/ride_type_chips.dart';
-import 'goals.dart';
-import 'power_summary.dart';
+import '../training/training_text.dart';
+import '../training/training_view_model.dart' as auto_training;
+import 'events.dart';
+import 'progress_filter_sheet.dart';
+import 'progress_tabs.dart';
 import 'progress_view_models.dart';
-import 'readiness_card.dart';
 import 'totals_chart.dart';
-import 'training_summary.dart';
-import 'wellbeing_card.dart';
-import '../../core/tokens.dart';
-import '../../core/widgets/form_sheet.dart';
-import '../../core/units.dart';
 
-/// How many totals rows the table lists before the rest are counted.
-const _totalsShown = 8;
+/// Where the FTP the power curve was read with came from, for its source note. [rideDate] is the day
+/// of the ride a test FTP came from, which the history row's own `setAt` is not.
+String? ftpSourceNote(
+  AppLocalizations l10n,
+  List<FtpHistoryEntry> history, {
+  DateTime? rideDate,
+}) {
+  final newest = history.firstOrNull;
+  if (newest == null) return null;
+  return ftpSourceText(l10n, newest.source_, newest.setAt, rideDate: rideDate);
+}
 
-/// Totals per week, month or year, goals, readiness, training, power and the
-/// daily check-in. Each source is its own ViewModel, so one failing endpoint
-/// does not blank the page.
+/// Progress: one overview that answers "how am I today and this week?" and opens the page that answers
+/// the next question. The deep charts live on the four sub-pages; a training rider keeps the analysis
+/// here, behind one fold for a simple mode.
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
-
-  Future<void> _addGoal(BuildContext context, WidgetRef ref) async {
-    final g = await showGoalForm(context);
-    if (g == null) return;
-    await ref
-        .read(goalsViewModelProvider.notifier)
-        .add(
-          CreateGoalRequest(
-            period: g.period,
-            metric: g.metric,
-            target: g.target,
-          ),
-        );
-  }
-
-  Future<void> _editGoal(
-    BuildContext context,
-    WidgetRef ref,
-    GoalResponse goal,
-  ) async {
-    final g = await showGoalForm(context, goal: goal);
-    if (g == null) return;
-    await ref
-        .read(goalsViewModelProvider.notifier)
-        .setTarget(goal.id, g.target);
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final filters = ref.watch(progressFiltersViewModelProvider);
     final totals = ref.watch(totalsViewModelProvider);
-    final goals = ref.watch(goalsViewModelProvider);
     final training = ref.watch(trainingViewModelProvider);
-    final power = ref.watch(powerCurveViewModelProvider);
+    // The auto-training week behind the Today strip, which is there only while the rider turned it on.
+    final plan = ref.watch(auto_training.trainingViewModelProvider);
+    final autoTraining =
+        plan.on &&
+        (ref.watch(sessionProvider).serverInfo?.autoTrainingEnabled ?? false);
+    final todayWeek = autoTraining ? plan.thisWeek : null;
     final readiness = ref.watch(readinessViewModelProvider);
-    final wellbeing = ref.watch(wellbeingViewModelProvider);
+    final events = ref.watch(eventsViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    // The overview's last card grows to the bottom of the window, as `ProgressDesktop.md` draws it.
+    final fill =
+        MediaQuery.sizeOf(context).width >= AppBreakpoint.expandedWidth;
 
-    listenUserMessages(
-      ref,
-      context,
-      goalsViewModelProvider.select((s) => s.messages),
-      ref.read(goalsViewModelProvider.notifier).messageShown,
-    );
-    listenUserMessages(
-      ref,
-      context,
-      powerCurveViewModelProvider.select((s) => s.messages),
-      ref.read(powerCurveViewModelProvider.notifier).messageShown,
-    );
-    listenUserMessages(
-      ref,
-      context,
-      wellbeingViewModelProvider.select((s) => s.messages),
-      ref.read(wellbeingViewModelProvider.notifier).messageShown,
-    );
-
+    // Every card on the page says so when its own number did not arrive.
     final failures = [
       totals.load.failure,
-      goals.load.failure,
       training.load.failure,
-      power.load.failure,
       readiness.load.failure,
-      wellbeing.load.failure,
     ].whereType<Failure>();
 
-    // The analysis: the totals chart leads, then each source that explains it. The check-in follows,
-    // because it is the member's own input rather than an answer.
-    final analysis = <Widget>[
-      if (totals.load.value case final totalsData?)
-        _TotalsCard(totals: totalsData)
-      else if (totals.load.running)
-        Semantics(
-          liveRegion: true,
-          label: l10n.loading,
-          child: const Column(
-            key: Key('totals-loading'),
-            children: [
-              PlaceholderBlock(height: 180, radius: 16),
-              SizedBox(height: AppSpacing.md),
-              PlaceholderBlock(height: 120, radius: 16),
-            ],
-          ),
+    // The period, in the gender the language needs: "Questa settimana", "Questo mese", "Quest'anno".
+    final thisPeriod = switch (filters.period) {
+      'week' => l10n.thisWeek,
+      'month' => l10n.thisMonth,
+      _ => l10n.thisYear,
+    };
+    final weeks = totals.load.value?.totals ?? const <PeriodTotals>[];
+    final latestWeek = weeks.isEmpty ? null : weeks.last;
+    final earlier = weeks.length > 1
+        ? weeks.sublist(0, weeks.length - 1)
+        : const <PeriodTotals>[];
+    final averageM = earlier.isEmpty
+        ? null
+        : earlier.map((week) => week.distanceM).reduce((a, b) => a + b) /
+              earlier.length;
+
+    final readinessCard = switch (readiness.load.value) {
+      // No score yet is a fact the card carries: a dash and what makes one appear, not a hole in the row.
+      final r? when r.score == null => StatCard(
+        key: const Key('metric-readiness'),
+        title: l10n.readiness,
+        value: '–',
+        sentence: l10n.readinessNoData,
+        link: l10n.wellbeing,
+        onLink: () => context.go('/progress/wellbeing'),
+      ),
+      final r? => StatCard(
+        key: const Key('metric-readiness'),
+        title: l10n.readiness,
+        value: '${r.score}',
+        state: switch (r.band) {
+          'hard' => l10n.readinessHard,
+          'easy' => l10n.readinessEasy,
+          'rest' => l10n.readinessRest,
+          _ => l10n.readinessNormal,
+        },
+        stateCare: r.band == 'easy' || r.band == 'rest',
+        sentence: switch (r.band) {
+          'hard' => l10n.readinessAdviceHard,
+          'easy' => l10n.readinessAdviceEasy,
+          'rest' => l10n.readinessAdviceRest,
+          _ => l10n.readinessAdviceNormal,
+        },
+        link: l10n.wellbeing,
+        onLink: () => context.go('/progress/wellbeing'),
+      ),
+      null => null,
+    };
+    final formCard = switch (training.load.value) {
+      final t? when t.days.isNotEmpty => StatCard(
+        key: const Key('metric-form'),
+        title: l10n.form,
+        value: t.days.last.form.round().toString(),
+        // The design's state word for a form under load.
+        state: l10n.formStateBuilding,
+        sentence: l10n.formFitnessFatigue(
+          t.days.last.fitness.round(),
+          t.days.last.fatigue.round(),
         ),
-      if (readiness.load.value case final readinessData?)
-        ReadinessCard(readiness: readinessData),
-      if (totals.load.value case final totalsData?)
-        _TotalsTable(totals: totalsData),
-      if (training.load.value case final trainingData?)
-        TrainingSummary(
-          training: trainingData,
-          days: filters.trainingDays,
-          onDays: (days) async => ref
-              .read(progressFiltersViewModelProvider.notifier)
-              .setTrainingDays(days),
-        ),
-      if (power.load.value case final curve?)
-        PowerSummary(
-          curve: curve,
-          days: filters.powerDays,
-          onDays: (days) async => ref
-              .read(progressFiltersViewModelProvider.notifier)
-              .setPowerDays(days),
-          onUseFtp: (watts) =>
-              ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
-        ),
+        // Two side by side on a phone: smaller number, no link, the card itself opens the page.
+        compact: !wide,
+        onTap: wide ? null : () => context.go('/progress/fitness'),
+        link: wide ? l10n.fitness : null,
+        onLink: wide ? () => context.go('/progress/fitness') : null,
+      ),
+      // A rider with no load in the range gets the card's empty state, not a hole in the row.
+      _? => StatCard(
+        key: const Key('metric-form'),
+        title: l10n.form,
+        value: '–',
+        sentence: l10n.dailyLoadEmpty,
+        compact: !wide,
+        onTap: wide ? null : () => context.go('/progress/fitness'),
+        link: wide ? l10n.fitness : null,
+        onLink: wide ? () => context.go('/progress/fitness') : null,
+      ),
+      null => null,
+    };
+    // The week's distance against the recent average; two across on a phone it keeps its size down
+    // and hands the tap to the whole card.
+    StatCard? periodCard({required bool compact}) => switch (latestWeek) {
+      final week? => StatCard(
+        key: const Key('metric-period'),
+        title: thisPeriod,
+        value: distanceParts(units, week.distanceM).value,
+        unit: distanceParts(units, week.distanceM).unit,
+        // The sentence keeps the rides and the time the week took: the average alone does not say how
+        // much riding it stands for.
+        sentence: averageM == null
+            ? l10n.periodTotals(
+                week.rides,
+                duration(week.movingS),
+                elevation(units, week.elevationGainM),
+              )
+            : '${l10n.goalRideCount(week.rides)}, ${duration(week.movingS)}. '
+                  '${l10n.weekAgainstAverage(week.distanceM > averageM
+                      ? 'above'
+                      : week.distanceM < averageM
+                      ? 'below'
+                      : 'other', km(units, averageM))}',
+        compact: compact,
+        onTap: compact ? () => context.go('/progress/totals') : null,
+        link: compact ? null : l10n.navTotals,
+        onLink: compact ? null : () => context.go('/progress/totals'),
+      ),
+      // Nothing ridden yet is a fact too: the card says so instead of leaving a hole. While the totals
+      // are still on their way the page waits rather than claiming there are none.
+      null when !totals.load.running => StatCard(
+        key: const Key('metric-period'),
+        title: thisPeriod,
+        value: '–',
+        sentence: l10n.totalsEmpty,
+        compact: compact,
+        onTap: compact ? () => context.go('/progress/totals') : null,
+        link: compact ? null : l10n.navTotals,
+        onLink: compact ? null : () => context.go('/progress/totals'),
+      ),
+      null => null,
+    };
+    final nextCard = _NextEventCard(next: events.next);
+    final metrics = <Widget>[
+      ?readinessCard,
+      ?formCard,
+      ?periodCard(compact: false),
+      nextCard,
     ];
 
-    // A wide window also keeps the filters on the page; every width opens them from the header menu.
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    final periods = SegmentedButton<String>(
-      key: const Key('progress-period'),
-      showSelectedIcon: false,
+    final periods = SegmentedControl<String>(
+      buttonKey: const Key('progress-period'),
       segments: [
         ButtonSegment(value: 'week', label: Text(l10n.periodWeeks)),
         ButtonSegment(value: 'month', label: Text(l10n.periodMonths)),
         ButtonSegment(value: 'year', label: Text(l10n.periodYears)),
       ],
-      selected: {filters.period},
-      onSelectionChanged: (s) => ref
-          .read(progressFiltersViewModelProvider.notifier)
-          .setPeriod(s.single),
-    );
-    final disciplines = [
-      ChoiceChip(
-        key: const Key('progress-filter-all'),
-        label: Text(l10n.rideFilterAll),
-        selected: filters.discipline == null,
-        onSelected: (_) => ref
-            .read(progressFiltersViewModelProvider.notifier)
-            .setDiscipline(null),
-      ),
-      for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-        ChoiceChip(
-          key: Key('progress-filter-$discipline'),
-          label: Text(disciplineName(l10n, discipline)),
-          selected: filters.discipline == discipline,
-          onSelected: (_) => ref
-              .read(progressFiltersViewModelProvider.notifier)
-              .setDiscipline(discipline),
-        ),
-    ];
-
-    // The dashboard reads top-down: the four numbers that answer "how am I going", then the detail
-    // they come from. Every number is one the page already had.
-    final periodWord = switch (filters.period) {
-      'week' => l10n.periodWordWeek,
-      'month' => l10n.periodWordMonth,
-      _ => l10n.periodWordYear,
-    };
-    final latest = switch (totals.load.value) {
-      final data? when data.totals.isNotEmpty => data.totals.last,
-      _ => null,
-    };
-    final thisPeriod = _metricCard(
-      key: const Key('metric-period'),
-      label: l10n.metricThisPeriod(periodWord),
-      value: latest == null ? '–' : km(units, latest.distanceM),
-      detail: latest == null
-          ? null
-          : l10n.periodTotals(
-              latest.rides,
-              duration(latest.movingS),
-              elevation(units, latest.elevationGainM),
-            ),
-    );
-    final metrics = <Widget>[
-      if (readiness.load.value case final r?)
-        _metricCard(
-          key: const Key('metric-readiness'),
-          label: l10n.readiness,
-          value: r.score == null ? '–' : '${r.score}',
-          detail: switch (r.band) {
-            'hard' => l10n.readinessHard,
-            'easy' => l10n.readinessEasy,
-            'rest' => l10n.readinessRest,
-            _ => l10n.readinessNormal,
-          },
-        ),
-      if (training.load.value case final t?)
-        _metricCard(
-          key: const Key('metric-training'),
-          label: l10n.metricTrainingLoad,
-          value: t.tss.round().toString(),
-          detail: 'TSS · ${l10n.bikeRides(t.rides)}',
-        ),
-      if (power.load.value case final p? when p.hasPower)
-        _metricCard(
-          key: const Key('metric-power'),
-          label: l10n.metricPower,
-          value: p.currentFtpW == null ? '–' : '${p.currentFtpW} W',
-          detail: l10n.ftpCurrent,
-        ),
-      thisPeriod,
-    ];
-
-    final menu = PageMenu(
-      buttonKey: const Key('progress-actions'),
-      badge: filters.discipline != null,
-      entries: [
-        PageMenuEntry(
-          key: const Key('progress-filter'),
-          icon: Icons.filter_list,
-          label: l10n.progressFilterTitle,
-          // The menu closes first; the sheet then opens over the page, not over the menu.
-          onSelected: () => scheduleMicrotask(() {
-            if (context.mounted) {
-              showFiltersSheet(context, (_) => const _ProgressFilterSheet());
-            }
-          }),
-        ),
-      ],
+      selected: filters.period,
+      onChanged: (period) =>
+          ref.read(progressFiltersViewModelProvider.notifier).setPeriod(period),
     );
 
-    final page = PageScaffold(
-      eyebrow: l10n.eyebrowProgress,
+    return PageScaffold(
       title: l10n.navProgress,
       subtitle: l10n.progressSubtitle,
-      menu: menu,
+      fillLast: fill,
+      // No `⋯` menu: its one entry was the sport filter, which the chips below and the phone's title
+      // chip already draw.
+      // A phone chooses the sport from one chip in the title row; a wide window has the chips below.
+      primaryAction: wide
+          ? null
+          : ActionChip(
+              key: const Key('progress-filter-chip'),
+              avatar: const Icon(Icons.expand_more, size: 18),
+              label: Text(
+                filters.discipline == null
+                    ? l10n.rideFilterAll
+                    : disciplineName(l10n, filters.discipline!),
+              ),
+              onPressed: () => showProgressFilterSheet(context),
+            ),
       children: [
-        if (wide) ToolbarRow(children: [periods, ...disciplines]),
+        // A phone has nowhere else for the sub-pages; from 600 dp the rail or the sidebar has them.
+        if (!wide) ProgressTabs(location: '/progress'),
         if (failures.isNotEmpty)
           ErrorState(
             message: failureText(l10n, failures.first),
+            // Retry reloads every number that failed, not only the chart's.
+            onRetry: () {
+              if (totals.load.failure != null) {
+                ref.read(totalsViewModelProvider.notifier).load();
+              }
+              if (training.load.failure != null) {
+                ref.read(trainingViewModelProvider.notifier).load();
+              }
+              if (readiness.load.failure != null) {
+                ref.read(readinessViewModelProvider.notifier).load();
+              }
+            },
             actionKey: const Key('progress-error'),
           ),
-        _MetricRow(children: metrics),
-        CardGrid(
-          columns: 3,
-          hero: analysis.isEmpty ? 0 : 2,
-          children: analysis,
-        ),
-        SectionHeading(
-          title: l10n.goals,
-          action: FilledButton.tonalIcon(
-            key: const Key('add-goal'),
-            onPressed: () => _addGoal(context, ref),
-            icon: const Icon(Icons.flag),
-            label: Text(l10n.addGoal),
+        // A wide window chooses the sport with the chips on the page; a phone opens the same choice in
+        // one chip in the title row, because five chips would take the top of the screen.
+        if (wide) ...[
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              FilterChip(
+                key: const Key('progress-filter-all'),
+                label: Text(l10n.rideFilterAll),
+                selected: filters.discipline == null,
+                onSelected: (_) => ref
+                    .read(progressFiltersViewModelProvider.notifier)
+                    .setDiscipline(null),
+              ),
+              for (final discipline in ['road', 'gravel', 'mountain', 'track'])
+                FilterChip(
+                  key: Key('progress-filter-$discipline'),
+                  label: Text(disciplineName(l10n, discipline)),
+                  selected: filters.discipline == discipline,
+                  onSelected: (_) => ref
+                      .read(progressFiltersViewModelProvider.notifier)
+                      .setDiscipline(discipline),
+                ),
+            ],
           ),
-        ),
-        CardGrid(
-          children: [
-            if (goals.goals.isEmpty &&
-                !goals.load.running &&
-                goals.load.failure == null)
-              EmptyState(
-                key: const Key('no-goals'),
-                message: l10n.noGoals,
-                icon: Icons.flag_outlined,
-              ),
-            for (final goal in goals.goals)
-              GoalCard(
-                goal: goal,
-                onEdit: () => _editGoal(context, ref, goal),
-                onDelete: () =>
-                    ref.read(goalsViewModelProvider.notifier).delete(goal.id),
-              ),
-          ],
-        ),
-        WellbeingCard(
-          wellbeing: wellbeing.today,
-          checkIns: wellbeing.checkIns,
-          saving: wellbeing.action.running,
-          onConsent: () =>
-              ref.read(wellbeingViewModelProvider.notifier).consent(),
-          onWithdraw: () =>
-              ref.read(wellbeingViewModelProvider.notifier).withdrawConsent(),
-          onSave: (fatigue, soreness, mood, stress, motivation) => ref
-              .read(wellbeingViewModelProvider.notifier)
-              .saveCheckIn(fatigue, soreness, mood, stress, motivation),
-        ),
-      ],
-    );
-    return page;
-  }
-}
-
-/// The filters in one sheet: the period and the discipline, applied as they are chosen.
-class _ProgressFilterSheet extends ConsumerWidget {
-  const _ProgressFilterSheet();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filters = ref.watch(progressFiltersViewModelProvider);
-    final notifier = ref.read(progressFiltersViewModelProvider.notifier);
-    final l10n = context.l10n;
-    return SheetFrame(
-      title: l10n.progressFilterTitle,
-      children: [
-        SegmentedButton<String>(
-          key: const Key('progress-period'),
-          showSelectedIcon: false,
-          segments: [
-            ButtonSegment(value: 'week', label: Text(l10n.periodWeeks)),
-            ButtonSegment(value: 'month', label: Text(l10n.periodMonths)),
-            ButtonSegment(value: 'year', label: Text(l10n.periodYears)),
-          ],
-          selected: {filters.period},
-          onSelectionChanged: (s) => notifier.setPeriod(s.single),
-        ),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.xs,
-          children: [
-            ChoiceChip(
-              key: const Key('progress-filter-all'),
-              label: Text(l10n.rideFilterAll),
-              selected: filters.discipline == null,
-              onSelected: (_) => notifier.setDiscipline(null),
-            ),
-            for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-              ChoiceChip(
-                key: Key('progress-filter-$discipline'),
-                label: Text(disciplineName(l10n, discipline)),
-                selected: filters.discipline == discipline,
-                onSelected: (_) => notifier.setDiscipline(discipline),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// A number and what it means, on a surface of its own: the top of a dashboard.
-Widget _metricCard({
-  required Key key,
-  required String label,
-  required String value,
-  String? detail,
-}) => StatTile(
-  key: key,
-  label: label,
-  value: value,
-  detail: detail,
-  boxed: true,
-  headline: true,
-);
-
-/// The metric cards in one row: equal columns on a desktop window, two and two on a tablet, one
-/// under the other on a phone.
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = MediaQuery.sizeOf(context).width;
-      final count = switch (width) {
-        >= AppBreakpoint.expandedWidth => children.length,
-        >= AppBreakpoint.compactWidth => 2,
-        _ => 1,
-      };
-      const gap = AppSpacing.md;
-      final cell = (constraints.maxWidth - gap * (count - 1)) / count;
-      return Wrap(
-        spacing: gap,
-        runSpacing: gap,
-        children: [
-          for (final child in children) SizedBox(width: cell, child: child),
         ],
-      );
-    },
-  );
-}
-
-/// The totals as the chart and its numbers: the chart gets a title, so the page says what it shows.
-class _TotalsCard extends ConsumerWidget {
-  const _TotalsCard({required this.totals});
-
-  final TotalsResponse totals;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final units = ref.watch(unitsChoiceViewModelProvider);
-    final latest = totals.totals.isEmpty ? null : totals.totals.last;
-    final title = switch (totals.period) {
-      'week' => l10n.totalsTitleWeekly,
-      'month' => l10n.totalsTitleMonthly,
-      _ => l10n.totalsTitleYearly,
-    };
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            if (latest != null)
-              Text(
-                l10n.periodTotals(
-                  latest.rides,
-                  duration(latest.movingS),
-                  elevation(units, latest.elevationGainM),
-                ),
-                style: Theme.of(context).textTheme.bodySmall,
+        // Under the chips: today's session, a link to Training, and only while auto training is on.
+        if (todayWeek != null) _TodayTrainingStrip(week: todayWeek),
+        // A wide window puts the four facts in one row; a phone leads with readiness, puts Form and this
+        // period side by side under it and ends with the next event, as the phone mock-up draws them.
+        if (wide)
+          StatCardRow(children: metrics)
+        else ...[
+          ?readinessCard,
+          if (formCard != null && periodCard(compact: true) != null)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpacing.lg,
+                children: [
+                  Expanded(child: formCard),
+                  Expanded(child: periodCard(compact: true)!),
+                ],
               ),
-            TotalsChart(period: totals.period, totals: totals.totals),
+            )
+          else ...[
+            ?formCard,
+            ?periodCard(compact: true),
           ],
-        ),
-      ),
+          nextCard,
+        ],
+        // The chart's own loading state: the page is not empty while the totals arrive.
+        if (totals.load.running && totals.load.value == null)
+          Semantics(
+            liveRegion: true,
+            label: l10n.loading,
+            child: const PlaceholderBlock(
+              key: Key('totals-loading'),
+              height: AppChart.height,
+              radius: AppRadius.large,
+            ),
+          ),
+        if (totals.load.value case final data?)
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              // The card reaches the window's bottom, so its link sits at the foot of it, as the mock-up
+              // draws it with a spacer above the link.
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: AppSpacing.sm,
+                  children: [
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.sm,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(switch (data.period) {
+                          'week' => l10n.totalsTitleWeekly,
+                          'month' => l10n.totalsTitleMonthly,
+                          _ => l10n.totalsTitleYearly,
+                        }, style: Theme.of(context).textTheme.titleMedium),
+                        periods,
+                      ],
+                    ),
+                    TotalsChart(period: data.period, totals: data.totals),
+                  ],
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: CardLink(
+                    l10n.navTotals,
+                    key: const Key('progress-totals-link'),
+                    onPressed: () => context.go('/progress/totals'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
 
-/// The same totals as the chart, newest first, with every number. A long year stops at the first few
-/// rows; the chart still has them all.
-class _TotalsTable extends ConsumerWidget {
-  const _TotalsTable({required this.totals});
+/// Days to the next event, and which event it is. With nothing planned it says so and still leads to
+/// Goals, which is where an event is added.
+class _NextEventCard extends ConsumerWidget {
+  const _NextEventCard({required this.next});
 
-  final TotalsResponse totals;
+  final EventResponse? next;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final units = ref.watch(unitsChoiceViewModelProvider);
-    final rows = totals.totals.reversed.toList();
-    return Card(
-      child: Column(
+    final event = next;
+    if (event == null) {
+      return StatCard(
+        key: const Key('metric-next-event'),
+        title: l10n.nextEvent,
+        value: '–',
+        sentence: l10n.noEventPlanned,
+        link: l10n.navGoalsAndEvents,
+        onLink: () => context.go('/goals'),
+      );
+    }
+    final days = DateUtils.dateOnly(event.date)
+        .difference(DateUtils.dateOnly(DateTime.now()))
+        .inDays;
+    return StatCard(
+      key: const Key('metric-next-event'),
+      title: l10n.nextEvent,
+      value: days <= 0 ? l10n.eventToday : '$days',
+      unit: days <= 0 ? null : (days == 1 ? l10n.dayUnit : l10n.daysUnit),
+      sentence:
+          '${event.name} · ${DateFormat.yMMMMd(Localizations.localeOf(context).toLanguageTag()).format(event.date)}'
+          '${eventDetail(l10n, units, event).isEmpty ? '' : ' · ${eventDetail(l10n, units, event)}'}',
+      link: l10n.navGoalsAndEvents,
+      onLink: () => context.go('/goals'),
+    );
+  }
+}
+
+/// Today's session as one slim line: "Today · Strong and steady 3×10 · 1 h 15", linking to Training. It is a link,
+/// not a fact card, and it is not there while auto training is off.
+class _TodayTrainingStrip extends StatelessWidget {
+  const _TodayTrainingStrip({required this.week});
+
+  final TrainingWeek week;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final palette = VelomineColors.of(context);
+    final today = DateUtils.dateOnly(DateTime.now());
+    final session = week.sessions
+        .where((session) => DateUtils.isSameDay(session.localDate, today))
+        .firstOrNull;
+    return AppCard(
+      key: const Key('progress-today-training'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      onTap: () => context.go('/training'),
+      child: Row(
+        spacing: AppSpacing.md,
         children: [
-          for (final (i, t) in rows.take(_totalsShown).indexed)
-            ListTile(
-              key: Key('total-$i'),
-              dense: true,
-              title: Text(
-                i == 0
-                    ? switch (totals.period) {
-                        'week' => l10n.thisWeek,
-                        'month' => l10n.thisMonth,
-                        _ => l10n.thisYear,
-                      }
-                    : periodTitle(totals.period, t.start, t.end),
+          Expanded(
+            child: Text(
+              l10n.trainingTodayStrip(
+                session == null
+                    ? l10n.trainingRestDay
+                    : '${sessionName(l10n, session)} · ${sessionLength(session.minutes)}',
               ),
-              subtitle: Text(
-                l10n.periodTotals(
-                  t.rides,
-                  duration(t.movingS),
-                  elevation(units, t.elevationGainM),
-                ),
-              ),
-              trailing: Text(
-                km(units, t.distanceM),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-          if (rows.length > _totalsShown)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                l10n.totalsMore(rows.length - _totalsShown),
-                key: const Key('totals-more'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+          ),
+          Text(
+            l10n.navTraining,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: palette.accentStrong,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          ExcludeSemantics(
+            child: Icon(
+              Icons.arrow_forward,
+              size: AppTraining.stripIcon,
+              color: palette.accentStrong,
+            ),
+          ),
         ],
       ),
     );

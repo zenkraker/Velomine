@@ -3,9 +3,11 @@ using Npgsql;
 using System.Diagnostics;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Privacy;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
@@ -36,7 +38,11 @@ public sealed class RideIngestionService(
             try
             {
                 await using var scope = services.CreateAsyncScope();
-                await ProcessAsync(scope.ServiceProvider.GetRequiredService<VelomineDbContext>(), id, stoppingToken);
+                await ProcessAsync(
+                    scope.ServiceProvider.GetRequiredService<VelomineDbContext>(),
+                    scope.ServiceProvider.GetRequiredService<SetHeartRateValue>(),
+                    id,
+                    stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -59,12 +65,12 @@ public sealed class RideIngestionService(
         }
     }
 
-    private async Task ProcessAsync(VelomineDbContext db, Guid id, CancellationToken ct)
+    private async Task ProcessAsync(VelomineDbContext db, SetHeartRateValue setHeartRate, Guid id, CancellationToken ct)
     {
         var started = Stopwatch.GetTimestamp();
         try
         {
-            await ProcessCoreAsync(db, id, ct);
+            await ProcessCoreAsync(db, setHeartRate, id, ct);
         }
         finally
         {
@@ -72,7 +78,7 @@ public sealed class RideIngestionService(
         }
     }
 
-    private async Task ProcessCoreAsync(VelomineDbContext db, Guid id, CancellationToken ct)
+    private async Task ProcessCoreAsync(VelomineDbContext db, SetHeartRateValue setHeartRate, Guid id, CancellationToken ct)
     {
         var ride = await db.Rides.Include(r => r.Laps).FirstOrDefaultAsync(r => r.Id == id && r.Status == RideStatus.Processing, ct);
         if (ride is null) return;
@@ -94,11 +100,13 @@ public sealed class RideIngestionService(
         }
 
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
-        var profile = await db.Users.AsNoTracking()
+        // Tracked, because a ride that measures this member's heart rate changes the same row in the same save.
+        var profile = await db.Users
             .Where(u => u.Id == ride.UserId)
-            .Select(u => new { u.FtpW, u.BirthYear, u.TimeZone })
             .FirstAsync(ct);
-        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear, time);
+        var heartRates = HeartRates.For(profile, time);
+        var maxHeartRate = heartRates.Max?.Bpm;
+        var thresholdHeartRate = heartRates.Threshold?.Bpm;
         // Copied once, onto the ride row made at upload: the activities of a multi-activity file inherit it below, and
         // a re-read from the original file leaves the columns alone because it assigns only what it derives.
         ride.Privacy ??= PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking()
@@ -109,9 +117,14 @@ public sealed class RideIngestionService(
             .ToListAsync(ct);
         var used = false;
         var read = new List<Ride>();
+        // Each ride's own samples, by id: the duplicate check compares what is stored, not the parsed activity.
+        var sources = new Dictionary<Guid, ParsedRide>();
         string? lastError = null;
         foreach (var file in parsed)
         {
+            // The bike a new ride is given is picked before the numbers, because its kind and weight shape the estimate.
+            var bikeId = ride.BikeId ?? DefaultBike.For(memberBikes, file.Discipline, file.Assist, file.Environment, file.Commute);
+            var bike = memberBikes.FirstOrDefault(b => b.Id == bikeId);
             RideMetricValues metrics;
             try
             {
@@ -122,7 +135,10 @@ public sealed class RideIngestionService(
                     file.DeviceMovingS,
                     file.Pauses,
                     ftpW: profile.FtpW,
-                    maxHeartRate: maxHeartRate);
+                    maxHeartRate: maxHeartRate,
+                    thresholdHeartRate: thresholdHeartRate,
+                    estimate: new PowerEstimate(
+                        profile.WeightKg, bike?.WeightKg, bike?.Kind, file.Discipline, file.Environment, file.Assist));
             }
             catch (RideParseException ex)
             {
@@ -148,6 +164,7 @@ public sealed class RideIngestionService(
             if (used) db.Rides.Add(target);
             used = true;
             read.Add(target);
+            sources[target.Id] = file;
 
             target.StartTime = file.StartTime;
             target.UtcOffsetMinutes = file.UtcOffsetMinutes
@@ -165,7 +182,7 @@ public sealed class RideIngestionService(
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
             Apply(target, metrics);
-            target.StampRead(profile.FtpW, maxHeartRate);
+            target.StampRead(profile.FtpW, maxHeartRate, thresholdHeartRate);
 
             if (await FindOriginalAsync(db, target, ct) is { } original)
             {
@@ -174,9 +191,9 @@ public sealed class RideIngestionService(
                 continue;
             }
 
-            target.BikeId ??= DefaultBike.For(memberBikes, file.Discipline, file.Assist, file.Environment, file.Commute);
+            target.BikeId ??= bikeId;
             target.Status = RideStatus.Ready;
-            target.Streams = ToStreams(file.Samples);
+            target.Streams = ToStreams(file.Samples, metrics.EstimatedPower);
             target.Laps.Clear();
             target.Laps.AddRange(LapMetrics.Build(target.Id, file.Laps, file.Samples, file.Pauses, profile.FtpW, maxHeartRate));
             target.PowerBests.Clear();
@@ -190,25 +207,119 @@ public sealed class RideIngestionService(
             return;
         }
 
+        // Worked out before the save: a ride that was just read has its bests in memory, not yet in the database.
+        var clock = read.Any(r => r.Status == RideStatus.Ready) ? await MemberClock.ForAsync(db, ride.UserId, time, ct) : null;
+        if (clock is not null && ride.NotifiesMember)
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+                await Notify.PowerRecordAsync(db, time, clock, r, ct);
+        // Only here, on a ride's first read: a re-read and a duplicate never suggest an FTP.
+        if (clock is not null)
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+                await FtpSuggestionDetection.AddAsync(db, time, clock, r, profile.FtpW, ct);
+        // Nor do they learn a heart rate: the number a ride showed is asked about once, when it is first read.
+        if (clock is not null)
+        {
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+            {
+                var file = sources[r.Id];
+                var (maxNote, thresholdNote) = await HeartRateDetection.AddAsync(
+                    db, time, clock, profile, r, file.Samples, file.Pauses, setHeartRate, ct);
+                // The legacy column keeps the maximum first, so an app without the threshold's own field still sees a note.
+                r.HeartRateNote = maxNote ?? thresholdNote;
+                r.HeartRateThresholdNote = thresholdNote;
+            }
+        }
+        // A ride that was the rider's only one that day becomes the event of that date, if one is waiting for it.
+        if (clock is not null)
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+                await EventRideLink.AddAsync(db, clock, r, ct);
+
         foreach (var r in read.Where(r => r.NotifiesMember)) Notify.RideRead(db, time, r);
+        // A ride ticks the session of its day, or asks about one beside it: in this save, next to the event link, so a
+        // ride is never ready without the tick it earned. A failure is logged and swallowed, and the ride lands anyway.
+        var matched = await MatchSessionsAsync(db, ride.UserId, [.. read.Where(r => r.Status == RideStatus.Ready)], ct);
+        bool saved;
         try
         {
-            await db.SaveChangesAsync(ct);
+            saved = await SaveReadAsync(db, ride, read, ct);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-        { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
+        catch (DbUpdateConcurrencyException) when (matched is not null)
         {
-            // Two reads of the same file finished together. The unique index lets one in; the other becomes a
-            // duplicate of it, exactly as when it is seen later.
-            await MarkDuplicateAsync(db, ride.Id, ride.UserId, read.FirstOrDefault()?.DedupKey, ct);
-            return;
+            // The week was planned under a session the matching changed, so this save finds no row to update. The ride
+            // comes first: the sessions go back as they were, the ride is saved on its own, and the matching is tried
+            // once more from the sessions that are there now.
+            matched.Restore(db);
+            saved = await SaveReadAsync(db, ride, read, ct);
+            if (saved)
+                await RematchAsync(db, ride.UserId, [.. read.Where(r => r.Status == RideStatus.Ready)], ct);
         }
+        if (!saved) return;
 
         // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
         VelomineMetrics.RidesIngested.Add(read.Count(r => r.Status == RideStatus.Ready));
         // An import warns once when it finishes, not once per ride: wear is recomputed from every ride each time.
         if (ride.NotifiesMember) await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
+    }
+
+    /// <summary>
+    /// The matching again, after the week was planned under it. The ride is saved and ready by now, so this save losing
+    /// too costs the tick and nothing else: the sessions go back as they were and the reason is logged.
+    /// </summary>
+    private async Task RematchAsync(VelomineDbContext db, Guid userId, IReadOnlyList<Ride> rides, CancellationToken ct)
+    {
+        var edits = await MatchSessionsAsync(db, userId, rides, ct);
+        if (edits is null) return;
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex)
+        {
+            edits.Restore(db);
+            logger.LogWarning("Could not match a ride to its training session ({Exception}).", ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// The read's one save. False when another read of the same file got there first: the unique index lets one in and
+    /// this one becomes a duplicate of it, exactly as when it is seen later.
+    /// </summary>
+    private async Task<bool> SaveReadAsync(VelomineDbContext db, Ride ride, List<Ride> read, CancellationToken ct)
+    {
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+        { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
+        {
+            await MarkDuplicateAsync(db, ride.Id, ride.UserId, read.FirstOrDefault()?.DedupKey, ct);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Ticks or asks about the sessions of the rides that were just read, changing them in this context so they save
+    /// with the rides. Every read happens before the first change: an exception here leaves the save untouched, and the
+    /// ride still becomes ready.
+    /// </summary>
+    private async Task<SessionMatch.Edits?> MatchSessionsAsync(
+        VelomineDbContext db, Guid userId, IReadOnlyList<Ride> rides, CancellationToken ct)
+    {
+        if (rides.Count == 0) return null;
+        try
+        {
+            return await SessionMatch.AddAsync(db, time, userId, rides, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The rider keeps the ride and every number of it; the tick or the question is what is lost, and matching
+            // never runs again for this ride. Nothing of the ride or the rider goes in the log.
+            logger.LogWarning("Could not match a ride to its training session ({Exception}).", ex.GetType().Name);
+            return null;
+        }
     }
 
     /// <summary>
@@ -293,13 +404,20 @@ public sealed class RideIngestionService(
         ride.IntensityFactor = m.IntensityFactor;
         ride.Tss = m.Tss;
         ride.Trimp = m.Trimp;
+        ride.HrTss = m.HrTss;
+        ride.EstimatedAvgPowerW = m.EstimatedAvgPowerW;
+        ride.EstimatedNormalizedPowerW = m.EstimatedNormalizedPowerW;
+        ride.EstimatedTss = m.EstimatedTss;
         ride.AvgHeartRate = m.AvgHeartRate;
         ride.MaxHeartRate = m.MaxHeartRate;
         ride.AvgCadence = m.AvgCadence;
+        ride.EfficiencyFactor = m.EfficiencyFactor;
+        ride.DecouplingPct = m.DecouplingPct;
+        ride.Steady = m.Steady;
     }
 
     /// <summary>One array per signal; a signal the file never had is left null instead of an array of nulls.</summary>
-    internal static RideStreams ToStreams(IReadOnlyList<Sample> samples)
+    internal static RideStreams ToStreams(IReadOnlyList<Sample> samples, short?[]? estimatedPower = null)
     {
         static T?[]? Column<T>(IReadOnlyList<Sample> all, Func<Sample, T?> pick)
             where T : struct
@@ -318,6 +436,7 @@ public sealed class RideIngestionService(
             Distance = Column(samples, s => s.Distance),
             HeartRate = Column(samples, s => s.HeartRate),
             Power = Column(samples, s => s.Power),
+            EstimatedPower = estimatedPower,
             Cadence = Column(samples, s => s.Cadence),
             Temperature = Column(samples, s => s.Temperature),
         };

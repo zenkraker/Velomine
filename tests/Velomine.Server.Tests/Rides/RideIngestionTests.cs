@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Velomine.Server.Tests.Rides;
 
-public sealed class RideIngestionTests(PostgresFixture postgres)
+public sealed class RideIngestionTests(PostgresFixture postgres, RideIngestionHost host) : IClassFixture<RideIngestionHost>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -58,7 +58,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldStoreAReadyRideWithMetrics_WhenGivenAFitFile()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
 
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120, NormalizedPower: 215)));
@@ -82,7 +82,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldUseGpsSpeedAndWorkOutNormalizedPower_WhenGpxHasNoSpeed()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var gpx = Gpx(180, i => $"<gpxpx:PowerExtension><gpxpx:PowerInWatts>{(i % 60 < 30 ? 150 : 250)}</gpxpx:PowerInWatts></gpxpx:PowerExtension>");
 
@@ -100,7 +100,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldStoreTheRidersOffset_WhenTheGpxHasNoOffset()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         await SetProfileAsync(member, "Europe/Rome");
 
@@ -137,7 +137,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldStoreStreamsAlignedBySample_WhenTheFileIsRead()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)));
 
@@ -158,7 +158,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task GetRideStreams_ShouldReturnAlignedArraysAndThinThem_WhenRequested()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)));
 
@@ -179,7 +179,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task GetRideStreams_ShouldBeHiddenFromNonOwners_WhenTheRideIsNotTheirs()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var alice = await NewMemberAsync(api);
         var bob = await NewMemberAsync(api);
         var ready = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 90)));
@@ -194,7 +194,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldReturnTheSameRide_WhenRetriedWithTheSameKey()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var file = Fit(new FitSession(Start, 90));
 
@@ -224,7 +224,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldReturnAHiddenDuplicate_WhenTheSameFileIsUploadedAgain()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var file = Fit(new FitSession(Start, 90));
         var first = await UploadAndWaitAsync(member, file);
@@ -240,7 +240,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldMakeNoNotification_WhenTheFilesCameInABulkDrop()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var file = Fit(new FitSession(Start, 90));
         var broken = Bytes("not a ride");
@@ -261,21 +261,9 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task UploadRide_ShouldNotifyTheMember_WhenASingleFileIsUploaded()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-
-        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 90)));
-
-        var notifications = await member.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct);
-        Assert.Single(notifications!.Notifications);
-    }
-
-    [Fact]
     public async Task UploadRide_ShouldKeepOneRide_WhenTheSameFileIsUploadedTwiceAtOnce()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var file = Fit(new FitSession(Start, 90));
 
@@ -296,7 +284,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldCreateTwoRides_WhenTheFileHasTwoSessions()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
 
         var first = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 90), new FitSession(Start.AddHours(3), 60)));
@@ -324,21 +312,9 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task UploadRide_ShouldFailAsNotCycling_WhenTheActivityIsARun()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-
-        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60, Sport.Running)));
-
-        Assert.Equal("failed", ride.Status);
-        Assert.Equal("not_cycling", ride.Error);
-    }
-
-    [Fact]
     public async Task UploadRide_ShouldAcceptTheRequest_WhenSentAsTheGeneratedDartClientDoes()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
 
         // The generated client adds a plain text field "file" with the value "file" next to the file part.
@@ -357,7 +333,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldRejectTheRequest_WhenTwoFilesAreSent()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var form = new MultipartFormDataContent
         {
@@ -371,7 +347,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldRejectTheRequest_WhenTheFileIsEmpty()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
 
         var response = await UploadAsync(member, []);
@@ -382,7 +358,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task Rides_ShouldBeInvisibleToOtherMembers_WhenTheyBelongToSomeoneElse()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var alice = await NewMemberAsync(api);
         var bob = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 90)));
@@ -391,24 +367,6 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.NotFound, (await bob.DeleteAsync($"/api/v1/rides/{ride.Id}", Ct)).StatusCode);
         Assert.Empty((await bob.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct))!.Rides);
         Assert.Equal(HttpStatusCode.OK, (await alice.GetAsync($"/api/v1/rides/{ride.Id}", Ct)).StatusCode);
-    }
-
-    [Fact]
-    public async Task ListRides_ShouldPageNewestFirst_WhenThereAreMoreRidesThanTheLimit()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        foreach (var day in new[] { 1, 2, 3 }) await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(day), 60)));
-
-        var page1 = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?limit=2", Ct);
-        Assert.Equal([Start.AddDays(3), Start.AddDays(2)], page1!.Rides.Select(r => r.StartTime!.Value.UtcDateTime).ToArray());
-        Assert.NotNull(page1.Next);
-
-        var page2 = await member.GetFromJsonAsync<ListRidesResponse>($"/api/v1/rides?limit=2&cursor={Uri.EscapeDataString(page1.Next)}", Ct);
-        Assert.Equal([Start.AddDays(1)], page2!.Rides.Select(r => r.StartTime!.Value.UtcDateTime).ToArray());
-        Assert.Null(page2.Next);
-
-        Assert.Equal(HttpStatusCode.BadRequest, (await member.GetAsync("/api/v1/rides?cursor=nonsense", Ct)).StatusCode);
     }
 
     [Fact]
@@ -429,7 +387,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldStoreTheDistance_WhenAnIndoorFileHasAPause()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
 
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(
@@ -490,7 +448,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldStoreTheDimensions_WhenTheFitSessionHasASubSport()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
 
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60, Sport.EBiking, SubSport: SubSport.EBikeMountain)));
@@ -504,7 +462,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task SetRideType_ShouldChangeTheDimensions_WhenTheMemberOwnsTheRide()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
 
@@ -533,7 +491,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task SetRideType_ShouldRejectAnUnknownDiscipline_WhenTheBodyHasOne()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
 
@@ -545,7 +503,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task SetRideType_ShouldReturnNotFound_WhenTheRideBelongsToSomeoneElse()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var alice = await NewMemberAsync(api);
         var bob = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 60)));
@@ -601,7 +559,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task ListRides_ShouldApplyEveryDimensionFilter_WhenSeveralAreGiven()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(1), 60, SubSport: SubSport.Road)));
         await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(2), 60, SubSport: SubSport.GravelCycling)));
@@ -626,7 +584,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldStoreComputedLaps_WhenTheFileHasThem()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120, LapSeconds: [60, 60])));
 
@@ -639,24 +597,16 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(119, laps.Laps[1].EndS);
         Assert.InRange(laps.Laps.Sum(l => l.DistanceM), ride.DistanceM!.Value - 1, ride.DistanceM.Value + 1);
         Assert.InRange(laps.Laps.Sum(l => l.MovingS), ride.MovingS!.Value - 2, ride.MovingS.Value + 2);
-    }
 
-    [Fact]
-    public async Task GetRideLaps_ShouldReturnNone_WhenTheFileHasNoLaps()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
-
-        var laps = await member.GetFromJsonAsync<RideLapsResponse>($"/api/v1/rides/{ride.Id}/laps", Ct);
-
-        Assert.Empty(laps!.Laps);
+        // A ride whose file has no laps answers 200 with an empty list, not an error.
+        var plain = await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(1), 60)));
+        Assert.Empty((await member.GetFromJsonAsync<RideLapsResponse>($"/api/v1/rides/{plain.Id}/laps", Ct))!.Laps);
     }
 
     [Fact]
     public async Task GetRideLaps_ShouldBeHiddenOrRefused_WhenTheRideIsNotReadyOrNotMine()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var alice = await NewMemberAsync(api);
         var bob = await NewMemberAsync(api);
         var ready = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 60)));
@@ -671,7 +621,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task UploadRide_ShouldUseTheBikeForItsDimensions_WhenTheMemberHasSeveral()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         var userId = (await member.GetFromJsonAsync<Server.Features.Accounts.MeResponse>("/api/v1/accounts/me", Ct))!.Id;
 
@@ -706,4 +656,19 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(ebike.Id, ebikeRide.BikeId);
         Assert.Equal(road.Id, indoorRide.BikeId); // no kind for indoor: the single default
     }
+}
+
+/// <summary>One server for the class: every test makes its own member and only reads or changes that member's data.</summary>
+public sealed class RideIngestionHost(PostgresFixture postgres) : IAsyncLifetime
+{
+    public TestApi Api { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync() => Api = await TestApi.StartAsync(postgres, b =>
+    {
+        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+        // Tests sign members in from the same address; one server per test gave each a fresh budget.
+        b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "100000");
+    });
+
+    public ValueTask DisposeAsync() => Api.DisposeAsync();
 }

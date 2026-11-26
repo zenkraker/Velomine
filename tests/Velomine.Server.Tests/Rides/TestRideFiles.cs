@@ -21,7 +21,20 @@ public static class TestRideFiles
         SubSport SubSport = SubSport.Generic,
         IReadOnlyList<int>? LapSeconds = null,
         bool NoPosition = false,
-        string? WorkoutName = null);
+        string? WorkoutName = null,
+        ushort ManufacturerId = Manufacturer.Garmin,
+        double StartLatitude = 46.0,
+        double StartLongitude = 11.0,
+        /// <summary>Power per second, when the test needs a shape other than the steady 200 W.</summary>
+        Func<int, short>? Power = null,
+        /// <summary>Heart rate per second, when the test needs a shape other than the steady 150 bpm.</summary>
+        Func<int, short>? HeartRate = null,
+        /// <summary>Leaves the heart rate out, so a ride does not teach the member a maximum heart rate.</summary>
+        bool NoHeartRate = false,
+        /// <summary>Leaves the power out, for a rider with no power meter.</summary>
+        bool NoPower = false,
+        /// <summary>The offset the file's activity claims, so a ride can be on another local date.</summary>
+        int UtcOffsetHours = 2);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -32,7 +45,7 @@ public static class TestRideFiles
 
         var fileId = new FileIdMesg();
         fileId.SetType(Dynastream.Fit.File.Activity);
-        fileId.SetManufacturer(Manufacturer.Garmin);
+        fileId.SetManufacturer(sessions[0].ManufacturerId);
         fileId.SetProduct(1);
         fileId.SetSerialNumber(1234);
         encode.Write(fileId);
@@ -59,14 +72,16 @@ public static class TestRideFiles
                 record.SetTimestamp(new Dynastream.Fit.DateTime(session.Start.AddSeconds(s)));
                 if (!session.NoPosition)
                 {
-                    record.SetPositionLat((int)((46.0 + s * 8 / 111_195.0) * (2147483648.0 / 180.0)));
-                    record.SetPositionLong((int)(11.0 * (2147483648.0 / 180.0)));
+                    record.SetPositionLat((int)((session.StartLatitude + s * 8 / 111_195.0) * (2147483648.0 / 180.0)));
+                    record.SetPositionLong((int)(session.StartLongitude * (2147483648.0 / 180.0)));
                 }
                 record.SetAltitude(300 + s * 0.1f);
                 record.SetSpeed(8);
                 record.SetDistance(s * 8f);
-                record.SetHeartRate(150);
-                record.SetPower(200);
+                if (!session.NoHeartRate)
+                    record.SetHeartRate((byte)(session.HeartRate?.Invoke(s) ?? 150));
+                if (!session.NoPower)
+                    record.SetPower((ushort)(session.Power?.Invoke(s) ?? 200));
                 record.SetCadence(90);
                 record.SetTemperature(18);
                 encode.Write(record);
@@ -104,7 +119,7 @@ public static class TestRideFiles
         var last = sessions[^1].Start.AddSeconds(sessions[^1].Seconds);
         var activity = new ActivityMesg();
         activity.SetTimestamp(new Dynastream.Fit.DateTime(last));
-        activity.SetLocalTimestamp(new Dynastream.Fit.DateTime(last.AddHours(2)).GetTimeStamp()); // UTC+2
+        activity.SetLocalTimestamp(new Dynastream.Fit.DateTime(last.AddHours(sessions[^1].UtcOffsetHours)).GetTimeStamp());
         activity.SetNumSessions((ushort)sessions.Length);
         encode.Write(activity);
 

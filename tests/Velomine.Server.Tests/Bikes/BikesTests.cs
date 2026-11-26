@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using Velomine.Server.Data;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Tests.Rides;
@@ -177,6 +181,22 @@ public sealed class BikesTests(PostgresFixture postgres)
         var stolen = await member.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/bike", new SetRideBikeRequest { BikeId = theirs.Bike.Id }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, stolen.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await other.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/bike", new SetRideBikeRequest { BikeId = theirs.Bike.Id }, Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task BikeTable_ShouldRefuseAWeightOutsideTheRange_WhenWrittenDirectly()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var bike = await AddBikeAsync(member, NewBike());
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        // The validator allows 3 to 40 kg; the table refuses anything else, whatever writes it.
+        var error = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"UPDATE bikes.bikes SET weight_kg = 50 WHERE id = {bike.Bike.Id}", Ct));
+
+        Assert.Equal("ck_bikes_weight_kg", error.ConstraintName);
     }
 
     private static Task<RideResponse> UploadRideAsync(TestApi api, HttpClient client) =>

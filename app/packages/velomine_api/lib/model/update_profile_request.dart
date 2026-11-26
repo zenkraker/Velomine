@@ -22,6 +22,8 @@ class UpdateProfileRequest {
     this.emailNotifications = const Optional.absent(),
     this.emailAccountNotifications = const Optional.absent(),
     this.emailTrainingNotifications = const Optional.absent(),
+    this.maxHeartRate = const Optional.absent(),
+    this.thresholdHeartRate = const Optional.absent(),
   });
 
   final String displayName;
@@ -66,6 +68,26 @@ class UpdateProfileRequest {
   ///
   final Optional<bool?> emailTrainingNotifications;
 
+  /// Minimum value: 120
+  /// Maximum value: 230
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> maxHeartRate;
+
+  /// Minimum value: 90
+  /// Maximum value: 220
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> thresholdHeartRate;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateProfileRequest &&
     other.displayName == displayName &&
@@ -76,7 +98,9 @@ class UpdateProfileRequest {
     other.firstDayOfWeek == firstDayOfWeek &&
     other.emailNotifications == emailNotifications &&
     other.emailAccountNotifications == emailAccountNotifications &&
-    other.emailTrainingNotifications == emailTrainingNotifications;
+    other.emailTrainingNotifications == emailTrainingNotifications &&
+    other.maxHeartRate == maxHeartRate &&
+    other.thresholdHeartRate == thresholdHeartRate;
 
   @override
   int get hashCode =>
@@ -89,10 +113,12 @@ class UpdateProfileRequest {
     (firstDayOfWeek.hashCode) +
     (emailNotifications == null ? 0 : emailNotifications!.hashCode) +
     (emailAccountNotifications == null ? 0 : emailAccountNotifications!.hashCode) +
-    (emailTrainingNotifications == null ? 0 : emailTrainingNotifications!.hashCode);
+    (emailTrainingNotifications == null ? 0 : emailTrainingNotifications!.hashCode) +
+    (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
+    (thresholdHeartRate == null ? 0 : thresholdHeartRate!.hashCode);
 
   @override
-  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications]';
+  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, maxHeartRate=$maxHeartRate, thresholdHeartRate=$thresholdHeartRate]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -130,6 +156,14 @@ class UpdateProfileRequest {
       final value = this.emailTrainingNotifications.value;
       json[r'emailTrainingNotifications'] = value;
     }
+    if (this.maxHeartRate.isPresent) {
+      final value = this.maxHeartRate.value;
+      json[r'maxHeartRate'] = value;
+    }
+    if (this.thresholdHeartRate.isPresent) {
+      final value = this.thresholdHeartRate.value;
+      json[r'thresholdHeartRate'] = value;
+    }
     return json;
   }
 
@@ -149,6 +183,8 @@ class UpdateProfileRequest {
     Optional<bool?>? emailNotifications,
     Optional<bool?>? emailAccountNotifications,
     Optional<bool?>? emailTrainingNotifications,
+    Optional<int?>? maxHeartRate,
+    Optional<int?>? thresholdHeartRate,
   }) => UpdateProfileRequest(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -159,6 +195,8 @@ class UpdateProfileRequest {
     emailNotifications: emailNotifications ?? this.emailNotifications,
     emailAccountNotifications: emailAccountNotifications ?? this.emailAccountNotifications,
     emailTrainingNotifications: emailTrainingNotifications ?? this.emailTrainingNotifications,
+    maxHeartRate: maxHeartRate ?? this.maxHeartRate,
+    thresholdHeartRate: thresholdHeartRate ?? this.thresholdHeartRate,
   );
 
   /// Returns a new [UpdateProfileRequest] instance and imports its values from
@@ -193,6 +231,8 @@ class UpdateProfileRequest {
         emailNotifications: json.containsKey(r'emailNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailNotifications')) : const Optional.absent(),
         emailAccountNotifications: json.containsKey(r'emailAccountNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailAccountNotifications')) : const Optional.absent(),
         emailTrainingNotifications: json.containsKey(r'emailTrainingNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailTrainingNotifications')) : const Optional.absent(),
+        maxHeartRate: json.containsKey(r'maxHeartRate') ? Optional.present(json[r'maxHeartRate'] == null ? null : int.parse('${json[r'maxHeartRate']}')) : const Optional.absent(),
+        thresholdHeartRate: json.containsKey(r'thresholdHeartRate') ? Optional.present(json[r'thresholdHeartRate'] == null ? null : int.parse('${json[r'thresholdHeartRate']}')) : const Optional.absent(),
       );
     }
     return null;

@@ -4,9 +4,10 @@ using Microsoft.Extensions.Options;
 namespace Velomine.Server.Features.Demo;
 
 /// <summary>
-/// What a demo refuses. Its visitors share three accounts, so one of them must not be able to lock the others out:
-/// no new or reset password, no two-factor sign-in, no deleted account, no signing the others out, no changed club roles, and
-/// no new accounts.
+/// What a demo refuses. Its visitors share the demo accounts, so one of them must not be able to lock the others out:
+/// no new or reset password, no two-factor sign-in, no deleted account, no signing the others out, no changed club roles,
+/// no new accounts, no turning auto training off and no skipping the rest of the week, either of which would take the
+/// week away from everyone until 03:00 UTC.
 /// </summary>
 public static class DemoLock
 {
@@ -33,6 +34,8 @@ public static class DemoLock
         ("POST", "club/leave"),
         ("POST", "club/join-code"),
         ("PUT", "club/members/{userId}/role"),
+        // A visitor must not turn the demo rider's auto training off for the next visitor.
+        ("DELETE", "training/plan"),
     ];
 
     public static bool Refuses(string method, string? routeTemplate)
@@ -47,6 +50,15 @@ public static class DemoLock
         return false;
     }
 
+    /// <summary>The refusal a demo answers with, as the middleware and an endpoint that reads a request body both send it.</summary>
+    public static ProblemDetails Problem() => new()
+    {
+        Status = StatusCodes.Status403Forbidden,
+        Title = "Not available in the demo.",
+        Detail = "This is switched off in the demo, because everyone shares these accounts.",
+        Extensions = { ["code"] = Code },
+    };
+
     /// <summary>Answers 403 for a refused action when this server is a demo. Runs after routing has chosen the endpoint.</summary>
     public static IApplicationBuilder UseDemoLock(this IApplicationBuilder app) => app.Use(async (context, next) =>
     {
@@ -54,13 +66,7 @@ public static class DemoLock
             && context.GetEndpoint() is RouteEndpoint endpoint
             && Refuses(context.Request.Method, endpoint.RoutePattern.RawText))
         {
-            await Results.Problem(new ProblemDetails
-            {
-                Status = StatusCodes.Status403Forbidden,
-                Title = "Not available in the demo.",
-                Detail = "This is switched off in the demo, because everyone shares these accounts.",
-                Extensions = { ["code"] = Code },
-            }).ExecuteAsync(context);
+            await Results.Problem(Problem()).ExecuteAsync(context);
             return;
         }
 

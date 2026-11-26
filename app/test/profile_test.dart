@@ -1,5 +1,11 @@
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:velomine/core/units.dart';
+import 'package:velomine/core/widgets/section_card.dart';
+import 'package:velomine/core/widgets/source_note.dart';
+import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
 
 import 'fake_server.dart';
 
@@ -11,8 +17,11 @@ void main() {
     server.signInBrowser(server.add('rider@example.com', name: 'Ada'));
   });
 
-  Future<void> openProfile(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 1600);
+  Future<void> openProfile(
+    WidgetTester tester, {
+    Size size = const Size(1000, 1600),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
@@ -39,23 +48,367 @@ void main() {
 
     String field(String key) =>
         tester.widget<TextField>(find.byKey(Key(key))).controller!.text;
+    String? hint(String key) =>
+        tester.widget<TextField>(find.byKey(Key(key))).decoration!.hintText;
     expect(field('profile-name'), 'Ada');
     expect(field('profile-ftp'), '250');
     expect(field('profile-weight'), '64.5');
     expect(field('profile-birth-year'), '1990');
-    expect(find.textContaining('Estimated maximum heart rate'), findsOneWidget);
-    expect(field('profile-zone'), 'Europe/Rome');
+    // Born 1990: 208 − 0.7 × 36 = 183, and 89 % of it. An estimate is the field's hint, not its value.
+    expect(field('profile-max-hr'), '');
+    expect(hint('profile-max-hr'), '183');
+    expect(field('profile-threshold-hr'), '');
+    expect(hint('profile-threshold-hr'), '163');
+    // The zone is a picker of the zones the app knows, not a free-text field.
+    expect(find.text('Europe/Rome'), findsOneWidget);
     expect(find.text('Sunday'), findsOneWidget);
   });
+
+  testWidgets('ProfileScreen_ShouldExplainTheMaxHeartRate_WhenItIsEstimated', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': null,
+      'weightKg': null,
+      'birthYear': 1990,
+      'timeZone': null,
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+    };
+    await openProfile(tester);
+
+    final note = tester.widget<SourceNote>(
+      find.byKey(const Key('profile-max-hr-source')),
+    );
+    expect(note.text, 'Estimated from your age (208 − 0.7 × age)');
+    final threshold = tester.widget<SourceNote>(
+      find.byKey(const Key('profile-threshold-hr-source')),
+    );
+    expect(threshold.text, 'Estimated as 89 % of your maximum');
+    // An estimated threshold is always below the maximum, so nothing is said about it.
+    expect(
+      find.byKey(const Key('profile-threshold-hr-above-max')),
+      findsNothing,
+    );
+    expect(
+      find.text('The highest heart rate you can hold for about an hour.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldSuggestAddingWeight_WhenRidesHaveNoPowerAndNoWeight',
+    (tester) async {
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'hasRidesWithoutPower': true,
+      };
+      await openProfile(tester);
+
+      final weight = tester.widget<TextField>(
+        find.byKey(const Key('profile-weight')),
+      );
+      expect(
+        weight.decoration!.helperText,
+        'Add your weight to estimate watts on rides without a power meter.',
+      );
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldOpenTheRide_WhenAMeasuredHeartRateIsTapped', (
+    tester,
+  ) async {
+    server.rides.add(
+      rideJson(
+        'r1',
+        'ready',
+        startTime: '2026-11-12T23:30:00Z',
+        utcOffsetMinutes: 60,
+      ),
+    );
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': null,
+      'weightKg': null,
+      'birthYear': 1990,
+      'timeZone': 'Europe/Rome',
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+      'maxHeartRate': 192,
+      'maxHeartRateSource': 'measured',
+      'maxHeartRateRideId': 'r1',
+    };
+    await openProfile(tester);
+
+    // The ride's own local date: 23:30 UTC on the 12th is early on the 13th where it was ridden.
+    expect(
+      find.text(
+        'Measured on your ride of ${DateFormat.yMMMd().format(DateTime(2026, 11, 13))}',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('profile-max-hr-source')));
+    await tester.pumpAndSettle();
+    expect(find.byType(RideDetailScreen), findsOneWidget);
+  });
+
+  testWidgets('ProfileScreen_ShouldShowNoLink_WhenTheMeasuringRideWasDeleted', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': null,
+      'weightKg': null,
+      'birthYear': 1990,
+      'timeZone': 'Europe/Rome',
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+      'maxHeartRate': 192,
+      'maxHeartRateSource': 'measured',
+      'maxHeartRateRideId': null,
+    };
+    await openProfile(tester);
+
+    expect(find.text('Measured on a ride you deleted'), findsOneWidget);
+    final note = tester.widget<SourceNote>(
+      find.byKey(const Key('profile-max-hr-source')),
+    );
+    expect(note.onTap, isNull);
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldNotSave_WhenAnEstimatedFieldIsLeftUntouched',
+    (tester) async {
+      // Born 1990: an estimated maximum and threshold, both shown as hints; leaving them alone writes nothing.
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+      };
+      await openProfile(tester);
+
+      await tester.enterText(find.byKey(const Key('profile-max-hr')), '');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('profile-threshold-hr')), '');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        server.requests.where((r) => r.contains('/accounts/me/heart-rate')),
+        isEmpty,
+      );
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldSaveAsManual_WhenTheRiderTypesANumber', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-max-hr')), '190');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/accounts/me/heart-rate/max'));
+    expect(server.profiles['rider@example.com']!['maxHeartRate'], 190);
+    expect(
+      server.profiles['rider@example.com']!['maxHeartRateSource'],
+      'manual',
+    );
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldSaveAsManual_WhenTheRiderTypesTheEstimatedMaximum',
+    (tester) async {
+      // Born 1990: the maximum is an estimate, so it is only the field's hint. Typing that very number is the
+      // rider's own, not the server's value in use.
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+      };
+      await openProfile(tester);
+      final estimate = tester
+          .widget<TextField>(find.byKey(const Key('profile-max-hr')))
+          .decoration!
+          .hintText!;
+
+      await tester.enterText(find.byKey(const Key('profile-max-hr')), estimate);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        server.requests,
+        contains('PUT /api/v1/accounts/me/heart-rate/max'),
+      );
+      expect(
+        server.profiles['rider@example.com']!['maxHeartRateSource'],
+        'manual',
+      );
+      expect(
+        server.profiles['rider@example.com']!['maxHeartRate'],
+        int.parse(estimate),
+      );
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldSaveAsManual_WhenTheRiderTypesTheEstimatedThreshold',
+    (tester) async {
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+      };
+      await openProfile(tester);
+      final estimate = tester
+          .widget<TextField>(find.byKey(const Key('profile-threshold-hr')))
+          .decoration!
+          .hintText!;
+
+      await tester.enterText(
+        find.byKey(const Key('profile-threshold-hr')),
+        estimate,
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        server.requests,
+        contains('PUT /api/v1/accounts/me/heart-rate/threshold'),
+      );
+      expect(
+        server.profiles['rider@example.com']!['thresholdHeartRateSource'],
+        'manual',
+      );
+      expect(
+        server.profiles['rider@example.com']!['thresholdHeartRate'],
+        int.parse(estimate),
+      );
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldGoBackToTheEstimate_WhenATypedValueIsEmptied',
+    (tester) async {
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 195,
+        'maxHeartRateSource': 'manual',
+        'maxHeartRateSetAt': '2026-11-12T09:00:00Z',
+      };
+      await openProfile(tester);
+
+      // The field holds the typed 195, and emptying it goes back to the estimate.
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('profile-max-hr')))
+            .controller!
+            .text,
+        '195',
+      );
+      await tester.enterText(find.byKey(const Key('profile-max-hr')), '');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        server.requests,
+        contains('DELETE /api/v1/accounts/me/heart-rate/max'),
+      );
+      expect(server.profiles['rider@example.com']!['maxHeartRate'], isNull);
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldSayTheThresholdIsAboveTheMaximum_WhenTheMaximumWasLowered',
+    (tester) async {
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 150,
+        'maxHeartRateSource': 'manual',
+        'thresholdHeartRate': 170,
+        'thresholdHeartRateSource': 'manual',
+      };
+      await openProfile(tester);
+
+      final note = tester.widget<SourceNote>(
+        find.byKey(const Key('profile-threshold-hr-above-max')),
+      );
+      expect(
+        note.text,
+        'Above the maximum in use (150 bpm). Your zones still follow the maximum.',
+      );
+    },
+  );
 
   testWidgets(
     'ProfileScreen_ShouldSaveImperialUnits_WhenTheMemberChoosesThem',
     (tester) async {
       await openProfile(tester);
 
-      await tester.tap(find.byKey(const Key('profile-units')));
+      // Units are a segmented control, and the choice is saved as it is made.
+      await tester.ensureVisible(find.byKey(const Key('profile-units')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Imperial (miles, lb)').last);
+      await tester.tap(find.text('Imperial (miles, lb)'));
       await tester.pumpAndSettle();
 
       expect(server.requests, contains('PUT /api/v1/accounts/me/units'));
@@ -125,7 +478,10 @@ void main() {
     await openProfile(tester);
 
     expect(find.byKey(const Key('telemetry-crash')), findsOneWidget);
+    // The two heart-rate fields pushed the switch below the first screen.
     await tester.ensureVisible(find.byKey(const Key('telemetry-crash')));
+    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('telemetry-crash')));
     await tester.pumpAndSettle();
 
@@ -156,10 +512,10 @@ void main() {
     await tester.enterText(find.byKey(const Key('profile-ftp')), '265');
     await tester.enterText(find.byKey(const Key('profile-weight')), '68,5');
     await tester.enterText(find.byKey(const Key('profile-birth-year')), '1985');
-    await tester.enterText(
-      find.byKey(const Key('profile-zone')),
-      'Europe/Rome',
-    );
+    await tester.tap(find.byKey(const Key('profile-zone')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('UTC').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-first-day')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Saturday').last);
@@ -172,7 +528,7 @@ void main() {
       'ftpW': 265,
       'weightKg': 68.5,
       'birthYear': 1985,
-      'timeZone': 'Europe/Rome',
+      'timeZone': 'UTC',
       'firstDayOfWeek': 'saturday',
       'emailNotifications': true,
       'emailAccountNotifications': true,
@@ -218,7 +574,12 @@ void main() {
     server.smtpConfigured = true;
     await openProfile(tester);
 
+    // The preferences card, above, pushes the notifications below the first screen.
+    await tester.ensureVisible(find.byKey(const Key('profile-email')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-email')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
@@ -530,4 +891,185 @@ void main() {
     expect(find.text('Bike bike-1'), findsWidgets);
     expect(find.byKey(const Key('bike-actions')), findsOneWidget);
   });
+
+  /// The title of the card a widget sits in: the design's sections are cards of their own.
+  String cardTitleOf(WidgetTester tester, String key) => tester
+      .widget<SectionCard>(
+        find
+            .ancestor(
+              of: find.byKey(Key(key)),
+              matching: find.byType(SectionCard),
+            )
+            .first,
+      )
+      .title;
+
+  testWidgets(
+    'ProfileScreen_ShouldKeepThePreferencesInTheirOwnCard_WhenOpened',
+    (tester) async {
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      // The athlete card holds the numbers; how the app behaves lives in Preferences.
+      expect(cardTitleOf(tester, 'profile-name'), 'Athlete');
+      expect(cardTitleOf(tester, 'profile-birth-year'), 'Athlete');
+      expect(cardTitleOf(tester, 'profile-zone'), 'Preferences');
+      expect(cardTitleOf(tester, 'profile-language'), 'Preferences');
+      expect(cardTitleOf(tester, 'profile-units'), 'Preferences');
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldOfferTheZoneAsAPicker_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    // The zone is chosen from a list, never typed: the server stores an IANA name.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('profile-zone')),
+        matching: find.byType(TextField),
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('profile-zone')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('UTC').last);
+    await tester.pumpAndSettle();
+
+    // A preference saves the moment it is chosen.
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    expect(server.profiles['rider@example.com']!['timeZone'], 'UTC');
+  });
+
+  testWidgets('ProfileScreen_ShouldSaveTheFirstDay_WhenItIsChosen', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Saturday').last);
+    await tester.pumpAndSettle();
+
+    // No Save pressed: the choice saved itself, and the athlete fields are untouched.
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    final profile = server.profiles['rider@example.com']!;
+    expect(profile['firstDayOfWeek'], 'saturday');
+    expect(profile['displayName'], 'Ada');
+  });
+
+  testWidgets('ProfileScreen_ShouldSaySo_WhenAPreferenceCannotBeSaved', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+    server.failing.add('/api/v1/accounts/me/profile');
+
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Saturday').last);
+    await tester.pumpAndSettle();
+
+    // The error sits under the card that made the choice, not under the athlete fields.
+    expect(find.byKey(const Key('preferences-error')), findsOneWidget);
+    expect(find.byKey(const Key('profile-error')), findsNothing);
+  });
+
+  testWidgets('ProfileScreen_ShouldDrawLanguageAndUnitsAsSegments_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    // Both choices are one tap, never a menu.
+    expect(
+      tester.widget<SegmentedButton<String>>(
+        find.byKey(const Key('profile-language')),
+      ),
+      isA<SegmentedButton<String>>(),
+    );
+    expect(
+      tester.widget<SegmentedButton<Units>>(
+        find.byKey(const Key('profile-units')),
+      ),
+      isA<SegmentedButton<Units>>(),
+    );
+  });
+
+  testWidgets('ProfileScreen_ShouldAskTheBirthYearBeforeTheFtp_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    // The athlete fields read in the design's order: name, year of birth, FTP, weight.
+    expect(
+      tester.getTopLeft(find.byKey(const Key('profile-birth-year'))).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('profile-ftp'))).dy),
+    );
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldKeepBikesAndPrivacyInTheRidingCard_WhenOpened',
+    (tester) async {
+      server.bikes.add(bike('bike-1'));
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      expect(cardTitleOf(tester, 'profile-my-bikes'), 'Riding');
+      expect(cardTitleOf(tester, 'profile-ride-privacy'), 'Riding');
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldKeepTelemetryInItsOwnCard_WhenTheServerCollectsIt',
+    (tester) async {
+      server.telemetryEnabled = true;
+      server.sentryDsn = 'https://key@example.invalid/1';
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      // The opt-in is its own card, never a row of the privacy settings.
+      expect(cardTitleOf(tester, 'telemetry-crash'), 'Help improve Velomine');
+      expect(cardTitleOf(tester, 'telemetry-usage'), 'Help improve Velomine');
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldDrawEveryEmailChoiceAsASwitch_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    for (final key in [
+      'profile-email',
+      'profile-email-account',
+      'profile-email-training',
+    ]) {
+      expect(tester.widget<SwitchListTile>(find.byKey(Key(key))), isNotNull);
+    }
+    expect(find.byType(CheckboxListTile), findsNothing);
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldDownloadFromAButton_WhenTheDataCardIsShown',
+    (tester) async {
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      // A quiet button under the sentence, not a settings row with a chevron.
+      expect(
+        find.widgetWithText(OutlinedButton, 'Download my data'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('ProfileScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.bikes.add(bike('bike-1', due: 1));
+      await openProfile(tester, size: Size(width, 2400));
+
+      // The segmented choices are the widest thing on the page, so they are laid out before the check.
+      await tester.ensureVisible(find.byKey(const Key('profile-units')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

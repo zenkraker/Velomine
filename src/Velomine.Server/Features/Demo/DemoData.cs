@@ -9,6 +9,7 @@ using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Demo;
 
@@ -37,6 +38,10 @@ public sealed class DemoData(
         new("demo-admin@velomine.eu", "Giulia Rossi", ClubRoles.Owner),
         new("demo-coach@velomine.eu", "Marco Bianchi", ClubRoles.Coach),
         new("demo-rider@velomine.eu", "Luca Ferri", ClubRoles.Member),
+        // No power meter, a heart-rate strap: the effort score comes from heart rate.
+        new("demo-heart-rate@velomine.eu", "Sara Conti", ClubRoles.Member),
+        // No power meter and no strap: the watts are estimated from speed, slope and weight, and the load is the feel score.
+        new("demo-no-sensors@velomine.eu", "Davide Serra", ClubRoles.Member),
     ];
 
     /// <summary>When the demo data was last made: the demo club is made again by every reset.</summary>
@@ -72,6 +77,8 @@ public sealed class DemoData(
                 DisplayName = account.DisplayName,
                 IsApproved = true,
                 CreatedAt = now,
+                // The demo shares its accounts, so they start on the full layout every night.
+                RiderMode = RiderModes.Training,
             };
             var created = await users.CreateAsync(user, Password);
             if (!created.Succeeded)
@@ -90,6 +97,8 @@ public sealed class DemoData(
         db.Clubs.Add(club);
         await db.SaveChangesAsync(ct);
         await SeedAsync(ct);
+        await SeedTrainingAsync(ct);
+        await StoreReadMetricsAsync(ct);
         await WriteOriginalFilesAsync(ct);
     }
 
@@ -121,6 +130,125 @@ public sealed class DemoData(
     }
 
     /// <summary>
+    /// The demo rider's auto training, on with a week in progress. A session is stored as the recipe and the day's
+    /// minutes, exactly as the planner stores one: its block percentages are <see cref="SessionPlan"/>'s, its planned
+    /// effort is worked out from those when the week is read, and a done session's score is
+    /// <see cref="SessionScore"/>'s from the ride the script wrote on its day. Nothing here is a second copy of a
+    /// number the code produces.
+    /// </summary>
+    private async Task SeedTrainingAsync(CancellationToken ct)
+    {
+        var rider = await db.Users.FirstAsync(u => u.Email == Accounts[2].Email, ct);
+        var clock = MemberClock.For(rider.TimeZone, rider.FirstDayOfWeek, time);
+        var today = clock.Today;
+        // The goal is the one the rider's own rides suggest, so the reason the Training page shows is that goal's.
+        var goal = TrainingGoalSuggestion.For(await TrainingGoalSuggestion.ReadAsync(db, rider.Id, clock, null, ct)).Goal;
+        var week = DemoTrainingWeek.For(today, clock.FirstDayOfWeek, goal);
+
+        var rides = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == rider.Id && r.StartTime != null)
+            .Select(r => new { r.Id, r.StartTime, r.UtcOffsetMinutes })
+            .ToListAsync(ct);
+        var rideOn = rides
+            .GroupBy(r => clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes))
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(r => r.StartTime).First().Id);
+
+        db.TrainingPlans.Add(new TrainingPlan
+        {
+            UserId = rider.Id,
+            Goal = goal,
+            Days = week.Days,
+            HoursPerWeek = week.HoursPerWeek,
+            LongRideDay = week.LongRideDay,
+            // The seeded week is what the next visitor finds: the sweep plans again on the first local midnight after it,
+            // and the 07:00 reminder is still to come.
+            LastPlannedFor = today,
+            IsOn = true,
+            UpdatedAt = time.GetUtcNow(),
+        });
+
+        foreach (var day in week.Sessions)
+        {
+            var (recipe, blocks) = SessionPlan.For(Recipes.ByCode(day.Recipe), day.Minutes);
+            var ridden = rideOn.TryGetValue(day.LocalDate, out var rideId);
+            var past = day.LocalDate < today;
+            db.TrainingSessions.Add(new TrainingSession
+            {
+                Id = Guid.NewGuid(),
+                UserId = rider.Id,
+                LocalDate = day.LocalDate,
+                Recipe = recipe.Code,
+                Minutes = day.Minutes,
+                BlockPercents = SessionPlan.Percents(blocks),
+                State = !past ? TrainingSessionStates.Planned
+                    : !ridden ? TrainingSessionStates.Skipped
+                    : TrainingSessionStates.Done,
+                SkipReason = past && !ridden ? TrainingSkipReasons.Ill : null,
+                RideId = past && ridden ? rideId : null,
+                CreatedAt = time.GetUtcNow(),
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// The numbers the script cannot write come from the real reader, never from a second copy here: each seeded
+    /// ride's stored streams go through the same calls an import makes, so the demo shows the numbers the product
+    /// produces and a change to a formula reaches it. That is the efficiency factor, decoupling and steadiness, the
+    /// heart-rate effort score and, for a ride with no power at all, the watts estimated from speed, slope and weight.
+    /// </summary>
+    private async Task StoreReadMetricsAsync(CancellationToken ct)
+    {
+        var users = (await db.Users.AsNoTracking().ToListAsync(ct)).ToDictionary(u => u.Id);
+        var bikes = (await db.Bikes.AsNoTracking().ToListAsync(ct)).ToDictionary(b => b.Id);
+        var rides = (await db.Rides.AsNoTracking().ToListAsync(ct)).ToDictionary(r => r.Id);
+        var streams = await db.RideStreams.AsNoTracking().ToListAsync(ct);
+        foreach (var s in streams)
+        {
+            if (!rides.TryGetValue(s.RideId, out var ride) || !users.TryGetValue(ride.UserId, out var user)) continue;
+            var samples = Enumerable.Range(0, s.Time.Length)
+                .Select(i => new Sample(
+                    s.Time[i],
+                    Altitude: s.Altitude?[i],
+                    Speed: s.Speed?[i],
+                    HeartRate: s.HeartRate?[i],
+                    Power: s.Power?[i]))
+                .ToList();
+            var pause = RideMetrics.PauseThresholdS(samples);
+            var (efficiencyFactor, decoupling, steady) = RideMetrics.Efficiency(
+                RideMetrics.PairedSeconds(samples, pause));
+            var (max, threshold) = HeartRates.For(user, time);
+            var bike = ride.BikeId is { } bikeId ? bikes.GetValueOrDefault(bikeId) : null;
+            var estimated = s.Power is null
+                ? EstimatedPower.Compute(
+                    samples,
+                    s.Speed ?? [],
+                    pause,
+                    [],
+                    new PowerEstimate(user.WeightKg, bike?.WeightKg, bike?.Kind, ride.Discipline, ride.Environment, ride.Assist),
+                    user.FtpW,
+                    ride.MovingS ?? 0)
+                : null;
+            await db.Rides.Where(r => r.Id == ride.Id).ExecuteUpdateAsync(
+                u => u.SetProperty(r => r.EfficiencyFactor, efficiencyFactor)
+                    .SetProperty(r => r.DecouplingPct, decoupling)
+                    .SetProperty(r => r.Steady, steady)
+                    .SetProperty(r => r.HrTss, TrainingLoad.HrTss(samples, threshold?.Bpm))
+                    .SetProperty(r => r.LoadFtpW, user.FtpW ?? 0)
+                    .SetProperty(r => r.LoadMaxHeartRate, max?.Bpm ?? 0)
+                    .SetProperty(r => r.LoadThresholdHeartRate, threshold?.Bpm ?? 0)
+                    .SetProperty(r => r.EstimatedAvgPowerW, estimated == null ? null : estimated.AvgPowerW)
+                    .SetProperty(r => r.EstimatedNormalizedPowerW, estimated == null ? null : estimated.NormalizedPowerW)
+                    .SetProperty(r => r.EstimatedTss, estimated == null ? null : estimated.Tss),
+                ct);
+            if (estimated?.PerSample is { } watts)
+                await db.RideStreams.Where(t => t.RideId == ride.Id)
+                    .ExecuteUpdateAsync(u => u.SetProperty(t => t.EstimatedPower, watts), ct);
+        }
+    }
+
+    /// <summary>
     /// The script makes rides without a file. Every ride keeps its original file, and the export hands it back, so
     /// each seeded ride gets one: a gzipped TCX written from its own samples.
     /// </summary>
@@ -140,7 +268,10 @@ public sealed class DemoData(
             buffer.Position = 0;
             var sha = await files.SaveAsync(buffer, ct);
             await db.Rides.Where(r => r.Id == ride.Id).ExecuteUpdateAsync(
-                u => u.SetProperty(r => r.FileSha256, sha).SetProperty(r => r.ParserVersion, RideParserVersion.Current),
+                u => u.SetProperty(r => r.FileSha256, sha)
+                    .SetProperty(r => r.ParserVersion, RideParserVersion.Current)
+                    // The seed already stored the bests the file would give, so the startup backfill leaves it alone.
+                    .SetProperty(r => r.PowerBestsBackfilledAt, time.GetUtcNow()),
                 ct);
         }
     }

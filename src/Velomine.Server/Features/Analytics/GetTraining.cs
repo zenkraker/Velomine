@@ -31,7 +31,8 @@ public sealed class TrainingRequest
     public bool? Commute { get; set; }
 }
 
-/// <summary>One day of training: what was ridden and what it cost. Fitness, fatigue and form are the usual CTL, ATL and TSB.</summary>
+/// <summary>One day of training: what was ridden and what it cost. Fitness and fatigue are the usual CTL and ATL; form
+/// is their difference, not TrainingPeaks' TSB.</summary>
 public sealed record TrainingDay(
     DateOnly Date,
     int Rides,
@@ -40,6 +41,8 @@ public sealed record TrainingDay(
     double ElevationGainM,
     double Tss,
     double Trimp,
+    /// <summary>The rides' effort scores: TSS, else Velomine's hrTSS, else the feel score. Fitness and fatigue follow it.</summary>
+    double Load,
     double Fitness,
     double Fatigue,
     double Form);
@@ -54,7 +57,25 @@ public sealed record TrainingResponse(
     double ElevationGainM,
     double Tss,
     double Trimp,
-    TrainingDay[] Days);
+    TrainingDay[] Days,
+    /// <summary>Seiler's three zones over the range, null when no ride had power or heart rate to place.</summary>
+    IntensityResponse? Intensity,
+    IntensityWeek[] IntensityWeeks,
+    /// <summary>The mean efficiency factor of each week's steady rides; a week without one is left out.</summary>
+    EfficiencyWeek[] Efficiency,
+    /// <summary>How many rides in the range were scored from heart rate, for the note under the fitness chart.</summary>
+    int HeartRateLoadRides = 0,
+    /// <summary>The last seven days' monotony and strain (Foster 1998); null under a ride filter.</summary>
+    double? Monotony = null,
+    double? Strain = null,
+    /// <summary>What a usual week costs, from the eight blocks before the window; null under four with load.</summary>
+    double? StrainUsual = null,
+    /// <summary>Every day about as hard this week.</summary>
+    bool Monotonous = false,
+    /// <summary>Much heavier than the usual week.</summary>
+    bool HeavyWeek = false,
+    DateOnly? MonotonyFrom = null,
+    DateOnly? MonotonyTo = null);
 
 public sealed class TrainingValidator : Validator<TrainingRequest>
 {
@@ -90,6 +111,7 @@ public sealed class GetTraining(VelomineDbContext db, TimeProvider time) : Endpo
                 db,
                 User.UserId(),
                 clock,
+                time,
                 req.Days ?? 90,
                 ct,
                 new RideFilter(req.Discipline, req.Assist, req.Environment, req.Commute)),

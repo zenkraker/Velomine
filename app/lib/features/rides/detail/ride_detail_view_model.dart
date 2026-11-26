@@ -6,6 +6,7 @@ import '../../../core/providers.dart';
 import '../../../core/result.dart';
 import '../../../core/units.dart';
 import '../../../core/user_message.dart';
+import '../rides_data.dart';
 import 'ride_detail_data.dart';
 import 'ride_detail_state.dart';
 
@@ -79,6 +80,9 @@ class RideDetailViewModel extends _$RideDetailViewModel {
     final bikes = (await data.bikes()).valueOrNull ?? const [];
     final feel = (await data.feel(id)).valueOrNull;
     final views = (await data.views(id)).valueOrNull;
+    final profile = (await data.profile()).valueOrNull;
+    final heartRateSuggestions =
+        (await data.heartRateSuggestions()).valueOrNull ?? const [];
     if (!ref.mounted) return;
     state = RideDetailState(
       ride: ride,
@@ -87,6 +91,8 @@ class RideDetailViewModel extends _$RideDetailViewModel {
       bikes: bikes,
       feel: feel,
       views: views,
+      profile: profile,
+      heartRateSuggestions: heartRateSuggestions,
       load: state.load.finish(Ok(ride)),
       messages: state.messages,
     );
@@ -160,6 +166,108 @@ class RideDetailViewModel extends _$RideDetailViewModel {
       ),
     );
   });
+
+  /// Adopts the ride's FTP suggestion. The ride is read again, so the card goes once the server agrees.
+  Future<void> acceptSuggestion(String suggestionId) => _suggestion(
+    () => ref.read(rideDetailDataProvider).acceptFtpSuggestion(suggestionId),
+  );
+
+  Future<void> dismissSuggestion(String suggestionId) => _suggestion(
+    () => ref.read(rideDetailDataProvider).dismissFtpSuggestion(suggestionId),
+  );
+
+  /// Adopts the ride's heart-rate suggestion: the number becomes measured, from this ride.
+  Future<void> acceptHeartRateSuggestion(String suggestionId) =>
+      _heartRateSuggestion(
+        () => ref
+            .read(rideDetailDataProvider)
+            .acceptHeartRateSuggestion(suggestionId),
+      );
+
+  Future<void> dismissHeartRateSuggestion(String suggestionId) =>
+      _heartRateSuggestion(
+        () => ref
+            .read(rideDetailDataProvider)
+            .dismissHeartRateSuggestion(suggestionId),
+      );
+
+  /// Both answers clear the open suggestion and change the profile; a failure keeps the card and says why.
+  Future<void> _heartRateSuggestion(
+    Future<Result<Object?>> Function() call,
+  ) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    final data = ref.read(rideDetailDataProvider);
+    final profile = (await data.profile()).valueOrNull;
+    final suggestions =
+        (await data.heartRateSuggestions()).valueOrNull ?? const [];
+    if (ref.mounted) {
+      state = state.copyWith(
+        profile: profile,
+        heartRateSuggestions: suggestions,
+      );
+    }
+  }
+
+  /// Both answers leave no suggestion on the ride; a failure keeps the card and says why.
+  Future<void> _suggestion(Future<Result<Object?>> Function() call) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    final fresh = (await ref.read(rideDetailDataProvider).ride(id)).valueOrNull;
+    if (ref.mounted && fresh != null) state = state.copyWith(ride: fresh);
+  }
+
+  /// The address of the ride's file for the browser to open: `original` as received, or `fit` written
+  /// from the ride. Null when it could not be made, with the reason said on the page.
+  Future<String?> rideFileLink(String format) async {
+    if (state.fileLink.running) return null;
+    state = state.copyWith(fileLink: state.fileLink.start());
+    final result = await ref.read(ridesDataProvider).rideFileLink(id, format);
+    if (!ref.mounted) return null;
+    state = state.copyWith(fileLink: state.fileLink.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return null;
+    }
+    return result.valueOrNull;
+  }
+
+  /// Answers the auto-training session's question about this ride, then reads the ride again so the card says what
+  /// became of it: the session it is, or nothing at all.
+  Future<bool> answerSession(
+    String sessionId,
+    String rideId, {
+    required bool yes,
+  }) async {
+    if (state.action.running) return false;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(rideDetailDataProvider)
+        .answerSession(sessionId, rideId, yes: yes);
+    if (!ref.mounted) return false;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+    final fresh = (await ref.read(rideDetailDataProvider).ride(id)).valueOrNull;
+    if (ref.mounted && fresh != null) state = state.copyWith(ride: fresh);
+    return true;
+  }
 
   /// Returns whether the ride was deleted.
   Future<bool> deleteRide() async {

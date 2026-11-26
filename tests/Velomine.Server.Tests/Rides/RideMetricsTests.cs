@@ -38,6 +38,27 @@ public sealed class RideMetricsTests
         Assert.Null(RideMetrics.NormalizedPower(Enumerable.Repeat(250.0, 29).ToArray()));
 
     [Fact]
+    public void NormalizedPower_ShouldReturnNull_WhenNoStretchLastsThirtySeconds()
+    {
+        var seconds = new List<(int, int, int, double)>();
+        for (var i = 0; i < 20; i++) seconds.Add((0, i, i, 200));
+        for (var i = 0; i < 20; i++) seconds.Add((1, i, i, 200));
+
+        Assert.Null(RideMetrics.NormalizedPower(seconds));
+    }
+
+    [Fact]
+    public void NormalizedPower_ShouldAverageWindowsInsideEachStretch_WhenTheRideHasTwoStretches()
+    {
+        var seconds = new List<(int, int, int, double)>();
+        for (var i = 0; i < 30; i++) seconds.Add((0, i, i, 200));
+        for (var i = 0; i < 30; i++) seconds.Add((1, i, i, 100));
+
+        // One 30 s window at 200 W and one at 100 W: the fourth root of (200^4 + 100^4) / 2 = 170.75, rounded.
+        Assert.Equal(171, RideMetrics.NormalizedPower(seconds));
+    }
+
+    [Fact]
     public void RobustMax_ShouldIgnoreASingleGlitch_WhenOneSampleSpikes()
     {
         var speeds = Enumerable.Repeat(8f, 40).ToArray();

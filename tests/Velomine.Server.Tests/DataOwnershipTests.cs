@@ -77,17 +77,18 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         await UploadAsync(me.Client, original);
         await UploadAsync(other.Client, Fit(new FitSession(Start.AddHours(6), 120)), "grace-ride.fit");
         await me.Client.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada", 265, 61.5, 1995, "Europe/Rome", "sunday"), Ct);
-        await me.Client.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest
+        (await me.Client.PutAsJsonAsync(
+            "/api/v1/privacy/settings",
+            new UpdatePrivacyRequest { TrimStartM = 500, TrimEndM = 0 },
+            Ct)).EnsureSuccessStatusCode();
+        // A member of the last release may still have a switch set: the export keeps the stored value while the column lives.
+        await using (var scope = api.Services.CreateAsyncScope())
         {
-            HidePower = true,
-            HideHeartRate = false,
-            HideCadence = false,
-            HideSpeed = false,
-            HideElevation = false,
-            HideTemperature = false,
-            TrimStartM = 500,
-            TrimEndM = 0,
-        }, Ct);
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var settings = await db.PrivacySettings.SingleAsync(x => x.UserId == me.Id, Ct);
+            settings.HidePower = true;
+            await db.SaveChangesAsync(Ct);
+        }
         await me.Client.PostAsJsonAsync("/api/v1/privacy/zones", new CreatePrivacyZoneRequest
         {
             Name = "Home",
@@ -172,6 +173,87 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         Assert.DoesNotContain("passwordHash", everything, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("securityStamp", everything, StringComparison.OrdinalIgnoreCase);
         Assert.Single(entries.Keys, k => k.StartsWith("files/", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AccountExport_ShouldIncludeTheBikesWeightAndSpec_WhenTheBikeHasThem()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api);
+        (await me.Client.PostAsJsonAsync("/api/v1/bikes", new CreateBikeRequest
+        {
+            Name = "Road",
+            Brand = "Canyon",
+            Model = "Endurace",
+            ModelYear = 2024,
+            BuildSpec = "CF SL 7",
+            FrameSize = "M",
+            Kind = "road",
+            WheelCircumferenceMm = 2105,
+            WeightKg = 8.6,
+            InitialDistanceM = 0,
+        }, Ct)).EnsureSuccessStatusCode();
+
+        var download = await api.CreateClient().GetAsync(await LinkAsync(me.Client), Ct);
+        var bikes = JsonDocument.Parse(Encoding.UTF8.GetString((await UnzipAsync(download))["bikes.json"])).RootElement;
+
+        Assert.Equal(2024, bikes[0].GetProperty("modelYear").GetInt32());
+        Assert.Equal("CF SL 7", bikes[0].GetProperty("buildSpec").GetString());
+        Assert.Equal("M", bikes[0].GetProperty("frameSize").GetString());
+        Assert.Equal(8.6, bikes[0].GetProperty("weightKg").GetDouble());
+    }
+
+    [Fact]
+    public async Task AccountExport_ShouldIncludeTheEstimatedPower_WhenARideHasNoSensors()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api);
+        // Watts are estimated only when the rider has a weight.
+        (await me.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, 70, 2000, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        var uploaded = await TestApi.UploadAndWaitAsync(me.Client, Fit(new FitSession(Start, 600, NoPower: true)));
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var ride = await scope.ServiceProvider.GetRequiredService<VelomineDbContext>()
+                .Rides.AsNoTracking().SingleAsync(r => r.Id == uploaded.Id, Ct);
+            Assert.NotNull(ride.EstimatedTss);
+
+            var download = await api.CreateClient().GetAsync(await LinkAsync(me.Client), Ct);
+            var rides = JsonDocument.Parse(Encoding.UTF8.GetString((await UnzipAsync(download))["rides.json"])).RootElement;
+
+            Assert.Equal(ride.EstimatedNormalizedPowerW!.Value, rides[0].GetProperty("estimatedNormalizedPowerW").GetInt32());
+            Assert.Equal(ride.EstimatedTss!.Value, rides[0].GetProperty("estimatedTss").GetDouble());
+        }
+    }
+
+    [Fact]
+    public async Task AccountExport_ShouldContainRiderMode_WhenMemberChose()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api);
+        (await me.Client.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.WithGoals), Ct)).EnsureSuccessStatusCode();
+
+        var download = await api.CreateClient().GetAsync(await LinkAsync(me.Client), Ct);
+
+        var entries = await UnzipAsync(download);
+        var profile = JsonDocument.Parse(Encoding.UTF8.GetString(entries["profile.json"])).RootElement;
+        Assert.Equal(RiderModes.WithGoals, profile.GetProperty("riderMode").GetString());
+    }
+
+    [Fact]
+    public async Task AccountDeletion_ShouldRemoveRiderMode_WhenAccountIsDeleted()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api);
+        (await me.Client.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.Training), Ct)).EnsureSuccessStatusCode();
+
+        (await me.Client.PostAsJsonAsync("/api/v1/accounts/me/delete", new DeleteMyAccountRequest(TestApi.MemberPassword, null), Ct)).EnsureSuccessStatusCode();
+
+        // The same address signs up again: nothing of the deleted account's choice is left on it.
+        (await api.RegisterAsync(me.Email, name: "Back Again")).EnsureSuccessStatusCode();
+        var again = await api.SignedInClientAsync(me.Email, TestApi.MemberPassword);
+        Assert.Null((await again.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
     }
 
     [Fact]

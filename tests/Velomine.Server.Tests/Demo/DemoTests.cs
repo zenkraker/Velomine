@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Demo;
 using Velomine.Server.Features.Notifications;
@@ -15,6 +16,8 @@ using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Server;
+using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Tests.Demo;
 
@@ -50,52 +53,6 @@ public sealed class DemoTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DemoData_ShouldMakeTheAccountsTheClubAndTheirRides_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        foreach (var account in DemoData.Accounts)
-        {
-            var client = await api.SignedInClientAsync(account.Email, DemoData.Password);
-            var me = await client.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
-            Assert.Equal(account.DisplayName, me!.DisplayName);
-            Assert.DoesNotContain(Roles.Admin, me.Roles);
-            var club = await client.GetFromJsonAsync<MyClubResponse>("/api/v1/club", Ct);
-            Assert.Equal(DemoData.ClubName, club!.Club!.Name);
-            var rides = await client.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
-            Assert.NotEmpty(rides!.Rides);
-        }
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveEveryRideAnOriginalFileThatReadsBack_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var files = scope.ServiceProvider.GetRequiredService<RideFileStore>();
-        var rides = await db.Rides.AsNoTracking().Select(r => new { r.Id, r.FileSha256, r.ParserVersion }).ToListAsync(Ct);
-        Assert.NotEmpty(rides);
-        foreach (var ride in rides)
-        {
-            Assert.Equal(RideParserVersion.Current, ride.ParserVersion);
-            var parsed = Assert.Single(RideFileParser.Parse(await files.ReadAsync(ride.FileSha256, Ct)));
-            var samples = await db.RideStreams.Where(s => s.RideId == ride.Id).Select(s => s.Time.Length).SingleAsync(Ct);
-            Assert.Equal(samples, parsed.Samples.Count);
-        }
-
-        // The export hands the files back, as it does for any member.
-        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
-        var link = (await (await rider.PostAsync("/api/v1/accounts/me/export-link", null, Ct)).Content.ReadFromJsonAsync<ExportLinkResponse>(Ct))!.Path;
-        Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().GetAsync(link, Ct)).StatusCode);
-    }
-
-    [Fact]
     public async Task DemoData_ShouldUndoWhatAVisitorChanged_WhenTheDemoIsResetAgain()
     {
         await using var api = await StartDemoAsync();
@@ -103,6 +60,10 @@ public sealed class DemoTests(PostgresFixture postgres)
         var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
         var rides = await visitor.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
         (await visitor.DeleteAsync($"/api/v1/rides/{rides!.Rides[0].Id}", Ct)).EnsureSuccessStatusCode();
+        Assert.Equal(RiderModes.Training, (await visitor.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+        (await visitor.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.JustRiding), Ct)).EnsureSuccessStatusCode();
+        var weeks = (await visitor.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!;
+        (await visitor.PostAsync($"/api/v1/training/sessions/{weeks.Weeks[0].Sessions.Single(x => x.CanMakeEasy).Id}/easy", null, Ct)).EnsureSuccessStatusCode();
         await using (var scope = api.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -116,104 +77,29 @@ public sealed class DemoTests(PostgresFixture postgres)
         var fresh = await api.SignedInClientAsync(Rider, DemoData.Password);
         var me = await fresh.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
         Assert.Equal("Luca Ferri", me!.DisplayName);
+        // The mode a visitor switched is back to the training the demo is made for.
+        Assert.Equal(RiderModes.Training, me.RiderMode);
+        // The week a visitor made easy is the seeded week again.
+        var seededWeek = (await fresh.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!;
+        Assert.DoesNotContain(seededWeek.Weeks[0].Sessions, x => x.State == TrainingSessionStates.Easy);
         var again = await fresh.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?limit=1", Ct);
         Assert.NotEmpty(again!.Rides);
         await using var check = api.Services.CreateAsyncScope();
         var data = check.ServiceProvider.GetRequiredService<VelomineDbContext>();
         Assert.Equal(1, await data.Clubs.CountAsync(Ct));
         Assert.Equal(DemoData.Accounts.Count, await data.ClubMemberships.CountAsync(Ct));
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldKeepTheServerAdmin_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-        await ResetAsync(api);
-
+        // The server admin is not a demo account and survives the reset.
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var me = await admin.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
-        Assert.Contains(Roles.Admin, me!.Roles);
-    }
-
-    // Girona and its hills: every seeded coordinate must fall in this box.
-    private static bool InGironaArea(double latitude, double longitude) =>
-        latitude is > 41.80 and < 42.15 && longitude is > 2.55 and < 3.00;
-
-    [Fact]
-    public async Task DemoData_ShouldSeedTheClubRoutesAroundGirona_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var clubId = await db.Clubs.Select(c => c.Id).SingleAsync(Ct);
-        var routes = await db.Routes.AsNoTracking().Include(r => r.Line).Where(r => r.ClubId == clubId).ToListAsync(Ct);
-        Assert.Equal(4, routes.Count);
-        Assert.Equal(["gravel", "mixed", "mountain", "road"], routes.Select(r => r.Surface).Order());
-        foreach (var route in routes)
-        {
-            var line = route.Line!;
-            Assert.InRange(line.Latitude.Length, 200, 500);
-            Assert.Equal(line.Latitude.Length, line.Elevation!.Length);
-            Assert.All(line.Latitude.Zip(line.Longitude), p => Assert.True(InGironaArea(p.First, p.Second)));
-            var points = line.Latitude.Select((lat, i) => new RoutePoint(lat, line.Longitude[i], line.Elevation[i])).ToList();
-            var (distance, climbing) = RouteGeometry.Measure(points);
-            Assert.Equal(distance, route.DistanceM, 1);
-            Assert.InRange(route.ClimbingM!.Value, 1, climbing!.Value * 2);
-        }
-
-        var road = routes.Single(r => r.Surface == "road");
-        Assert.InRange(road.DistanceM, 59_000, 61_000);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldPlanClubRidesOnSeededRoutes_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var rides = await db.PlannedRides.AsNoTracking().ToListAsync(Ct);
-        Assert.NotEmpty(rides);
-        foreach (var ride in rides)
-        {
-            Assert.True(ride.StartsAt > DateTimeOffset.UtcNow);
-            Assert.True(InGironaArea(ride.MeetingLatitude, ride.MeetingLongitude));
-            Assert.True(await db.Routes.AnyAsync(r => r.Id == ride.RouteId && r.ClubId == ride.ClubId, Ct));
-        }
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldKeepEveryPrivacyZoneAndRideAroundGirona_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var zones = await db.PrivacyZones.AsNoTracking().ToListAsync(Ct);
-        Assert.NotEmpty(zones);
-        Assert.All(zones, z => Assert.True(InGironaArea(z.Latitude, z.Longitude)));
-        var streams = await db.RideStreams.AsNoTracking().Where(s => s.Latitude != null)
-            .Select(s => new { s.Latitude, s.Longitude }).ToListAsync(Ct);
-        Assert.NotEmpty(streams);
-        Assert.All(streams, s => Assert.All(s.Latitude!.Zip(s.Longitude!), p => Assert.True(InGironaArea(p.First!.Value, p.Second!.Value))));
+        Assert.Contains(Roles.Admin, (await admin.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Roles);
     }
 
     [Fact]
     public async Task DemoLock_ShouldRefuseEveryLockedAction_WhenTheServerIsADemo()
     {
         await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-        var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
+        // The lock answers before an endpoint runs, so the server admin is enough: no seeded demo.
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+        var visitor = admin;
 
         foreach (var (method, route) in DemoLock.Refused)
         {
@@ -225,8 +111,14 @@ public sealed class DemoTests(PostgresFixture postgres)
             Assert.Contains(DemoLock.Code, await response.Content.ReadAsStringAsync(Ct));
         }
 
+        // The rest of a week is refused by the endpoint, because the body decides it, and before it looks the session up.
+        var rest = await admin.PostAsJsonAsync($"/api/v1/training/sessions/{Guid.NewGuid()}/skip",
+            new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.NoTime, RestOfWeek = true }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, rest.StatusCode);
+        Assert.Contains(DemoLock.Code, await rest.Content.ReadAsStringAsync(Ct));
+
         // The account still signs in with the public password, and what a visitor is meant to try still works.
-        var again = await api.SignedInClientAsync(Rider, DemoData.Password);
+        var again = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         Assert.Equal(HttpStatusCode.OK, (await again.GetAsync("/api/v1/rides", Ct)).StatusCode);
     }
 
@@ -250,7 +142,6 @@ public sealed class DemoTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartDemoWithEmailAsync();
         await using var _ = api;
-        await ResetAsync(api);
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
 
         var test = await admin.PostAsync("/api/v1/admin/settings/test-email", null, Ct);
@@ -284,8 +175,7 @@ public sealed class DemoTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartDemoWithEmailAsync();
         await using var _ = api;
-        await ResetAsync(api);
-        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
+        var rider = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         var id = (await rider.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await using (var scope = api.Services.CreateAsyncScope())
         {

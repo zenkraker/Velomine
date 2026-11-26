@@ -26,7 +26,16 @@
     },
     "scaleway": {
       "type": "stdio",
-      "command": "scw-mcp"
+      "command": "scw",
+      "args": [
+        "-p",
+        "velomine-readonly",
+        "mcp",
+        "server",
+        "serve",
+        "read-only=true",
+        "namespaces=instance,rdb,dns,object,iam,registry,vpc"
+      ]
     }
   }
 }

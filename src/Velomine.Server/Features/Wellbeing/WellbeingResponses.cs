@@ -7,10 +7,12 @@ public sealed record CheckInResponse(
     int Soreness,
     int Mood,
     int Stress,
-    int Motivation)
+    int Motivation,
+    int? Sleep = null)
 {
     public static CheckInResponse From(DailyCheckIn checkIn) =>
-        new(checkIn.LocalDate, checkIn.Fatigue, checkIn.Soreness, checkIn.Mood, checkIn.Stress, checkIn.Motivation);
+        new(checkIn.LocalDate, checkIn.Fatigue, checkIn.Soreness, checkIn.Mood, checkIn.Stress, checkIn.Motivation,
+            checkIn.Sleep);
 }
 
 public sealed record CheckInsResponse(CheckInResponse[] CheckIns);

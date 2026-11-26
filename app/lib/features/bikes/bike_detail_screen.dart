@@ -26,13 +26,19 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'row_menu.dart';
-import '../../core/widgets/section_heading.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/badge.dart';
+import '../../core/widgets/card_grid.dart';
+import '../../core/widgets/section_card.dart';
+import '../../core/widgets/stat_card.dart';
 
 DateTime _today() {
   final now = DateTime.now();
   return DateTime(now.year, now.month, now.day);
 }
+
+/// The wear column at the end of a part row: the percentage over the bar, 180 px as the mock-up draws it.
+/// No token carries it, so it is named here rather than spelled twice.
+const _wearColumnWidth = 180.0;
 
 class BikeDetailScreen extends ConsumerWidget {
   const BikeDetailScreen({
@@ -57,13 +63,10 @@ class BikeDetailScreen extends ConsumerWidget {
   Future<void> _saveTemplate(BuildContext context, WidgetRef ref) async {
     final name = await showTemplateNameDialog(context);
     if (name == null) return;
-    final saved = await ref
+    // The ViewModel queues the confirmation.
+    await ref
         .read(bikeDetailViewModelProvider(id).notifier)
         .saveTemplateFromBike(name);
-    if (saved && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.saved)));
-    }
   }
 
   Future<void> _applyTemplate(BuildContext context, WidgetRef ref) async {
@@ -73,13 +76,9 @@ class BikeDetailScreen extends ConsumerWidget {
       templates: templates,
     );
     if (template == null) return;
-    final applied = await ref
+    await ref
         .read(bikeDetailViewModelProvider(id).notifier)
         .applyTemplate(template.id);
-    if (applied && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.templateApplied)));
-    }
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
@@ -203,8 +202,9 @@ class BikeDetailScreen extends ConsumerWidget {
 
     final detail = s.detail;
     return PageScaffold(
-      eyebrow: l10n.eyebrowBikes,
       title: detail?.bike.name ?? l10n.navBikes,
+      parent: l10n.navBikes,
+      subtitle: detail == null ? null : _specLine(l10n, detail.bike),
       titleKey: const Key('bike-title'),
       primaryAction: detail == null ? null : _addPartButton(context, ref),
       menu: detail == null ? null : _bikeMenu(context, ref, detail.bike),
@@ -215,20 +215,12 @@ class BikeDetailScreen extends ConsumerWidget {
   /// The page's one action: a filled icon on a phone, whose tooltip names it, a labelled button from 600 dp.
   Widget _addPartButton(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    return wide
-        ? FilledButton.icon(
-            key: const Key('add-part'),
-            onPressed: () => _addPart(context, ref),
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addPartAction),
-          )
-        : IconButton.filled(
-            key: const Key('add-part'),
-            tooltip: l10n.addPartAction,
-            onPressed: () => _addPart(context, ref),
-            icon: const Icon(Icons.add),
-          );
+    return FilledButton.icon(
+      key: const Key('add-part'),
+      onPressed: () => _addPart(context, ref),
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addPartAction),
+    );
   }
 
   /// The rare jobs on a bike, behind one menu in the page header. Entries that open a sheet or a
@@ -282,7 +274,6 @@ class BikeDetailScreen extends ConsumerWidget {
 
   List<Widget> _body(BuildContext context, WidgetRef ref, BikeDetailState s) {
     final units = ref.watch(unitsChoiceViewModelProvider);
-    final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     if (s.notFound) {
       return [
@@ -305,51 +296,47 @@ class BikeDetailScreen extends ConsumerWidget {
       ];
     }
     final bike = detail.bike;
-    final make = [bike.brand, bike.model].whereType<String>().join(' ');
-    final model = [
-      if (bike.modelYear != null) '${bike.modelYear}',
-      bike.buildSpec,
-      if (bike.frameSize != null) bike.frameSize!,
-    ].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
     final current = detail.components
         .where((p) => p.removedOn == null)
-        .toList();
-    final retired = detail.components
-        .where((p) => p.removedOn != null)
         .toList();
     return [
       if (bike.isDefault || !bike.isActive)
         Wrap(
           spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
           children: [
-            if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
-            if (!bike.isActive) Chip(label: Text(l10n.archived)),
+            if (bike.isDefault)
+              AppBadge(l10n.defaultBike, tone: AppBadgeTone.good),
+            if (!bike.isActive) AppBadge(l10n.archived),
           ],
         ),
-      Text(
-        [
-          bikeKindName(l10n, bike.kind),
-          if (make.isNotEmpty) make,
-          if (model.isNotEmpty) model,
-          l10n.wheelLabel(bike.wheelCircumferenceMm),
-        ].join(' · '),
-      ),
-      Wrap(
-        spacing: AppSpacing.xl,
-        runSpacing: 8,
-        children: [
-          StatTile(label: l10n.statDistance, value: km(units, bike.distanceM)),
-          StatTile(label: l10n.statRides, value: '${bike.rideCount}'),
-          StatTile(label: l10n.statMovingTime, value: duration(bike.movingS)),
-        ],
-      ),
       if (s.load.failure case final failure?)
         ErrorState(
           message: failureText(l10n, failure),
           actionKey: const Key('bike-error'),
         ),
-      ServiceSection(id: id),
-      SectionHeading(title: l10n.parts),
+      // What the bike has done, in the four numbers the mock-up opens the page with.
+      SectionCard(
+        title: l10n.totals,
+        children: [
+          Wrap(
+            spacing: AppSpacing.xl,
+            runSpacing: AppSpacing.md,
+            children: [
+              StatFigure(
+                label: l10n.statDistance,
+                value: km(units, bike.distanceM),
+              ),
+              StatFigure(label: l10n.statRides, value: '${bike.rideCount}'),
+              StatFigure(
+                label: l10n.statMovingTime,
+                value: duration(bike.movingS),
+              ),
+              StatFigure(label: l10n.parts, value: '${current.length}'),
+            ],
+          ),
+        ],
+      ),
       if (current.isEmpty)
         EmptyState(
           key: const Key('no-parts'),
@@ -361,25 +348,53 @@ class BikeDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.add),
             label: Text(l10n.addPartAction),
           ),
+        )
+      else
+        // One card per group the component types make: drivetrain, wheels, brakes, and so on. A part that
+        // was replaced stays in its group, marked "Replaced", so nothing it holds is lost from the page.
+        CardGrid(
+          columns: 2,
+          // One card a row under the desktop width: the wear column is 180 px, and in a half-width card of a
+          // tablet it has no room beside the part's own words.
+          tabletColumns: 1,
+          children: [
+            for (final group in groupParts(l10n, detail.components, s.types))
+              SectionCard(
+                key: Key('group-${group.name}'),
+                title: group.name,
+                children: [
+                  for (final part in group.parts)
+                    _PartRow(
+                      part: part,
+                      onEdit: () => _editPart(context, ref, part),
+                      onReplace: part.removedOn == null
+                          ? () => _replacePart(context, ref, part)
+                          : null,
+                      onRemove: () => _removePart(context, ref, part),
+                    ),
+                ],
+              ),
+          ],
         ),
-      for (final part in current)
-        _PartCard(
-          part: part,
-          onEdit: () => _editPart(context, ref, part),
-          onReplace: () => _replacePart(context, ref, part),
-          onRemove: () => _removePart(context, ref, part),
-        ),
-      if (retired.isNotEmpty) ...[
-        Text(l10n.replacedParts, style: text.titleMedium),
-        for (final part in retired)
-          _PartCard(
-            part: part,
-            onEdit: () => _editPart(context, ref, part),
-            onRemove: () => _removePart(context, ref, part),
-          ),
-      ],
+      ServiceSection(id: id),
     ];
   }
+}
+
+/// "Road · Trek Domane · 2023 · SL 7 · 56 · wheel 2105 mm": what the bike is, under the title.
+String _specLine(AppLocalizations l10n, BikeResponse bike) {
+  final make = [bike.brand, bike.model].whereType<String>().join(' ');
+  final model = [
+    if (bike.modelYear != null) '${bike.modelYear}',
+    bike.buildSpec,
+    if (bike.frameSize != null) bike.frameSize!,
+  ].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
+  return [
+    bikeKindName(l10n, bike.kind),
+    if (make.isNotEmpty) make,
+    if (model.isNotEmpty) model,
+    l10n.wheelLabel(bike.wheelCircumferenceMm),
+  ].join(' · ');
 }
 
 Color wearColor(BuildContext context, String status) => switch (status) {
@@ -398,18 +413,15 @@ String wearLabel(AppLocalizations l10n, String status) => switch (status) {
 
 /// A wear distance in whole kilometres or whole miles, whichever the member reads.
 String _wearNumber(Units units, double metres) => units == Units.imperial
-    ? (metres / 1609.344).toStringAsFixed(0)
-    : (metres / 1000).toStringAsFixed(0);
+    ? decimal((metres / 1609.344), 0)
+    : decimal((metres / 1000), 0);
 
 /// "820 of 4000 km · 31 of 100 h · 5.2 of 12 months", only the limits the part has.
 String wearText(AppLocalizations l10n, Units units, ComponentResponse p) => [
   if (p.expectedDistanceM != null)
     '${l10n.wearDistance(_wearNumber(units, p.usedDistanceM), _wearNumber(units, p.expectedDistanceM!))} ${distanceUnit(units)}',
   if (p.expectedHours != null)
-    l10n.wearHours(
-      p.usedHours.toStringAsFixed(0),
-      p.expectedHours!.toStringAsFixed(0),
-    ),
+    l10n.wearHours(decimal(p.usedHours, 0), decimal(p.expectedHours!, 0)),
   if (p.expectedMonths != null)
     l10n.wearMonths(
       NumberFormat('0.0').format(p.usedMonths),
@@ -418,14 +430,13 @@ String wearText(AppLocalizations l10n, Units units, ComponentResponse p) => [
   if (p.expectedDistanceM == null &&
       p.expectedHours == null &&
       p.expectedMonths == null)
-    l10n.wearNoLimit(
-      km(units, p.usedDistanceM),
-      p.usedHours.toStringAsFixed(0),
-    ),
+    l10n.wearNoLimit(km(units, p.usedDistanceM), decimal(p.usedHours, 0)),
 ].join(' · ');
 
-class _PartCard extends ConsumerWidget {
-  const _PartCard({
+/// One part as a row of its group's card: what it is and how far it has gone on the left, the wear as the
+/// mock-up's 180 px column on the right — the percentage in words over the bar — and the row's `⋯`.
+class _PartRow extends ConsumerWidget {
+  const _PartRow({
     required this.part,
     required this.onEdit,
     this.onReplace,
@@ -440,87 +451,121 @@ class _PartCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final color = wearColor(context, part.status);
     final make = [part.brand, part.model].whereType<String>().join(' ');
     final typeName = componentTypeName(l10n, part.type, part.typeName);
-    return Card(
+    return Row(
       key: Key('part-${part.id}'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 6,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    make.isEmpty ? typeName : '$typeName · $make',
-                    style: text.titleMedium,
-                  ),
-                ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: AppSpacing.md,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.xs,
+            children: [
+              Text(typeName, style: text.bodyLarge),
+              // The wear colour never stands alone: the state is a word beside it.
+              Text(
+                wearLabel(l10n, part.status),
+                style: text.labelLarge?.copyWith(color: color),
+              ),
+              if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
+              Text(
+                [
+                  if (make.isNotEmpty) make,
+                  wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
+                ].join(' · '),
+                key: Key('wear-text-${part.id}'),
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              Text(
+                part.removedOn == null
+                    ? l10n.installedOn(isoDate(part.installedOn))
+                    : l10n.installedAndRemoved(
+                        isoDate(part.installedOn),
+                        isoDate(part.removedOn!),
+                      ),
+                style: text.bodySmall,
+              ),
+              if (part.mpn != null)
                 Text(
-                  wearLabel(l10n, part.status),
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
+                  part.mpn!,
+                  key: Key('mpn-${part.id}'),
+                  style: text.bodySmall,
                 ),
-                RowRemoveMenu(
-                  menuKey: Key('part-actions-${part.id}'),
-                  removeKey: Key('remove-${part.id}'),
-                  onRemove: onRemove,
+            ],
+          ),
+        ),
+        if (part.wearPercent != null)
+          SizedBox(
+            width: _wearColumnWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              spacing: AppSpacing.xs,
+              children: [
+                Text(
+                  l10n.wearPercent(part.wearPercent!),
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.end,
                 ),
-              ],
-            ),
-            if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
-            if (part.wearPercent != null)
-              Semantics(
-                label: l10n.wearPercent(part.wearPercent!),
-                child: LinearProgressIndicator(
+                LinearProgressIndicator(
                   key: Key('wear-${part.id}'),
                   value: (part.wearPercent! / 100).clamp(0.0, 1.0),
                   color: color,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(4),
+                  minHeight: AppSpacing.sm,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  semanticsLabel: l10n.wearPercent(part.wearPercent!),
                 ),
-              ),
-            Text(
-              wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
-              key: Key('wear-text-${part.id}'),
-            ),
-            Text(
-              part.removedOn == null
-                  ? l10n.installedOn(isoDate(part.installedOn))
-                  : l10n.installedAndRemoved(
-                      isoDate(part.installedOn),
-                      isoDate(part.removedOn!),
-                    ),
-              style: text.bodySmall,
-            ),
-            if (part.mpn != null)
-              Text(
-                part.mpn!,
-                key: Key('mpn-${part.id}'),
-                style: text.bodySmall,
-              ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                TextButton(
-                  key: Key('edit-${part.id}'),
-                  onPressed: onEdit,
-                  child: Text(l10n.edit),
-                ),
-                if (onReplace != null)
-                  TextButton(
-                    key: Key('replace-${part.id}'),
-                    onPressed: onReplace,
-                    child: Text(l10n.replace),
-                  ),
               ],
             ),
+          ),
+        RowActionMenu(
+          menuKey: Key('part-actions-${part.id}'),
+          removeKey: Key('remove-${part.id}'),
+          onRemove: onRemove,
+          actions: [
+            PageMenuEntry(
+              key: Key('edit-${part.id}'),
+              icon: Icons.edit_outlined,
+              label: l10n.edit,
+              onSelected: onEdit,
+            ),
+            if (onReplace case final onReplace?)
+              PageMenuEntry(
+                key: Key('replace-${part.id}'),
+                icon: Icons.swap_horiz,
+                label: l10n.replace,
+                onSelected: onReplace,
+              ),
           ],
         ),
-      ),
+      ],
     );
   }
+}
+
+/// The fitted parts grouped as the component types group them, in the order the groups first appear:
+/// drivetrain (chain, cassette), wheels (tyres, sealant), brakes, and so on.
+List<({String name, List<ComponentResponse> parts})> groupParts(
+  AppLocalizations l10n,
+  List<ComponentResponse> parts,
+  List<ComponentTypeResponse> types,
+) {
+  final groupOf = {for (final type in types) type.id: type.group};
+  final order = <String>[];
+  final grouped = <String, List<ComponentResponse>>{};
+  for (final part in parts) {
+    final group = groupOf[part.type] ?? 'other';
+    if (!grouped.containsKey(group)) order.add(group);
+    grouped.putIfAbsent(group, () => []).add(part);
+  }
+  return [
+    for (final group in order)
+      (name: componentGroupName(l10n, group), parts: grouped[group]!),
+  ];
 }

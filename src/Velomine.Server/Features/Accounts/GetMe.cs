@@ -13,7 +13,9 @@ public sealed record MeResponse(
     bool TelemetryConsentRequired,
     bool TelemetryCrash,
     bool TelemetryUsage,
-    string Units)
+    string Units,
+    string? RiderMode,
+    bool? RiderModeSupported)
 {
     public static MeResponse From(User user, IEnumerable<string> roles)
     {
@@ -27,7 +29,11 @@ public sealed record MeResponse(
             required,
             !required && user.TelemetryCrash,
             !required && user.TelemetryUsage,
-            user.Units);
+            user.Units,
+            user.RiderMode,
+            // Nullable on purpose: an older server does not send it, so an app can tell "no rider modes" from
+            // "not chosen yet" without waiting for a save to fail. A new server always says true.
+            RiderModeSupported: true);
     }
 }
 

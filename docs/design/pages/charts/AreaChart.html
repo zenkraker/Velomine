@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- AreaChart: Fitness over time: one line, a fading area, the last value marked. Guideline: AreaChart.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Area chart</title>
+<style>
+  .wrap { padding: var(--space-xl); max-width: 760px; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .line { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .s-a { stop-color: var(--accent-strong); }
+  .dot { fill: var(--accent-strong); stroke: var(--card); stroke-width: 3; }
+  .end { fill: var(--ink); font-size: 13px; font-weight: 600; text-anchor: end; }
+  svg { display: block; width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<article class="vm-card">
+  <h3 class="vm-card-title card-title">Fitness</h3>
+  <p class="vm-sentence body">Rising for 12 weeks: 4 to 18.</p>
+  <svg viewBox="0 0 640 192" role="img" aria-label="Fitness rose from 4 at the end of August to 18 this week.">
+    <defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-a" stop-opacity="0.35"/><stop offset="1" class="s-a" stop-opacity="0"/></linearGradient></defs>
+    <g class="grid"><line x1="36" y1="16" x2="636" y2="16"/><line x1="36" y1="88" x2="636" y2="88"/><line x1="36" y1="160" x2="636" y2="160"/></g>
+    <text class="ylab" x="28" y="20">20</text><text class="ylab" x="28" y="92">10</text><text class="ylab" x="28" y="164">0</text>
+    <path fill="url(#gA)" d="M36 131.2 L89.1 124 L142.2 109.6 L195.3 102.4 L248.4 95.2 L301.5 88 L354.5 73.6 L407.6 44.8 L460.7 52 L513.8 44.8 L566.9 52 L620 30.4 L620 160 L36 160 Z"/>
+    <path class="line" d="M36 131.2 L89.1 124 L142.2 109.6 L195.3 102.4 L248.4 95.2 L301.5 88 L354.5 73.6 L407.6 44.8 L460.7 52 L513.8 44.8 L566.9 52 L620 30.4"/>
+    <circle class="dot" cx="620" cy="30.4" r="6"/>
+    <text class="end" x="606" y="24">18</text>
+    <text class="xlab" x="89.1" y="184">Sep</text><text class="xlab" x="301.5" y="184">Oct</text><text class="xlab" x="513.8" y="184">Nov</text>
+  </svg>
+</article>
+</div>
+</body>
+</html>

@@ -1,100 +1,117 @@
-import 'dart:async' show scheduleMicrotask;
-
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/area_chart.dart';
 import '../../core/tokens.dart';
-import '../../core/confirm.dart';
-import '../../core/widgets/page_menu.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/segmented_control.dart';
 
-/// The daily check-in: consent first, then either today's scores or a short form.
-class WellbeingCard extends StatefulWidget {
+/// What a check-in says: six numbers from 1 to 5, in the order the server stores them.
+typedef CheckInScores = ({
+  int fatigue,
+  int soreness,
+  int mood,
+  int stress,
+  int motivation,
+  int sleep,
+});
+
+/// Asks how the rider feels, in a sheet. Returns the six numbers, or null when the sheet is dismissed.
+Future<CheckInScores?> showCheckInSheet(BuildContext context) =>
+    showSheet(context, builder: (_) => const _CheckInSheet());
+
+class _CheckInSheet extends StatefulWidget {
+  const _CheckInSheet();
+
+  @override
+  State<_CheckInSheet> createState() => _CheckInSheetState();
+}
+
+class _CheckInSheetState extends State<_CheckInSheet> {
+  final _values = <String, int>{
+    'sleep': 3,
+    'fatigue': 3,
+    'soreness': 3,
+    'mood': 3,
+    'stress': 3,
+    'motivation': 3,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      title: l10n.wellbeingToday,
+      saveKey: const Key('wellbeing-save'),
+      saveLabel: l10n.wellbeingSave,
+      onSave: () => Navigator.pop(context, (
+        fatigue: _values['fatigue']!,
+        soreness: _values['soreness']!,
+        mood: _values['mood']!,
+        stress: _values['stress']!,
+        motivation: _values['motivation']!,
+        sleep: _values['sleep']!,
+      )),
+      children: [
+        for (final (id, label) in [
+          ('sleep', l10n.wellbeingSleep),
+          ('fatigue', l10n.wellbeingFatigue),
+          ('soreness', l10n.wellbeingSoreness),
+          ('mood', l10n.wellbeingMood),
+          ('stress', l10n.wellbeingStress),
+          ('motivation', l10n.wellbeingMotivation),
+        ])
+          _ScoreRow(
+            label: label,
+            keyName: id,
+            value: _values[id]!,
+            onChanged: (v) => setState(() => _values[id] = v),
+          ),
+      ],
+    );
+  }
+}
+
+/// The daily check-in: consent first, then today's scores and how the rider felt over two weeks.
+/// Checking in is the page's own action, so the card only says what is stored.
+class WellbeingCard extends StatelessWidget {
   const WellbeingCard({
     super.key,
     required this.wellbeing,
     required this.checkIns,
     required this.onConsent,
-    required this.onWithdraw,
-    required this.onSave,
+    required this.onEdit,
     required this.saving,
   });
 
   final WellbeingResponse? wellbeing;
   final CheckInsResponse? checkIns;
   final Future<bool> Function() onConsent;
-  final Future<bool> Function() onWithdraw;
-  final Future<bool> Function(
-    int fatigue,
-    int soreness,
-    int mood,
-    int stress,
-    int motivation,
-  )
-  onSave;
+
+  /// Opens the check-in sheet, from the card's Edit.
+  final VoidCallback onEdit;
   final bool saving;
 
-  @override
-  State<WellbeingCard> createState() => _WellbeingCardState();
-}
+  /// The last two weeks of check-ins, the oldest first.
+  static List<CheckInResponse> _days(CheckInsResponse checkIns) =>
+      checkIns.checkIns.reversed.take(14).toList().reversed.toList();
 
-class _WellbeingCardState extends State<WellbeingCard> {
-  late List<int> _values = _initialValues();
-  bool _editing = false;
-
-  List<int> _initialValues() {
-    final today = widget.wellbeing?.today;
-    return today == null
-        ? [3, 3, 3, 3, 3]
-        : [
-            today.fatigue,
-            today.soreness,
-            today.mood,
-            today.stress,
-            today.motivation,
-          ];
-  }
-
-  @override
-  void didUpdateWidget(WellbeingCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!_editing && oldWidget.wellbeing?.today != widget.wellbeing?.today) {
-      setState(() => _values = _initialValues());
-    }
-  }
-
-  Future<void> _save() async {
-    final ok = await widget.onSave(
-      _values[0],
-      _values[1],
-      _values[2],
-      _values[3],
-      _values[4],
-    );
-    if (ok && mounted) setState(() => _editing = false);
-  }
-
-  /// Asks first, after the menu has closed: withdrawing stops the check-in and the shares of it.
-  void _withdraw() => scheduleMicrotask(() async {
-    if (!mounted) return;
-    final l10n = context.l10n;
-    final sure = await confirmDestructive(
-      context,
-      title: l10n.wellbeingWithdrawTitle,
-      body: l10n.wellbeingWithdrawBody,
-      action: l10n.wellbeingWithdrawConsent,
-      key: const Key('wellbeing-withdraw-confirm'),
-    );
-    if (sure) await widget.onWithdraw();
-  });
+  /// How the rider felt on a day, as one number out of five.
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final text = Theme.of(context).textTheme;
-    final wellbeing = widget.wellbeing;
+    final wellbeing = this.wellbeing;
+    final days = checkIns == null
+        ? const <CheckInResponse>[]
+        : _days(checkIns!);
 
     if (wellbeing == null) {
       return const SizedBox.shrink();
@@ -111,7 +128,7 @@ class _WellbeingCardState extends State<WellbeingCard> {
             alignment: Alignment.centerLeft,
             child: FilledButton(
               key: const Key('wellbeing-consent'),
-              onPressed: widget.saving ? null : widget.onConsent,
+              onPressed: saving ? null : onConsent,
               child: Text(l10n.wellbeingConsentAction),
             ),
           ),
@@ -123,21 +140,9 @@ class _WellbeingCardState extends State<WellbeingCard> {
 
     return SectionCard(
       key: const Key('wellbeing-card'),
-      title: l10n.wellbeing,
-      menu: PageMenu(
-        buttonKey: const Key('wellbeing-actions'),
-        entries: [
-          PageMenuEntry(
-            key: const Key('wellbeing-withdraw'),
-            icon: Icons.block,
-            label: l10n.wellbeingWithdrawConsent,
-            destructive: true,
-            onSelected: widget.saving ? () {} : _withdraw,
-          ),
-        ],
-      ),
+      title: l10n.wellbeingHowYouFeel,
       children: [
-        if (today != null && !_editing)
+        if (today != null) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -168,6 +173,9 @@ class _WellbeingCardState extends State<WellbeingCard> {
                           label: l10n.wellbeingMotivation,
                           value: today.motivation,
                         ),
+                        // A check-in saved before sleep was asked has none: no sleep is not a zero.
+                        if (today.sleep.orElse(null) case final sleep?)
+                          _Score(label: l10n.wellbeingSleep, value: sleep),
                       ],
                     ),
                   ],
@@ -175,73 +183,55 @@ class _WellbeingCardState extends State<WellbeingCard> {
               ),
               TextButton(
                 key: const Key('wellbeing-edit'),
-                onPressed: () => setState(() => _editing = true),
+                onPressed: onEdit,
                 child: Text(l10n.wellbeingEdit),
               ),
             ],
-          )
-        else ...[
-          Text(l10n.wellbeingToday, style: text.titleSmall),
-          const SizedBox(height: AppSpacing.sm),
-          _ScoreRow(
-            label: l10n.wellbeingFatigue,
-            keyName: 'fatigue',
-            value: _values[0],
-            onChanged: (v) => setState(() => _values[0] = v),
           ),
-          _ScoreRow(
-            label: l10n.wellbeingSoreness,
-            keyName: 'soreness',
-            value: _values[1],
-            onChanged: (v) => setState(() => _values[1] = v),
-          ),
-          _ScoreRow(
-            label: l10n.wellbeingMood,
-            keyName: 'mood',
-            value: _values[2],
-            onChanged: (v) => setState(() => _values[2] = v),
-          ),
-          _ScoreRow(
-            label: l10n.wellbeingStress,
-            keyName: 'stress',
-            value: _values[3],
-            onChanged: (v) => setState(() => _values[3] = v),
-          ),
-          _ScoreRow(
-            label: l10n.wellbeingMotivation,
-            keyName: 'motivation',
-            value: _values[4],
-            onChanged: (v) => setState(() => _values[4] = v),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              FilledButton(
-                key: const Key('wellbeing-save'),
-                onPressed: widget.saving ? null : _save,
-                child: Text(l10n.wellbeingSave),
-              ),
-              if (today != null) ...[
-                const SizedBox(width: AppSpacing.sm),
-                TextButton(
-                  onPressed: () => setState(() {
-                    _editing = false;
-                    _values = _initialValues();
-                  }),
-                  child: Text(l10n.cancel),
-                ),
-              ],
-            ],
-          ),
-        ],
-        if (widget.checkIns case final checkIns?
-            when checkIns.checkIns.isNotEmpty) ...[
+        ] else if (days.isNotEmpty)
+          Text(l10n.wellbeingNoToday, style: text.bodySmall),
+        if (days.isEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
-          Text(l10n.wellbeingHistory, style: text.labelLarge),
+          // Consented, but nothing said yet: the history says there is nothing rather than vanishing,
+          // and it is the one place that says it.
+          if (checkIns != null && today == null)
+            EmptyState(
+              key: const Key('wellbeing-empty'),
+              message: l10n.wellbeingNoToday,
+              framed: false,
+            ),
+        ] else ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text(l10n.wellbeingHistory14, style: text.labelLarge),
+          // What the line says in words, as the design puts it above the trend.
+          if (_feelSentence(today, days) case (final todayScore, final usual))
+            Text(
+              l10n.wellbeingFeelSentence(todayScore, usual),
+              key: const Key('wellbeing-feel-sentence'),
+              style: text.bodySmall,
+            ),
           const SizedBox(height: AppSpacing.xs),
-          for (final checkIn in checkIns.checkIns.reversed.take(7))
-            _HistoryRow(checkIn: checkIn),
+          // Two weeks of how the rider felt, as a line: the latest point carries today's score. The design
+          // draws the trend, not a row per day.
+          AreaChart(
+            key: const Key('wellbeing-history-chart'),
+            values: [for (final checkIn in days.reversed) _feelScore(checkIn)],
+            labels: [
+              for (final checkIn in days.reversed)
+                DateFormat.MMMd(locale).format(checkIn.date),
+            ],
+            format: (value) => decimal(value, 1),
+            semanticLabel: l10n.wellbeingHistory14,
+            emptyMessage: l10n.wellbeingNoToday,
+            height: AppProgress.fitnessChartHeight,
+          ),
         ],
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          l10n.wellbeingPrivateNotes,
+          key: const Key('wellbeing-private-notes'),
+          style: text.bodySmall,
+        ),
       ],
     );
   }
@@ -281,15 +271,14 @@ class _ScoreRow extends StatelessWidget {
           child: Text(label, style: Theme.of(context).textTheme.bodySmall),
         ),
         Expanded(
-          child: SegmentedButton<int>(
-            key: Key('wellbeing-$keyName'),
-            showSelectedIcon: false,
+          child: SegmentedControl<int>(
+            buttonKey: Key('wellbeing-$keyName'),
             segments: [
               for (var i = 1; i <= 5; i++)
                 ButtonSegment(value: i, label: Text('$i')),
             ],
-            selected: {value},
-            onSelectionChanged: (s) => onChanged(s.single),
+            selected: value,
+            onChanged: onChanged,
           ),
         ),
       ],
@@ -297,39 +286,25 @@ class _ScoreRow extends StatelessWidget {
   );
 }
 
-class _HistoryRow extends StatelessWidget {
-  const _HistoryRow({required this.checkIn});
-
-  final CheckInResponse checkIn;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppProgress.dateWidth,
-            child: Text(
-              DateFormat.MMMd(locale).format(checkIn.date),
-              style: text.bodySmall,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
-              '${l10n.wellbeingShortSoreness} ${checkIn.soreness} · '
-              '${l10n.wellbeingShortMood} ${checkIn.mood} · '
-              '${l10n.wellbeingShortStress} ${checkIn.stress} · '
-              '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
-              style: text.bodySmall,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+/// Today's feel and the rider's usual one, one decimal each, as the card's sentence reads them.
+/// The usual one is the mean of every saved day that has a score; a missing side is a dash.
+(String, String) _feelSentence(
+  CheckInResponse? today,
+  List<CheckInResponse> days,
+) {
+  final todayScore = today == null ? '–' : _oneDecimal(_feelScore(today));
+  if (days.isEmpty) return (todayScore, '–');
+  final mean = days.map(_feelScore).reduce((a, b) => a + b) / days.length;
+  return (todayScore, _oneDecimal(mean));
 }
+
+String _oneDecimal(double value) => value.toStringAsFixed(1);
+
+/// How the rider felt that day: the mean of the five scores, which is what the trend draws.
+double _feelScore(CheckInResponse checkIn) =>
+    (checkIn.fatigue +
+        checkIn.soreness +
+        checkIn.mood +
+        checkIn.stress +
+        checkIn.motivation) /
+    5;

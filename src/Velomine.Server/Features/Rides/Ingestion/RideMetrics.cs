@@ -20,7 +20,15 @@ public sealed record RideMetricValues(
     double? IntensityFactor = null,
     double? Tss = null,
     double? Trimp = null,
-    int[]? PowerBests = null);
+    double? HrTss = null,
+    int[]? PowerBests = null,
+    double? EfficiencyFactor = null,
+    double? DecouplingPct = null,
+    bool? Steady = null,
+    short?[]? EstimatedPower = null,
+    int? EstimatedAvgPowerW = null,
+    int? EstimatedNormalizedPowerW = null,
+    double? EstimatedTss = null);
 
 /// <summary>
 /// The numbers shown for a ride, worked out from its samples. Pure functions, no I/O.
@@ -43,7 +51,9 @@ public static class RideMetrics
         double? deviceMovingS = null,
         IReadOnlyList<PauseInterval>? pauses = null,
         int? ftpW = null,
-        int? maxHeartRate = null)
+        int? maxHeartRate = null,
+        int? thresholdHeartRate = null,
+        PowerEstimate? estimate = null)
     {
         if (samples.Count < 2) throw new RideParseException("too_short", "The ride has fewer than two samples.");
 
@@ -62,7 +72,7 @@ public static class RideMetrics
 
         var distance = TotalDistance(samples, paused);
         var (gain, loss) = ElevationChange(samples.Select(s => s.Altitude).ToArray());
-        var power = Resample(samples, s => s.Power, pause, paused);
+        var power = Seconds(samples, s => s.Power, pause, paused);
         var heartRate = Resample(samples, s => s.HeartRate, pause, paused);
         var cadence = Resample(samples, s => s.Cadence, pause, paused).Where(c => c > 0).ToArray();
         var normalizedPower = deviceNormalizedPowerW ?? NormalizedPower(power);
@@ -70,6 +80,11 @@ public static class RideMetrics
         var heartRateZones = maxHeartRate is { } zoneMaxHr
             ? TrainingLoad.ZoneSeconds(samples, s => s.HeartRate, zoneMaxHr, TrainingLoad.HeartRateFloor, TrainingLoad.HeartRateBounds)
             : null;
+        var (efficiencyFactor, decoupling, steady) = Efficiency(PairedSeconds(samples, pause, paused));
+        // Only a ride with no power at all gets estimated watts; they never feed the power numbers above.
+        var estimated = estimate is null
+            ? null
+            : EstimatedPower.Compute(samples, speeds, pause, paused, estimate, ftpW, moving);
 
         return new RideMetricValues(
             elapsed,
@@ -80,7 +95,7 @@ public static class RideMetrics
             moving > 0 ? distance / moving : null,
             speeds.Any(s => s.HasValue) ? RobustMax([.. speeds.OfType<float>()]) : null,
             source,
-            power.Length > 0 ? (int)Math.Round(power.Average()) : null,
+            power.Length > 0 ? (int)Math.Round(power.Average(s => s.Value)) : null,
             samples.Max(s => s.Power) is { } maxPower ? maxPower : null,
             normalizedPower,
             heartRate.Length > 0 ? (int)Math.Round(heartRate.Average()) : null,
@@ -89,7 +104,75 @@ public static class RideMetrics
             intensityFactor,
             tss,
             TrainingLoad.Trimp(heartRateZones),
-            PowerBests.ComputeFromSamples(samples, pause, paused));
+            TrainingLoad.HrTss(samples, thresholdHeartRate, paused),
+            PowerBests.ComputeFromSamples(samples, pause, paused),
+            efficiencyFactor,
+            decoupling,
+            steady,
+            estimated?.PerSample,
+            estimated?.AvgPowerW,
+            estimated?.NormalizedPowerW,
+            estimated?.Tss);
+    }
+
+    /// <summary>
+    /// One value per second of riding, from the samples that have both signals: pauses are left out, and a second
+    /// whose power or heart rate the file lacks is dropped as a whole, so the two never drift apart.
+    /// </summary>
+    public static (double Power, double HeartRate)[] PairedSeconds(
+        IReadOnlyList<Sample> samples,
+        double pauseThresholdS,
+        IReadOnlyList<PauseInterval>? pauses = null)
+    {
+        var result = new List<(double Power, double HeartRate)>();
+        for (var i = 0; i + 1 < samples.Count; i++)
+        {
+            var dt = samples[i + 1].T - samples[i].T;
+            if (dt <= 0 || dt > pauseThresholdS ||
+                CrossesPause(pauses, samples[i].T, samples[i + 1].T) ||
+                samples[i].Power is not { } watts || samples[i].HeartRate is not { } bpm) continue;
+            for (var s = 0; s < Math.Max(1, (int)Math.Round(dt)); s++) result.Add((watts, bpm));
+        }
+
+        return [.. result];
+    }
+
+    /// <summary>The shortest ride, after the warm-up, that says anything about aerobic decoupling.</summary>
+    private const int DecouplingWarmupS = 15 * 60;
+    private const int DecouplingMinimumS = 40 * 60;
+    /// <summary>Friel's steadiness cut for the decoupling test: a variability index above 1.05 is not a steady ride.</summary>
+    private const double DecouplingSteadyVi = 1.05;
+
+    /// <summary>
+    /// Aerobic decoupling and efficiency factor (Friel): the moving seconds with a heart rate and a pedalling power,
+    /// after a warm-up, split in two halves. Only a steady ride says how much heart rate drifted; every qualifying
+    /// ride has its efficiency factor and whether it was steady.
+    /// </summary>
+    public static (double? EfficiencyFactor, double? DecouplingPct, bool? Steady) Efficiency(
+        IReadOnlyList<(double Power, double HeartRate)> seconds)
+    {
+        // Coasting (descents, traffic) and spikes are left out, so a hilly ride does not show drift from freewheeling.
+        var kept = seconds.Where(s => s.HeartRate is >= 60 and <= 220 && s.Power is >= 50 and <= 2500).ToList();
+        if (kept.Count < DecouplingWarmupS + DecouplingMinimumS) return (null, null, null);
+        kept.RemoveRange(0, DecouplingWarmupS);
+
+        // Both the efficiency factor and the steadiness test use the kept seconds' own numbers, never the whole ride's:
+        // a warm-up or a long descent must not make a ride look steady, nor change what it says about heart rate drift.
+        var normalizedPower = (int?)NormalizedPower(kept.ConvertAll(s => s.Power)) ?? 0;
+        var efficiencyFactor = Math.Round(normalizedPower / kept.Average(s => s.HeartRate), 2);
+        if (normalizedPower / kept.Average(s => s.Power) > DecouplingSteadyVi) return (efficiencyFactor, null, false);
+
+        var half = kept.Count / 2;
+        var first = HalfEfficiency(kept, 0, half);
+        var second = HalfEfficiency(kept, half, kept.Count);
+        return (efficiencyFactor, Math.Round((first - second) / first * 100, 1), true);
+    }
+
+    /// <summary>One half's efficiency factor: the normalized power of its seconds over their mean heart rate.</summary>
+    private static double HalfEfficiency(List<(double Power, double HeartRate)> kept, int from, int to)
+    {
+        var half = kept.GetRange(from, to - from);
+        return (int?)NormalizedPower(half.ConvertAll(s => s.Power)) is { } np ? np / half.Average(s => s.HeartRate) : 0;
     }
 
     /// <summary>A gap this long between samples is a pause (the device stopped recording), not riding.</summary>
@@ -248,15 +331,7 @@ public static class RideMetrics
         var values = altitudes.Where(a => a.HasValue).Select(a => (double)a!.Value).ToArray();
         if (values.Length < 2) return (null, null);
 
-        var half = ElevationSmoothingWindow / 2;
-        var despiked = new double[values.Length];
-        for (var i = 0; i < values.Length; i++)
-            despiked[i] = Median(values[Math.Max(0, i - half)..Math.Min(values.Length, i + half + 1)].ToList());
-
-        var smooth = new double[values.Length];
-        for (var i = 0; i < values.Length; i++)
-            smooth[i] = despiked[Math.Max(0, i - half)..Math.Min(values.Length, i + half + 1)].Average();
-
+        var smooth = SmoothAltitude(values);
         double gain = 0, loss = 0, reference = smooth[0];
         foreach (var altitude in smooth)
         {
@@ -268,6 +343,43 @@ public static class RideMetrics
         }
 
         return (gain, loss);
+    }
+
+    /// <summary>
+    /// A median filter removes spikes and a moving average smooths the rest, over the five values around each one.
+    /// Same length as the input, so the result stays aligned with the samples it came from.
+    /// </summary>
+    public static double[] SmoothAltitude(IReadOnlyList<double> values)
+    {
+        var source = values as double[] ?? [.. values];
+        var half = ElevationSmoothingWindow / 2;
+        var despiked = new double[source.Length];
+        for (var i = 0; i < source.Length; i++)
+            despiked[i] = Median(source[Math.Max(0, i - half)..Math.Min(source.Length, i + half + 1)].ToList());
+
+        var smooth = new double[source.Length];
+        for (var i = 0; i < source.Length; i++)
+            smooth[i] = despiked[Math.Max(0, i - half)..Math.Min(source.Length, i + half + 1)].Average();
+        return smooth;
+    }
+
+    /// <summary>The same smoothing over a signal with gaps: each sample's altitude, null where it has none.</summary>
+    public static double?[] SmoothedAltitudes(IReadOnlyList<float?> altitudes)
+    {
+        var positions = new List<int>(altitudes.Count);
+        var values = new List<double>(altitudes.Count);
+        for (var i = 0; i < altitudes.Count; i++)
+            if (altitudes[i] is { } altitude)
+            {
+                positions.Add(i);
+                values.Add(altitude);
+            }
+
+        var result = new double?[altitudes.Count];
+        if (values.Count < 2) return result;
+        var smooth = SmoothAltitude(values);
+        for (var i = 0; i < positions.Count; i++) result[positions[i]] = smooth[i];
+        return result;
     }
 
     /// <summary>
@@ -294,8 +406,40 @@ public static class RideMetrics
     }
 
     /// <summary>
-    /// Normalized power: a 30-second rolling average of the 1 Hz power, raised to the fourth power, averaged,
-    /// then the fourth root. Null for less than 30 seconds of power.
+    /// The same seconds, each saying which sample it came from and which stretch of samples it belongs to, so a value
+    /// per second can go back onto the stored samples, which are the ride streams.
+    /// </summary>
+    public static (int Stretch, int First, int Last, double Value)[] Seconds(
+        IReadOnlyList<Sample> samples,
+        Func<Sample, short?> pick,
+        double pauseThresholdS,
+        IReadOnlyList<PauseInterval>? pauses = null)
+    {
+        var result = new List<(int, int, int, double)>();
+        var stretch = 0;
+        for (var i = 0; i + 1 < samples.Count; i++)
+        {
+            var dt = samples[i + 1].T - samples[i].T;
+            if (dt <= 0 || dt > pauseThresholdS ||
+                CrossesPause(pauses, samples[i].T, samples[i + 1].T) ||
+                pick(samples[i]) is not { } value)
+            {
+                stretch++;
+                continue;
+            }
+
+            // Every second of the stretch belongs to the sample it starts from, so a gapped recording never puts a
+            // second past the end of the arrays or two samples late.
+            var seconds = Math.Max(1, (int)Math.Round(dt));
+            for (var s = 0; s < seconds; s++) result.Add((stretch, i, i, value));
+        }
+
+        return [.. result];
+    }
+
+    /// <summary>
+    /// Normalized power from 1 Hz seconds the caller has already kept: a 30-second rolling average, each raised to the
+    /// fourth power, averaged, then the fourth root. Null under 30 seconds.
     /// </summary>
     public static int? NormalizedPower(IReadOnlyList<double> power1Hz)
     {
@@ -315,7 +459,37 @@ public static class RideMetrics
         return (int)Math.Round(Math.Pow(fourthPowers / windows, 0.25));
     }
 
-    private static double Median(List<double> values)
+    /// <summary>
+    /// The same, with every 30-second window kept inside one stretch, so a pause or a gap never joins two efforts.
+    /// Null when no stretch lasts 30 seconds.
+    /// </summary>
+    public static int? NormalizedPower(IReadOnlyList<(int Stretch, int First, int Last, double Value)> seconds)
+    {
+        double fourthPowers = 0;
+        var windows = 0;
+        var i = 0;
+        while (i < seconds.Count)
+        {
+            var stretch = seconds[i].Stretch;
+            var start = i;
+            while (i < seconds.Count && seconds[i].Stretch == stretch) i++;
+            if (i - start < NormalizedPowerWindowS) continue;
+
+            double windowSum = 0;
+            for (var k = start; k < i; k++)
+            {
+                windowSum += seconds[k].Value;
+                if (k >= start + NormalizedPowerWindowS) windowSum -= seconds[k - NormalizedPowerWindowS].Value;
+                if (k < start + NormalizedPowerWindowS - 1) continue;
+                fourthPowers += Math.Pow(windowSum / NormalizedPowerWindowS, 4);
+                windows++;
+            }
+        }
+
+        return windows == 0 ? null : (int)Math.Round(Math.Pow(fourthPowers / windows, 0.25));
+    }
+
+    internal static double Median(List<double> values)
     {
         values.Sort();
         var middle = values.Count / 2;

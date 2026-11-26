@@ -203,13 +203,14 @@ void main() {
 
     expect(server.clubRoles[rider.email], 'owner');
     expect(server.clubName, 'Friday Riders');
+    // Only the hero card names it: the page's title is "Club".
     expect(find.text('Friday Riders'), findsOneWidget);
     expect(find.byKey(const Key('club-plan-card')), findsOneWidget);
     expect(find.text('1 of 25 members'), findsOneWidget);
     expect(find.byKey(const Key('go-start-club')), findsNothing);
   });
 
-  testWidgets('ClubScreen_ShouldNotOfferStartAClub_WhenTheSettingIsOff', (
+  testWidgets('NoClubPage_ShouldKeepAllThreeWays_WhenTheSettingIsOff', (
     tester,
   ) async {
     widen(tester);
@@ -218,8 +219,16 @@ void main() {
 
     await openClub(tester);
 
+    // Club creation being off turns the third button off; it never removes the third way and never
+    // leaves a third of the row empty.
     expect(find.byKey(const Key('go-join-club')), findsOneWidget);
-    expect(find.byKey(const Key('go-start-club')), findsNothing);
+    expect(find.byKey(const Key('club-way-start')), findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.byKey(const Key('go-start-club')))
+          .onPressed,
+      isNull,
+    );
   });
 
   testWidgets('ClubsTab_ShouldRecordTheBand_WhenTheOperatorSavesAPlan', (
@@ -244,6 +253,8 @@ void main() {
     expect(find.text('1 of 25 members'), findsOneWidget);
     expect(find.byKey(const Key('club-paid-until-club-1')), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('club-menu-club-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('edit-plan-club-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('plan-limit')));
@@ -326,4 +337,22 @@ void main() {
     expect(notificationText(it, note('club_plan_ending')), contains('2027'));
     Intl.defaultLocale = null;
   });
+
+  testWidgets(
+    'ClubScreen_ShouldShowTheMemberCountOnce_WhenThePlanHasNoMemberLimit',
+    (tester) async {
+      widen(tester);
+      final owner = server.add('owner@example.com', clubRole: 'owner');
+      server.clubPaidUntil = '2099-03-31';
+      server.signInBrowser(owner);
+
+      await openClub(tester);
+
+      // The plan card is drawn for the paid-until day alone; the count is the hero card's, once.
+      expect(find.byKey(const Key('club-plan-card')), findsOneWidget);
+      expect(find.byKey(const Key('club-plan-members')), findsNothing);
+      expect(find.text('1 member'), findsOneWidget);
+      expect(find.textContaining('Paid until'), findsOneWidget);
+    },
+  );
 }

@@ -13,13 +13,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRides => 'Rides';
 
   @override
+  String get navAllRides => 'All rides';
+
+  @override
+  String get navGoals => 'Goals';
+
+  @override
+  String get navOverview => 'Overview';
+
+  @override
+  String get navClubRides => 'Club rides';
+
+  @override
+  String get navSharing => 'Sharing';
+
+  @override
+  String get navTotals => 'Totals';
+
+  @override
+  String get navGoalsAndEvents => 'Goals and events';
+
+  @override
+  String get nextEvent => 'Next event';
+
+  @override
+  String get dayUnit => 'day';
+
+  @override
+  String get daysUnit => 'days';
+
+  @override
   String get navGroupClub => 'Club';
-
-  @override
-  String get navNoClub => 'No club';
-
-  @override
-  String get eyebrowRides => 'Your rides';
 
   @override
   String get privacyCardTitle => 'Your data is yours.';
@@ -29,9 +53,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ridesSubtitle => 'Your rides and races.';
-
-  @override
-  String get ridesImportMenu => 'Add rides';
 
   @override
   String get rideDetailTitle => 'Ride';
@@ -66,12 +87,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rideNoData => 'No data';
-
-  @override
-  String get sessionsNavTitle => 'Sessions';
-
-  @override
-  String get twoFactorNavTitle => 'Two-factor';
 
   @override
   String get notifications => 'Notifications';
@@ -141,22 +156,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pressBackAgain => 'Press back again to exit';
 
   @override
-  String get authEyebrowSignIn => 'Welcome back';
-
-  @override
-  String get authEyebrowRegister => 'New account';
-
-  @override
-  String get authEyebrowForgot => 'Password help';
-
-  @override
-  String get authEyebrowReset => 'New password';
-
-  @override
-  String get authEyebrowServer => 'Server';
-
-  @override
   String get signInHelp => 'Sign in to see your rides and your form.';
+
+  @override
+  String get signInTitle => 'Welcome back';
 
   @override
   String get signIn => 'Sign in';
@@ -179,6 +182,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createAccount => 'Create an account';
+
+  @override
+  String get registerCaption => 'New account';
 
   @override
   String get createAccountAction => 'Create account';
@@ -300,9 +306,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoFactorStateOn => 'Two-factor sign-in is on.';
 
   @override
-  String get twoFactorStateOff => 'Two-factor sign-in is off.';
-
-  @override
   String get twoFactorIntro =>
       'After your password, you enter a code from your authenticator app. It is optional, and you can turn it off again.';
 
@@ -311,7 +314,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This account signs in with single sign-on, so it already has a second step.';
 
   @override
-  String get twoFactorStart => 'Set up an authenticator';
+  String get twoFactorStartSetup => 'Start setup';
 
   @override
   String get twoFactorKeyHelp =>
@@ -343,14 +346,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Save them somewhere safe. Each works once, in place of the app code.';
 
   @override
+  String get twoFactorSetupTitle => 'Set up an authenticator';
+
+  @override
   String get twoFactorEnabled => 'Two-factor sign-in is on.';
-
-  @override
-  String get twoFactorDisabled => 'Two-factor sign-in is off.';
-
-  @override
-  String get twoFactorCodeWrong =>
-      'That code did not work. Check the clock on your phone and try the next one.';
 
   @override
   String get sessionsTitle => 'Devices and sessions';
@@ -364,9 +363,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionLastUsed => 'Last used';
-
-  @override
-  String get sessionSince => 'Signed in';
 
   @override
   String get sessionRevoke => 'Sign out';
@@ -410,10 +406,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ssoGeneric => 'single sign-on';
 
   @override
-  String get signingIn => 'Signing you in…';
+  String get setupTitle => 'Which server does your club use?';
 
   @override
-  String get setupTitle => 'Which server does your club use?';
+  String get setupCaption => 'Server';
 
   @override
   String get setupServerAddress => 'Server address';
@@ -424,9 +420,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setupInsecure =>
       'This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.';
-
-  @override
-  String get setupChecking => 'Checking…';
 
   @override
   String get setupConnect => 'Connect';
@@ -685,7 +678,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubNoneSubtitle => 'Ride on your own, or with a club.';
 
   @override
-  String get eyebrowClub => 'Your club';
+  String get clubNearbyBody => 'Clubs that ride near you, by distance.';
+
+  @override
+  String get clubJoinWithCode => 'Join with a code';
+
+  @override
+  String get clubJoinBody => 'Have a code from a club owner? Join with it.';
+
+  @override
+  String get clubStartBody =>
+      'Start a club for the people you ride with. A month to try it.';
 
   @override
   String get clubSubtitle => 'Your club, its rides and the people in it.';
@@ -754,9 +757,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubCopy => 'Copy';
 
   @override
-  String get clubCopied => 'Copied';
-
-  @override
   String get sharingTitle => 'What you share';
 
   @override
@@ -783,32 +783,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turn on rides first; routes add the map to them.';
 
   @override
+  String get shareStatsConfirmTitle => 'Share with your coaches?';
+
+  @override
+  String get shareStatsConfirmBody =>
+      'Your coaches will see every number of your rides: power, heart rate, speed, cadence, elevation, temperature, and the training built from them. They only read; your rides stay yours to change or delete. The map needs Routes, and even then the start, the end and your saved places stay hidden.';
+
+  @override
+  String get shareWellbeingConfirmTitle =>
+      'Share your wellbeing with your coaches?';
+
+  @override
+  String get shareWellbeingConfirmBody =>
+      'Your coaches will see your daily check-in scores and how hard each ride felt. This is health data, so we ask you first. Your notes stay private, and you can stop sharing at any time.';
+
+  @override
+  String get shareConfirmAction => 'Share';
+
+  @override
   String get privacyTitle => 'Ride privacy';
 
   @override
   String get privacyHelp =>
-      'What other people see when you share a ride or your club can see it. You always see everything.';
-
-  @override
-  String get privacyOthersSee => 'What others see of each ride';
-
-  @override
-  String get privacyHideHeartRate => 'Heart rate';
-
-  @override
-  String get privacyHidePower => 'Power';
-
-  @override
-  String get privacyHideCadence => 'Cadence';
-
-  @override
-  String get privacyHideSpeed => 'Speed';
-
-  @override
-  String get privacyHideElevation => 'Elevation';
-
-  @override
-  String get privacyHideTemperature => 'Temperature';
+      'What your club and coaches never see of your routes. You always see everything.';
 
   @override
   String get privacyTrimTitle => 'Hide the start and end';
@@ -875,21 +872,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewsEmpty => 'Nobody has looked yet.';
 
   @override
-  String get viewSummary => 'Summary';
-
-  @override
-  String get viewTraining => 'Training';
-
-  @override
-  String get viewRide => 'Ride';
-
-  @override
-  String get viewRides => 'Ride list';
-
-  @override
-  String get viewRoute => 'Route';
-
-  @override
   String get athletesTitle => 'Athletes';
 
   @override
@@ -936,6 +918,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coachNoRides => 'No rides shared yet.';
 
   @override
+  String get coachPlan => 'Plan';
+
+  @override
+  String coachPlanDone(int done, int total) {
+    return '$done of $total done this week';
+  }
+
+  @override
+  String coachPlanPlannedRidden(String planned, String ridden) {
+    return '$planned planned · $ridden ridden';
+  }
+
+  @override
   String get routeNotShared => 'The athlete has not shared the route.';
 
   @override
@@ -956,6 +951,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminClubActive => 'Active';
+
+  @override
+  String get adminClubInactive => 'Inactive';
+
+  @override
+  String get adminClubPlanEnded => 'Plan ended';
+
+  @override
+  String get adminClubActivate => 'Activate club';
+
+  @override
+  String get adminClubDeactivate => 'Deactivate club';
+
+  @override
+  String get adminClubActiveHelp =>
+      'An inactive club keeps its members and rides, but nobody can join it until it is turned back on.';
+
+  @override
+  String get adminPeopleAndRides => 'People and rides';
+
+  @override
+  String get adminServer => 'Server';
 
   @override
   String get adminClubJoinCode => 'Join code';
@@ -1041,6 +1058,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bulkChooseFiles => 'Choose files';
+
+  @override
+  String get zwiftTitle => 'From Zwift';
+
+  @override
+  String get zwiftHint =>
+      'Zwift keeps every ride as a FIT file in Documents/Zwift/Activities. Choose that folder to bring them all in.';
 
   @override
   String get bulkDropTitle => 'Drop to add your rides';
@@ -1211,9 +1235,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
-  String get rideActions => 'Ride actions';
-
-  @override
   String get deleteRideTitle => 'Delete this ride?';
 
   @override
@@ -1237,7 +1258,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heartRateZones => 'Heart rate zones';
 
   @override
+  String heartRateZonesFromThreshold(String bpm) {
+    return 'Zones from your threshold heart rate ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMax(String bpm) {
+    return 'Zones from your maximum heart rate ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMaxEstimated(String bpm) {
+    return 'Zones from your maximum heart rate ($bpm bpm, estimated)';
+  }
+
+  @override
   String get powerZones => 'Power zones';
+
+  @override
+  String get zonesTitle => 'Zones';
+
+  @override
+  String get zonesEdit => 'Edit';
+
+  @override
+  String get zonesEditTitle => 'Your zones';
+
+  @override
+  String get zonesEditHelp =>
+      'The top of each zone, in watts or beats per minute. Zones are a share of your FTP and heart rate, so they move when those change.';
+
+  @override
+  String zonesLimitLabel(int zone) {
+    return 'Zone $zone up to';
+  }
+
+  @override
+  String get zonesInvalidLimit =>
+      'Type a whole number above zero for every zone.';
+
+  @override
+  String get zonesNotRising =>
+      'Each zone\'s limit must be higher than the one before it.';
+
+  @override
+  String get zonesBackToAutomatic => 'Back to automatic';
+
+  @override
+  String get zonesResetTitle => 'Use the standard zones?';
+
+  @override
+  String get zonesResetBody =>
+      'Your own limits are removed for every zone, and the standard ones apply again.';
+
+  @override
+  String get zonesResetAction => 'Use the standard zones';
+
+  @override
+  String get zonesCustom => 'Your own limits';
 
   @override
   String get momentHint =>
@@ -1247,6 +1325,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String momentAt(String time, String distance) {
     return 'At $time$distance';
   }
+
+  @override
+  String get rideNumbers => 'Numbers';
 
   @override
   String get statDistance => 'Distance';
@@ -1288,6 +1369,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statTrimp => 'TRIMP';
 
   @override
+  String get statEffortScore => 'Effort score';
+
+  @override
+  String get effortFromPower => 'From your power';
+
+  @override
+  String get effortFromHeartRate => 'From your heart rate';
+
+  @override
+  String get effortFromFeel => 'From how hard it felt';
+
+  @override
+  String get effortFromEstimated => 'From estimated watts';
+
+  @override
+  String get statEfficiency => 'Efficiency factor';
+
+  @override
+  String get statDecoupling => 'Decoupling';
+
+  @override
   String get statAverageHeartRate => 'Average heart rate';
 
   @override
@@ -1319,6 +1421,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String zoneName(String zone) {
+    String _temp0 = intl.Intl.selectLogic(zone, {
+      '1': 'Z1 Recovery',
+      '2': 'Z2 Endurance',
+      '3': 'Z3 Tempo',
+      '4': 'Z4 Threshold',
+      '5': 'Z5 VO2max',
+      '6': 'Z6 Anaerobic',
+      '7': 'Z7 Neuromuscular',
+      'other': 'Zone',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get bike => 'Bike';
 
   @override
@@ -1328,11 +1445,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapOfRoute => 'Map of the route';
 
   @override
+  String get mapVirtualWorld =>
+      'Virtual world: the line is drawn without a map.';
+
+  @override
   String get heartRateOnMap => 'Show heart rate on the map';
 
   @override
   String mapHeartRateHint(int min, int max) {
     return 'Route colour shows heart rate from $min to $max bpm';
+  }
+
+  @override
+  String mapHeartRateLegend(int min, int max) {
+    return '$min–$max bpm';
   }
 
   @override
@@ -1364,9 +1490,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addBike => 'Add bike';
 
   @override
-  String get eyebrowBikes => 'Your bikes';
-
-  @override
   String get bikesSubtitle => 'Every bike you ride and what it needs.';
 
   @override
@@ -1378,18 +1501,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archived => 'Archived';
-
-  @override
-  String bikeRides(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count rides',
-      one: '1 ride',
-      zero: 'No rides',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get deleteBikeTitle => 'Delete this bike?';
@@ -1419,15 +1530,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get metricTrainingLoad => 'Training load';
-
-  @override
   String get metricPower => 'Power';
-
-  @override
-  String metricThisPeriod(String period) {
-    return 'This $period';
-  }
 
   @override
   String get statRides => 'Rides';
@@ -1446,6 +1549,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parts => 'Parts';
+
+  @override
+  String get totals => 'Totals';
 
   @override
   String get addPartAction => 'Add part';
@@ -1581,9 +1687,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
-
-  @override
-  String get openFullMap => 'Open the full map';
 
   @override
   String get save => 'Save';
@@ -1932,8 +2035,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalDelete => 'Delete goal';
 
   @override
+  String get goalDeleteTitle => 'Delete this goal?';
+
+  @override
+  String get goalDeleteBody =>
+      'The goal and its target are removed. Your rides stay exactly as they are.';
+
+  @override
   String goalSemantics(String metric) {
     return '$metric goal';
+  }
+
+  @override
+  String goalPercent(int percent) {
+    return '$percent %';
   }
 
   @override
@@ -1942,12 +2057,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String totalsSemantics(String period, String distance) {
-    return 'Distance per $period. This $period: $distance.';
+  String goalLeft(Object value) {
+    return '$value to go';
   }
 
   @override
-  String get eyebrowProgress => 'Your progress';
+  String goalReachedBy(Object value) {
+    return 'Reached by $value';
+  }
+
+  @override
+  String goalsSummary(num reached, num running) {
+    String _temp0 = intl.Intl.pluralLogic(
+      running,
+      locale: localeName,
+      other: '$running goals running.',
+      one: 'One goal running.',
+      zero: 'No goals running.',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      reached,
+      locale: localeName,
+      other: '$reached reached.',
+      one: 'One reached.',
+      zero: '',
+    );
+    return '$_temp0 $_temp1';
+  }
+
+  @override
+  String chartAverage(String value) {
+    return 'Average $value';
+  }
+
+  @override
+  String totalsSemanticsMeasure(String measure, String period, String value) {
+    return '$measure per $period. This $period: $value.';
+  }
+
+  @override
+  String get fitnessTrendRising => 'Your fitness is rising.';
+
+  @override
+  String get fitnessTrendFalling => 'Your fitness is falling.';
+
+  @override
+  String formFitnessFatigue(int fitness, int fatigue) {
+    return 'Fitness $fitness, fatigue $fatigue.';
+  }
+
+  @override
+  String weekAgainstAverage(String trend, String average) {
+    String _temp0 = intl.Intl.selectLogic(trend, {
+      'above': 'Above your 12-week average of $average.',
+      'below': 'Below your 12-week average of $average.',
+      'other': 'Level with your 12-week average of $average.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get noEventPlanned =>
+      'No event planned. Add one to see the days to go.';
+
+  @override
+  String get totalsEmpty =>
+      'No rides yet. Upload or record a ride to see your totals.';
 
   @override
   String get progressSubtitle => 'Your form over the period you choose.';
@@ -1965,9 +2140,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalsTitleYearly => 'Distance per year';
 
   @override
-  String totalsMore(int count) {
-    return '$count older periods not listed';
-  }
+  String get totalsShowEarlier => 'Show earlier';
 
   @override
   String get trainingLoad => 'Training load';
@@ -1983,7 +2156,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trainingLoadHint =>
-      'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.';
+      'Set your FTP or wear a heart-rate strap, then upload a ride to see training load.';
+
+  @override
+  String get fitnessHeartRateLoad => 'Includes rides scored from heart rate.';
+
+  @override
+  String get trimpHelp =>
+      'TRIMP weights each heart-rate zone from 1 to 5 (Edwards).';
 
   @override
   String get fitnessFatigueForm => 'Fitness, fatigue and form';
@@ -2011,8 +2191,71 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get dailyLoadEmpty =>
+      'No training load in this range. Rides with power or heart rate add to it.';
+
+  @override
   String get trainingLoadHelp =>
       'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
+
+  @override
+  String get trainingMonotonous =>
+      'Every day was about as hard this week. An easy day helps you adapt.';
+
+  @override
+  String get trainingHeavyWeek => 'This week was much heavier than usual.';
+
+  @override
+  String trainingStrain(String monotony, String strain) {
+    return 'Monotony $monotony · Strain $strain';
+  }
+
+  @override
+  String get riderCardTitle => 'Your numbers';
+
+  @override
+  String get riderCardWhole => 'Whole rider card';
+
+  @override
+  String get riderCardFtpPerKilo => 'FTP per kilo';
+
+  @override
+  String riderCardFtpAtWeight(int ftp, double weight) {
+    final intl.NumberFormat weightNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String weightString = weightNumberFormat.format(weight);
+
+    return '$ftp W at $weightString kg';
+  }
+
+  @override
+  String get riderCardPeak => 'Peak power';
+
+  @override
+  String riderCardPeakNote(String duration) {
+    return 'Best $duration, last 90 days';
+  }
+
+  @override
+  String get riderCardPowerNote =>
+      'Fitted from your best efforts of the last 90 days.';
+
+  @override
+  String get riderCardBestsNote =>
+      'Your best in the last 90 days. Tap one to open its ride.';
+
+  @override
+  String get riderCardEfficiencyNote =>
+      'The mean of your steady rides, by week.';
+
+  @override
+  String get riderCardTotalsNote => 'Your rides in the last 90 days.';
+
+  @override
+  String get riderCardEffortNote => 'From your effort score.';
+
+  @override
+  String get riderCardEventNote => 'From your calendar.';
 
   @override
   String get accountSearch => 'Find an account';
@@ -2027,7 +2270,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSettings => 'Settings';
 
   @override
+  String get authOr => 'or';
+
+  @override
   String get adminOverview => 'Overview';
+
+  @override
+  String get adminOverviewSubtitle => 'This server at a glance.';
+
+  @override
+  String get adminAccountsSubtitle => 'Accounts on this server.';
+
+  @override
+  String get adminClubsSubtitle => 'Clubs on this server.';
+
+  @override
+  String get adminSettingsSubtitle => 'How this server works.';
 
   @override
   String deleteUserTitle(String name) {
@@ -2062,11 +2320,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get approve => 'Approve';
-
-  @override
-  String actionsFor(String name) {
-    return 'Actions for $name';
-  }
 
   @override
   String get changeRoles => 'Change roles';
@@ -2146,16 +2399,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.';
 
   @override
-  String statusOn(String title) {
-    return '$title: on';
-  }
-
-  @override
-  String statusOff(String title) {
-    return '$title: off';
-  }
-
-  @override
   String get noOverview => 'No overview.';
 
   @override
@@ -2180,6 +2423,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileTitle => 'Profile';
 
   @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get riding => 'Riding';
+
+  @override
   String get ftpHelper =>
       'Functional threshold power. Used for training load and power zones.';
 
@@ -2194,13 +2443,73 @@ class AppLocalizationsEn extends AppLocalizations {
       'Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).';
 
   @override
-  String estimatedMaxHeartRate(int bpm) {
-    return 'Estimated maximum heart rate: $bpm bpm';
+  String heartRateSourceManual(String date) {
+    return 'Set by you on $date';
   }
 
   @override
-  String get estimatedMaxHeartRateNone =>
-      'Add your year of birth to estimate it.';
+  String heartRateSourceMeasured(String date) {
+    return 'Measured on your ride of $date';
+  }
+
+  @override
+  String get heartRateSourceMeasuredDeleted => 'Measured on a ride you deleted';
+
+  @override
+  String get maxHeartRateField => 'Maximum heart rate';
+
+  @override
+  String get thresholdHeartRateField => 'Threshold heart rate';
+
+  @override
+  String get heartRateLeaveEmpty => 'Leave empty to estimate.';
+
+  @override
+  String get thresholdHeartRateHelp =>
+      'The highest heart rate you can hold for about an hour.';
+
+  @override
+  String thresholdAboveMax(int max) {
+    return 'Above the maximum in use ($max bpm). Your zones still follow the maximum.';
+  }
+
+  @override
+  String get heartRateSourceMaxEstimate =>
+      'Estimated from your age (208 − 0.7 × age)';
+
+  @override
+  String get heartRateSourceThresholdEstimate =>
+      'Estimated as 89 % of your maximum';
+
+  @override
+  String heartRateMaxMeasured(int bpm) {
+    return 'New maximum heart rate: $bpm bpm. Your zones now use it.';
+  }
+
+  @override
+  String heartRateMaxMeasuredOnly(int bpm) {
+    return 'New maximum heart rate: $bpm bpm.';
+  }
+
+  @override
+  String heartRateThresholdMeasured(int bpm) {
+    return 'New threshold heart rate: $bpm bpm. Your zones now use it.';
+  }
+
+  @override
+  String heartRateSuggested(int bpm, int current) {
+    return 'This ride reached $bpm bpm, above the $current you set. Use $bpm?';
+  }
+
+  @override
+  String heartRateSuggestionUse(int bpm) {
+    return 'Use $bpm';
+  }
+
+  @override
+  String heartRateSuggestionKeep(int current) {
+    return 'Keep $current';
+  }
 
   @override
   String get timeZone => 'Time zone';
@@ -2269,6 +2578,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a year of birth between 1900 and ten years ago.';
 
   @override
+  String get errorHeartRate =>
+      'Enter a maximum of 120–230 bpm or a threshold of 90–220 bpm, below your maximum.';
+
+  @override
   String get deleteAccountTitle => 'Delete your account?';
 
   @override
@@ -2306,13 +2619,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sunday => 'Sunday';
 
   @override
-  String get notificationsEyebrow => 'Your inbox';
-
-  @override
   String get notificationsSubtitle => 'What the server told you, newest first.';
 
   @override
   String get notificationGroupRides => 'Rides';
+
+  @override
+  String get notificationGroupUnread => 'Unread';
 
   @override
   String get notificationGroupClub => 'Club';
@@ -2335,10 +2648,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordRide => 'Record a ride';
-
-  @override
-  String get recordIntro =>
-      'The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.';
 
   @override
   String get starting => 'Starting…';
@@ -2483,6 +2792,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchAgain => 'Search again';
 
   @override
+  String sensorSignalStrength(int rssi) {
+    return '$rssi dBm';
+  }
+
+  @override
   String get recorderPermission =>
       'Allow precise location, and notifications if asked, so the ride can keep recording.';
 
@@ -2587,10 +2901,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a daily check-in to include how you feel.';
 
   @override
-  String get readinessWhy => 'Why';
+  String readinessWhyScore(Object score) {
+    return 'Why $score';
+  }
 
   @override
-  String get readinessNotMedical => 'A training guide, not a medical measure.';
+  String get readinessNotMedical =>
+      'A guide for training, not a medical measure.';
 
   @override
   String get readinessFactorForm => 'Form';
@@ -2658,6 +2975,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingMotivation => 'Motivation';
 
   @override
+  String get wellbeingSleep => 'Sleep';
+
+  @override
   String get wellbeingShortFatigue => 'Fat';
 
   @override
@@ -2673,10 +2993,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingShortMotivation => 'Mot';
 
   @override
-  String get wellbeingHistory => 'Last 30 days';
+  String get wellbeingShortSleep => 'Slp';
 
   @override
-  String get wellbeingNoHistory => 'No check-ins yet.';
+  String get wellbeingHistory14 => 'Last 14 days';
+
+  @override
+  String get wellbeingCheckIn => 'Check in';
+
+  @override
+  String get wellbeingHowYouFeel => 'How you feel';
+
+  @override
+  String get wellbeingNoToday =>
+      'No check-in today. Your readiness is measured from your rides alone.';
+
+  @override
+  String get wellbeingPrivate =>
+      'Only you see this. Readiness and notes never reach a coach.';
 
   @override
   String get wellbeingRpe => 'How hard was it?';
@@ -2710,29 +3044,59 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check-in scores and ride RPE; notes stay private.';
 
   @override
+  String get shareRidesHelper => 'Your rides and the training built from them.';
+
+  @override
   String get sharesWellbeing => 'Wellbeing';
-
-  @override
-  String get viewPowerCurve => 'Power curve';
-
-  @override
-  String get viewWellbeing => 'Wellbeing';
 
   @override
   String get powerCurve => 'Power curve';
 
   @override
   String get powerCurveEmpty =>
-      'No power data in this range. Upload a ride with a power meter.';
+      'Record rides with a power meter to see your curve.';
 
   @override
   String get powerBestEfforts => 'Best efforts';
 
   @override
-  String get ftpEstimate => 'Estimated FTP';
+  String powerCurveSentence(Object days) {
+    return 'Your best power for every duration in the last $days days.';
+  }
 
   @override
-  String get ftpCurrent => 'Current FTP';
+  String get bestEffortsDuration => 'Duration';
+
+  @override
+  String get bestEffortsPower => 'Power';
+
+  @override
+  String get bestEffortsWPerKg => 'W/kg';
+
+  @override
+  String get criticalPowerExplain =>
+      'The power you can hold for a long time, and the reserve above it for short attacks.';
+
+  @override
+  String get criticalPowerTitle => 'Critical power';
+
+  @override
+  String criticalPowerPeak(Object peak) {
+    return 'Peak $peak W';
+  }
+
+  @override
+  String ftpValue(Object watts) {
+    return 'FTP $watts W';
+  }
+
+  @override
+  String ftpEstimateToday(int watts, String method) {
+    return 'Estimate today: $watts W, $method.';
+  }
+
+  @override
+  String get ftpCurrent => 'FTP';
 
   @override
   String get ftpMethod20 => '95 % of your best 20-minute power';
@@ -2746,10 +3110,133 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get vo2MaxEstimate => 'VO2max estimate';
+  String ftpReminderStaleTitle(int weeks) {
+    return 'Your FTP is $weeks weeks old';
+  }
 
   @override
-  String get vo2MaxFrom5Min => 'from your best 5-minute power and weight';
+  String get ftpReminderStaleBody =>
+      'Zones and TSS use it. Ride a test, or use the estimate if it looks right.';
+
+  @override
+  String get ftpReminderEstimateTitle =>
+      'You may be stronger than your FTP says';
+
+  @override
+  String ftpReminderEstimateBody(String estimate, String ftp) {
+    return 'Your best efforts suggest $estimate W; your FTP is $ftp W.';
+  }
+
+  @override
+  String get ftpReminderMissingTitle => 'Set your FTP';
+
+  @override
+  String ftpReminderMissingBody(String estimate) {
+    return 'Your best efforts suggest $estimate W.';
+  }
+
+  @override
+  String get ftpReminderHow => 'How to test';
+
+  @override
+  String get ftpReminderHowBody =>
+      'Warm up for 15 minutes, with three short hard efforts. Ride 5 minutes hard, then 10 minutes easy. Then ride 20 minutes as hard as you can hold evenly. Velomine will notice the effort and suggest your new FTP (95 % of the 20 minutes).';
+
+  @override
+  String get ftpReminderNotNow => 'Not now';
+
+  @override
+  String ftpSourceManual(String date) {
+    return 'Set by you on $date';
+  }
+
+  @override
+  String ftpSourceEstimate(String date) {
+    return 'From your estimate, adopted on $date';
+  }
+
+  @override
+  String ftpSourceTest(String date) {
+    return 'From your ride on $date';
+  }
+
+  @override
+  String ftpSourceEarlier(String date) {
+    return 'Set before $date';
+  }
+
+  @override
+  String get ftpHistory => 'FTP history';
+
+  @override
+  String get ftpHistoryEmpty =>
+      'Your FTP has been set once, so there is nothing to compare it with yet.';
+
+  @override
+  String get ftpYouTypedIt => 'You typed it';
+
+  @override
+  String get ftpFromTheEstimate => 'From the estimate';
+
+  @override
+  String get ftpFromYourRide => 'From your ride';
+
+  @override
+  String get ftpBeforeHistory => 'Before history was kept';
+
+  @override
+  String ftpSuggestionTitle(String watts) {
+    return 'This ride suggests an FTP of $watts W';
+  }
+
+  @override
+  String ftpSuggestionMethod20(String effort) {
+    return '95 % of your best 20 minutes ($effort W)';
+  }
+
+  @override
+  String ftpSuggestionMethod30(String effort) {
+    return '97 % of your best 30 minutes ($effort W)';
+  }
+
+  @override
+  String get ftpSuggestionMethod60 => 'Your best 60 minutes';
+
+  @override
+  String ftpSuggestionUse(String watts) {
+    return 'Use $watts W';
+  }
+
+  @override
+  String get ftpSuggestionDismiss => 'Dismiss';
+
+  @override
+  String notificationFtpSuggested(String record) {
+    return 'A ride suggests an FTP of $record.';
+  }
+
+  @override
+  String notificationHeartRateMaxMeasured(int bpm) {
+    return 'Your maximum heart rate is now $bpm bpm, measured on a ride.';
+  }
+
+  @override
+  String notificationHeartRateThresholdMeasured(int bpm) {
+    return 'Your threshold heart rate is now $bpm bpm, measured on a ride.';
+  }
+
+  @override
+  String notificationHeartRateMaxSuggested(int bpm) {
+    return 'A ride suggests a maximum heart rate of $bpm bpm.';
+  }
+
+  @override
+  String notificationHeartRateThresholdSuggested(int bpm) {
+    return 'A ride suggests a threshold heart rate of $bpm bpm.';
+  }
+
+  @override
+  String get vo2MaxEstimate => 'VO2max estimate';
 
   @override
   String get vo2MaxNeedsWeight => 'Set your weight to estimate VO2max.';
@@ -2757,6 +3244,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vo2MaxNeedsEffort =>
       'A 5-minute effort is needed to estimate VO2max.';
+
+  @override
+  String ftpEstimateSource20(String date) {
+    return '95 % of your best 20 minutes, on $date';
+  }
+
+  @override
+  String ftpEstimateSource8(String date) {
+    return '90 % of your best 8 minutes, on $date';
+  }
+
+  @override
+  String vo2MaxSource(String date) {
+    return 'From your best 5 minutes on $date and your weight';
+  }
 
   @override
   String get coachWellbeing => 'Wellbeing';
@@ -2771,6 +3273,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachPowerCurve => 'Power curve';
+
+  @override
+  String criticalPowerRow(String cp, String wPrime) {
+    return 'Critical power $cp W · W′ $wPrime kJ';
+  }
+
+  @override
+  String criticalPowerRowWithPeak(String cp, String wPrime, String peak) {
+    return 'Critical power $cp W · W′ $wPrime kJ · Peak $peak W';
+  }
+
+  @override
+  String criticalPowerSource(String durations) {
+    return 'Fitted from your best $durations in this range';
+  }
+
+  @override
+  String get criticalPowerUnavailable =>
+      'Not enough hard efforts of 2 to 20 minutes in this range to work out critical power.';
+
+  @override
+  String criticalPowerMinutes(int minutes) {
+    return '$minutes minutes';
+  }
+
+  @override
+  String criticalPowerSeconds(int seconds) {
+    return '$seconds seconds';
+  }
+
+  @override
+  String criticalPowerDurationList(String first, String last) {
+    return '$first and $last';
+  }
 
   @override
   String get rideFilterAll => 'All';
@@ -2828,6 +3364,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rideTextEdit => 'Edit title and description';
+
+  @override
+  String get rideDownloadOriginal => 'Download original file';
+
+  @override
+  String get rideDownloadFit => 'Download as FIT';
 
   @override
   String get rideTextSheetTitle => 'Name this ride';
@@ -2934,6 +3476,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
+  String get forgotPasswordCaption => 'Password help';
+
+  @override
   String get forgotPasswordTitle => 'Reset your password';
 
   @override
@@ -2960,6 +3505,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sendResetLink => 'Send reset link';
+
+  @override
+  String get resetPasswordCaption => 'New password';
 
   @override
   String get resetPasswordTitle => 'Choose a new password';
@@ -3010,10 +3558,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordNoPassword => 'This account signs in with single sign-on.';
 
   @override
-  String get passwordChanged =>
-      'Your password is changed. Sign in again on this device.';
-
-  @override
   String get passwordChangeFailed =>
       'Could not change the password. Try again.';
 
@@ -3046,10 +3590,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkCopied => 'Copied';
-
-  @override
-  String get resetPasswordLinkFailed =>
-      'Could not make a reset link. Try again.';
 
   @override
   String get actionLoadNearbyClubs => 'find clubs near you';
@@ -3248,6 +3788,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinRequestDeclineBody => 'They are told, without a reason.';
 
   @override
+  String noteQuoted(String note) {
+    return '“$note”';
+  }
+
+  @override
   String notificationClubJoinRequest(String name) {
     return '$name asked to join your club.';
   }
@@ -3314,20 +3859,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedCatalogue => 'Shared parts catalogue';
 
   @override
-  String get shareParts => 'Share new parts with the shared catalogue';
-
-  @override
   String get sharePartsHelp =>
       'Non-custom parts that the shared catalogue does not list are sent to the publisher. Custom parts stay only on your bike.';
 
   @override
   String get catalogueNotConfigured =>
       'This server has no contribution endpoint configured, so nothing is sent.';
-
-  @override
-  String catalogueVersion(int version, String date) {
-    return 'Catalogue version $version, last checked $date';
-  }
 
   @override
   String get catalogueNeverSynced =>
@@ -3337,16 +3874,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String catalogueSynced(String date) {
     return 'Shared catalogue last checked $date';
   }
-
-  @override
-  String get catalogueConflicts =>
-      'Parts that differ from the shared catalogue';
-
-  @override
-  String get keepMine => 'Keep mine';
-
-  @override
-  String get useShared => 'Use shared';
 
   @override
   String contributionCounts(int pending, int sent, int rejected, int failed) {
@@ -3381,6 +3908,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get telemetryHelp =>
       'Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.';
+
+  @override
+  String get telemetryTitle => 'Help improve Velomine';
 
   @override
   String get crashReports => 'Crash reports';
@@ -3440,8 +3970,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reading your archive. This can take a few minutes.';
 
   @override
-  String importProgress(int done, int total) {
-    return '$done of $total activities read';
+  String importProgressUnit(Object total) {
+    return 'of $total activities read';
   }
 
   @override
@@ -3534,6 +4064,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startClubName => 'Club name';
+
+  @override
+  String get startClubNameCard => 'Name';
 
   @override
   String get startClubNameRequired => 'Give the club a name.';
@@ -3664,9 +4197,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderDone => 'Done';
-
-  @override
-  String get reminderDoneSaved => 'Done. It is in the service log.';
 
   @override
   String get reminderDoneBody =>
@@ -3899,6 +4429,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubRoutesTitle => 'Routes';
 
   @override
+  String get clubRoutesCaption => 'Club routes';
+
+  @override
   String get clubRoutesHelp =>
       'Lines the club shares, each one kept by the member who added it.';
 
@@ -3916,17 +4449,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routesFilterAll => 'All surfaces';
 
   @override
-  String get routesEyebrow => 'Club routes';
-
-  @override
   String get routesSubtitle =>
       'The lines the club rides, with their distance and climbing.';
 
   @override
   String get routesEmptyCta => 'Add the first route';
-
-  @override
-  String get clubRidesEyebrow => 'Club calendar';
 
   @override
   String get clubRidesSubtitle =>
@@ -3964,6 +4491,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routeOpenGpx => 'Download GPX';
+
+  @override
+  String get routeTheRoute => 'The route';
+
+  @override
+  String get routeDescription => 'Description';
 
   @override
   String get routeEdit => 'Edit';
@@ -4163,6 +4696,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideFormMaxRiders => 'Maximum riders (optional)';
 
   @override
+  String get rideFormDetails => 'Details';
+
+  @override
   String get rideFormSave => 'Save the ride';
 
   @override
@@ -4183,6 +4719,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarTitle => 'Calendar subscription';
+
+  @override
+  String get calendarAddressTitle => 'Your address';
+
+  @override
+  String get clubCalendarCaption => 'Club calendar';
 
   @override
   String get calendarHelp =>
@@ -4221,9 +4763,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarCopy => 'Copy the address';
 
   @override
-  String get calendarAddressCopied => 'Address copied';
-
-  @override
   String get calendarShownOnce =>
       'Copy it now. The server keeps only a hash, so it cannot show the address again; if you lose it, replace it.';
 
@@ -4240,6 +4779,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notificationClubRideCancelled(String ride) {
     return '$ride: the ride is cancelled.';
+  }
+
+  @override
+  String notificationPowerRecord(String record) {
+    return 'Personal best: $record.';
+  }
+
+  @override
+  String powerRecordAllTime(String duration, int watts) {
+    return 'Best $duration ever: $watts W';
+  }
+
+  @override
+  String powerRecordNinetyDays(String duration, int watts) {
+    return 'Best $duration in 90 days: $watts W';
+  }
+
+  @override
+  String recordDurationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String recordDurationMinutes(int minutes) {
+    return '$minutes min';
   }
 
   @override
@@ -4295,7 +4859,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supporterKeyVerified => 'Key verified';
 
   @override
-  String get supporterReplay => 'Replay';
+  String get supporterReplayLink => 'Play the celebration again';
 
   @override
   String get supporterBadgeReplayHint =>
@@ -4343,4 +4907,889 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get intensityTitle => 'Easy, moderate, hard';
+
+  @override
+  String intensityShares(String easy, String moderate, String hard) {
+    return '$easy % easy · $moderate % moderate · $hard % hard';
+  }
+
+  @override
+  String get intensitySource =>
+      'From power where you have it, otherwise heart rate.';
+
+  @override
+  String get intensityLabelPolarised =>
+      'Polarised: mostly easy, a real share of hard, little in between';
+
+  @override
+  String get intensityLabelPyramidal =>
+      'Pyramidal: most easy, less moderate, least hard';
+
+  @override
+  String get intensityLabelThreshold =>
+      'Threshold-heavy: a lot of moderate riding';
+
+  @override
+  String get intensityLabelHiit => 'High-intensity heavy: a lot of hard riding';
+
+  @override
+  String get intensityLabelBase => 'Base: almost all easy riding';
+
+  @override
+  String get intensityLabelMixed => 'Mixed';
+
+  @override
+  String get seriesWPrimeBalance => 'W′ balance';
+
+  @override
+  String wPrimeLowest(String min, String wPrime) {
+    return 'Lowest W′ balance $min kJ of $wPrime kJ';
+  }
+
+  @override
+  String efficiencyFactor(String ef) {
+    return 'Efficiency factor $ef';
+  }
+
+  @override
+  String decoupling(String pct, String word) {
+    return 'Decoupling $pct % · $word';
+  }
+
+  @override
+  String get decouplingSteady => 'Steady heart rate';
+
+  @override
+  String get decouplingDrift => 'Some drift';
+
+  @override
+  String get decouplingLargeDrift => 'Large drift';
+
+  @override
+  String get decouplingSource =>
+      'From steady pedalling after a 15-minute warm-up';
+
+  @override
+  String get efficiencyTitle => 'Aerobic efficiency';
+
+  @override
+  String get efficiencyHint =>
+      'Higher is better: more power for the same heart rate.';
+
+  @override
+  String get efficiencyEmpty =>
+      'Needs steady rides of about an hour with power and heart rate.';
+
+  @override
+  String efficiencyWeekSemantics(String date, String ef, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides',
+      one: '1 ride',
+    );
+    return '$date: efficiency factor $ef over $_temp0';
+  }
+
+  @override
+  String get eventsTitle => 'Events';
+
+  @override
+  String get noEvents =>
+      'No events yet. Add the race, sportive or tour you are training for; the ride that was it links itself when it is your only one that day.';
+
+  @override
+  String get eventAdd => 'Add an event';
+
+  @override
+  String get eventChange => 'Change the event';
+
+  @override
+  String get eventName => 'Name';
+
+  @override
+  String get eventKind => 'Kind';
+
+  @override
+  String get eventKindRace => 'Race';
+
+  @override
+  String get eventKindSportive => 'Sportive';
+
+  @override
+  String get eventKindTour => 'Tour';
+
+  @override
+  String get eventKindOther => 'Other';
+
+  @override
+  String get eventDistance => 'Distance';
+
+  @override
+  String get eventClimbing => 'Climbing';
+
+  @override
+  String get eventNotes => 'Notes';
+
+  @override
+  String eventNext(String name, String when) {
+    return 'Next event: $name in $when';
+  }
+
+  @override
+  String get eventToday => 'today';
+
+  @override
+  String eventInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String eventInWeeks(int weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: '$weeks weeks',
+      one: '1 week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsAll => 'All events';
+
+  @override
+  String eventYourRide(String name) {
+    return 'Your event: $name';
+  }
+
+  @override
+  String get eventLinkRide => 'Link a ride';
+
+  @override
+  String get eventUnlinkRide => 'Unlink';
+
+  @override
+  String get eventNoRidesThatDay => 'No ready rides on that day.';
+
+  @override
+  String get eventDeleteTitle => 'Delete this event?';
+
+  @override
+  String eventDeleteBody(String name) {
+    return '“$name” is removed. The ride it was stays.';
+  }
+
+  @override
+  String get errorEventName => 'Give the event a name.';
+
+  @override
+  String get actionAddEvent => 'add the event';
+
+  @override
+  String get actionSaveEvent => 'save the event';
+
+  @override
+  String get actionDeleteEvent => 'delete the event';
+
+  @override
+  String get seriesEstimatedPower => 'Estimated watts';
+
+  @override
+  String get statEstimatedAveragePower => 'Estimated average power';
+
+  @override
+  String get estimatedPowerSource =>
+      'From your speed, the slope and your weight with the bike. No wind, so it can be far off on the flat.';
+
+  @override
+  String get bikeWeight => 'Weight (kg)';
+
+  @override
+  String get bikeWeightHelper =>
+      'Used to estimate watts on rides without a power meter.';
+
+  @override
+  String get errorBikeWeight =>
+      'Enter the bike\'s weight in kilograms: 3 to 40.';
+
+  @override
+  String get profileWeightEstimateHint =>
+      'Add your weight to estimate watts on rides without a power meter.';
+
+  @override
+  String get riderModeQuestion => 'How do you ride?';
+
+  @override
+  String get riderModeTitle => 'How I ride';
+
+  @override
+  String get riderModeJustRiding => 'Just riding';
+
+  @override
+  String get riderModeJustRidingBody =>
+      'I ride for fun, with family or friends. I want my routes, my distance and how the ride went.';
+
+  @override
+  String get riderModeWithGoals => 'Riding with goals';
+
+  @override
+  String get riderModeWithGoalsBody =>
+      'I ride often and like to see my progress: weekly totals, goals, and how hard I rode in plain words.';
+
+  @override
+  String get riderModeTraining => 'Training';
+
+  @override
+  String get riderModeTrainingBody =>
+      'I train or race. I want power, training load, fitness and form, and every number.';
+
+  @override
+  String get riderModeLater => 'Decide later';
+
+  @override
+  String get riderModeElsewhere => 'Chosen on another device';
+
+  @override
+  String get moreDetailsAll => 'Show all details';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get rideEffortEasy => 'mostly easy';
+
+  @override
+  String get rideEffortSteady => 'steady';
+
+  @override
+  String get rideEffortHard => 'hard';
+
+  @override
+  String get navTraining => 'Training';
+
+  @override
+  String get autoTrainingTitle => 'Auto training (experimental)';
+
+  @override
+  String get autoTrainingSentence =>
+      'Velomine plans your week from your rides. It is new:';
+
+  @override
+  String get autoTrainingFeedback => 'tell us what feels wrong';
+
+  @override
+  String get autoTrainingOffTitle => 'Turn off auto training?';
+
+  @override
+  String get autoTrainingOffBody =>
+      'Your plan for this week and later goes. Your past sessions stay.';
+
+  @override
+  String get autoTrainingOffAction => 'Turn off auto training';
+
+  @override
+  String get trainingChangeSetup => 'Change setup';
+
+  @override
+  String get trainingGoalCard => 'Your goal';
+
+  @override
+  String trainingPlanStarts(String day) {
+    return 'Your plan starts $day.';
+  }
+
+  @override
+  String trainingHoursLine(int hours) {
+    return '$hours h a week';
+  }
+
+  @override
+  String get trainingSetupTitle => 'Set up auto training';
+
+  @override
+  String get trainingGoalStep => '1 · Your goal';
+
+  @override
+  String get trainingRideStep => '2 · When you ride';
+
+  @override
+  String get trainingHeartStep => '3 · Your heart rate';
+
+  @override
+  String get goalAerobic => 'Ride more regularly';
+
+  @override
+  String get goalFitter => 'Get fitter';
+
+  @override
+  String get goalFaster => 'Get faster';
+
+  @override
+  String get goalEvent => 'Get ready for a ride or race';
+
+  @override
+  String get goalKeep => 'Stay fit with less time';
+
+  @override
+  String get goalFasterLine => 'On climbs and on the flat';
+
+  @override
+  String get goalSuggested => 'Suggested';
+
+  @override
+  String get goalReasonNotEnoughRiding =>
+      'We have not seen enough of your riding yet, so we start easy and steady.';
+
+  @override
+  String get goalReasonRegularRiding =>
+      'Regular riding comes before faster riding; a steady rhythm of easy rides is the best start.';
+
+  @override
+  String get goalReasonEventSoon => 'We build toward your event.';
+
+  @override
+  String get goalReasonAfterBreak => 'Welcome back: we ease in.';
+
+  @override
+  String get goalReasonPowerRides =>
+      'You ride regularly with power, so we aim at your threshold power.';
+
+  @override
+  String get goalReasonRegularRider =>
+      'You ride regularly. We build both your base and a little speed.';
+
+  @override
+  String get goalLineAerobic =>
+      'A steady rhythm of easy rides, before anything faster.';
+
+  @override
+  String get goalLineFitter => 'Your base, and a little speed on top.';
+
+  @override
+  String get goalLineEvent => 'Planned like getting fitter, up to the day.';
+
+  @override
+  String get goalLineKeep => 'A couple of rides a week keep what you have.';
+
+  @override
+  String goalNextEvent(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String get goalAddEvent => 'Add an event';
+
+  @override
+  String get trainingDaysLabel => 'Days you can ride';
+
+  @override
+  String get trainingHoursLabel => 'Hours a week';
+
+  @override
+  String get trainingLongRideLabel => 'Long ride on';
+
+  @override
+  String get trainingLongRidePicks => 'Velomine picks';
+
+  @override
+  String trainingLongRidePicksDay(String day) {
+    return 'Velomine picks ($day)';
+  }
+
+  @override
+  String get trainingHeartUnknown => 'I don\'t know';
+
+  @override
+  String get trainingHeartUnknownHelp =>
+      'We estimate it from your age and learn it from your rides.';
+
+  @override
+  String get trainingMaxHeartRate => 'Maximum heart rate';
+
+  @override
+  String get trainingBirthYear => 'Year of birth';
+
+  @override
+  String get trainingHealthNote =>
+      'If you have a heart condition or have not exercised for a long time, check with a doctor first.';
+
+  @override
+  String get trainingStart => 'Start';
+
+  @override
+  String get errorTrainingDays => 'Choose at least one day you can ride.';
+
+  @override
+  String get errorTrainingHours =>
+      'Enter the hours you can ride in a week: 1 to 30.';
+
+  @override
+  String get errorTrainingMaxHeartRate =>
+      'Enter a maximum heart rate from 120 to 230.';
+
+  @override
+  String get errorTrainingBirthYear => 'Enter your year of birth.';
+
+  @override
+  String get actionLoadTraining => 'load your training plan';
+
+  @override
+  String get actionSaveTrainingPlan => 'save your setup';
+
+  @override
+  String get actionTurnOffTraining => 'turn off auto training';
+
+  @override
+  String get actionMatchTrainingSession => 'answer the session question';
+
+  @override
+  String trainingTodayCaption(String day) {
+    return 'Today · $day';
+  }
+
+  @override
+  String get trainingToday => 'today';
+
+  @override
+  String trainingTodayStrip(String what) {
+    return 'Today · $what';
+  }
+
+  @override
+  String get trainingRestDay => 'Rest day';
+
+  @override
+  String get trainingRestDaySentence =>
+      'Nothing today. Rest is part of the plan.';
+
+  @override
+  String get trainingThisWeek => 'This week';
+
+  @override
+  String get trainingNextWeek => 'Next week (preview)';
+
+  @override
+  String get trainingRest => 'Rest';
+
+  @override
+  String trainingWeekLine(int done, int total, String kind) {
+    return '$done of $total done. $kind';
+  }
+
+  @override
+  String trainingWeekLineAll(int done, int total) {
+    return '$done of $total done. That is the week, all of it.';
+  }
+
+  @override
+  String get trainingWeekKindOnTrack => 'Nicely on track.';
+
+  @override
+  String get trainingWeekKindStarted => 'A good start to the week.';
+
+  @override
+  String get trainingWeekKindNothing => 'Nothing done yet. There is time.';
+
+  @override
+  String get trainingStatePlanned => 'Planned';
+
+  @override
+  String get trainingStateDone => 'Done';
+
+  @override
+  String trainingStateDoneScore(int score) {
+    return 'Done · $score';
+  }
+
+  @override
+  String get trainingStateEasy => 'Easy instead';
+
+  @override
+  String get trainingStateMoved => 'Moved';
+
+  @override
+  String get trainingStateSkipped => 'Skipped';
+
+  @override
+  String get trainingStateMissed => 'Missed';
+
+  @override
+  String get trainingOpenSession => 'Open session';
+
+  @override
+  String get trainingSessionWhy => 'Why this session';
+
+  @override
+  String get trainingSessionTitle => 'The session';
+
+  @override
+  String trainingCoachesCall(String term) {
+    return 'Coaches call this $term.';
+  }
+
+  @override
+  String get trainingBlockWarmup => 'Warm-up';
+
+  @override
+  String get trainingBlockMain => 'Main set';
+
+  @override
+  String get trainingBlockRecovery => 'Easy between';
+
+  @override
+  String get trainingBlockCooldown => 'Cool-down';
+
+  @override
+  String trainingFeel(String range) {
+    return 'feel $range';
+  }
+
+  @override
+  String get trainingFeelExplained =>
+      'Feel 7: hard, you could hold it about an hour.';
+
+  @override
+  String get trainingEstimated => 'estimated';
+
+  @override
+  String get trainingHeartEstimated =>
+      'Heart rate estimated from your maximum.';
+
+  @override
+  String get trainingSessionMissing =>
+      'This session is not in this week\'s plan.';
+
+  @override
+  String trainingQuestionTitle(String day, String name) {
+    return 'Was this your $day $name?';
+  }
+
+  @override
+  String get trainingQuestionYesterday =>
+      'This ride looks like the session planned for yesterday.';
+
+  @override
+  String get trainingQuestionTomorrow =>
+      'This ride looks like the session planned for tomorrow.';
+
+  @override
+  String trainingLinkedTitle(String day, String name) {
+    return 'This was your $day $name.';
+  }
+
+  @override
+  String get trainingNotThisSession => 'Not this session';
+
+  @override
+  String get actionMakeTrainingEasy => 'make today easy';
+
+  @override
+  String get actionBackToTrainingPlan => 'put the session back';
+
+  @override
+  String get actionMoveTrainingSession => 'move the session';
+
+  @override
+  String get actionSkipTrainingSession => 'skip the session';
+
+  @override
+  String get trainingMakeEasy => 'Make today easy';
+
+  @override
+  String get trainingBackToPlan => 'Back to the plan';
+
+  @override
+  String get trainingMoveSession => 'Move';
+
+  @override
+  String get trainingSkipSession => 'Skip';
+
+  @override
+  String trainingEasyLine(String reason) {
+    return 'Easy today: $reason.';
+  }
+
+  @override
+  String trainingEasyMoved(String day) {
+    return 'The hard day moves to $day.';
+  }
+
+  @override
+  String get trainingEasySleptPoorly => 'you slept poorly';
+
+  @override
+  String get trainingEasyTired => 'you feel tired';
+
+  @override
+  String get trainingEasySore => 'you are sore';
+
+  @override
+  String get trainingEasyFormLow => 'your form is low';
+
+  @override
+  String get trainingEasyAsked => 'you asked for an easier day';
+
+  @override
+  String get trainingMoveTitle => 'Move this session';
+
+  @override
+  String get trainingMoveHelp =>
+      'Any day left this week, whether you ride that day or not. A hard day cannot sit next to another hard day or next to the long ride.';
+
+  @override
+  String get trainingMoveRefusedHard => 'Next to another hard day';
+
+  @override
+  String get trainingMoveRefusedLongRide => 'Next to the long ride';
+
+  @override
+  String get trainingMoveRefusedSession => 'That day already has a session';
+
+  @override
+  String get trainingMoveRefusedLoaded => 'That would make a fourth loaded day';
+
+  @override
+  String trainingMoveNearest(String day) {
+    return 'The nearest day that works is $day';
+  }
+
+  @override
+  String get trainingSkipTitle => 'Skip this session';
+
+  @override
+  String get trainingSkipReasonLabel => 'Why? (optional)';
+
+  @override
+  String get trainingSkipReasonTired => 'Tired';
+
+  @override
+  String get trainingSkipReasonIll => 'Ill or injured';
+
+  @override
+  String get trainingSkipReasonNoTime => 'No time';
+
+  @override
+  String get trainingSkipReasonOther => 'Other';
+
+  @override
+  String get trainingSkipAction => 'Skip';
+
+  @override
+  String get trainingSkipRestOfWeek => 'Skip the rest of this week?';
+
+  @override
+  String get trainingSkipRestOfWeekBody =>
+      'The sessions left this week go too, and none of them moves to another day.';
+
+  @override
+  String notificationTrainingToday(String name) {
+    return 'Today: $name.';
+  }
+
+  @override
+  String notificationTrainingMoved(String name, String day) {
+    return '$name moves to $day.';
+  }
+
+  @override
+  String notificationTrainingSkipped(String name, String day) {
+    return '$name on $day is skipped.';
+  }
+
+  @override
+  String get sessionHowItWent => 'How it went';
+
+  @override
+  String get sessionOfHundred => 'of 100';
+
+  @override
+  String get sessionKindSpotOn => 'Spot on. Textbook session.';
+
+  @override
+  String get sessionKindOnPlan => 'Right on plan. That is how it should feel.';
+
+  @override
+  String get sessionKindClose => 'Good work: most of the plan, ridden well.';
+
+  @override
+  String get sessionKindMost => 'You got most of it. It counts.';
+
+  @override
+  String get sessionKindAny => 'Not the session on paper, but the ride counts.';
+
+  @override
+  String sessionPlannedDone(String planned, String done) {
+    return '$planned planned · $done ridden';
+  }
+
+  @override
+  String sessionMainSetWatts(String planned, String done) {
+    return '$planned W planned · $done W ridden';
+  }
+
+  @override
+  String sessionMainSetBpm(String planned, String done) {
+    return '$planned bpm planned · $done bpm ridden';
+  }
+
+  @override
+  String sessionMainSetPlannedOnly(String planned) {
+    return '$planned planned';
+  }
+
+  @override
+  String get sessionOpenRide => 'Open the ride →';
+
+  @override
+  String get sessionTime => 'Time';
+
+  @override
+  String get sessionEffortScore => 'Effort score';
+
+  @override
+  String get sessionMainSet => 'Main set';
+
+  @override
+  String get relativeNow => 'now';
+
+  @override
+  String relativeMinutes(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String relativeHours(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String get relativeYesterday => 'yesterday';
+
+  @override
+  String get formStateBuilding => 'Building';
+
+  @override
+  String get totalsTableWeekly => 'Week by week';
+
+  @override
+  String get totalsTableMonthly => 'Month by month';
+
+  @override
+  String get totalsTableYearly => 'Year by year';
+
+  @override
+  String get totalsColumnWeek => 'Week';
+
+  @override
+  String get totalsColumnMonth => 'Month';
+
+  @override
+  String get totalsColumnYear => 'Year';
+
+  @override
+  String wellbeingFeelSentence(String today, String usual) {
+    return '$today out of 5 today; your usual is $usual.';
+  }
+
+  @override
+  String get wellbeingPrivateNotes =>
+      'Only you see your notes. Coaches you share with see scores and ride effort, never notes.';
+
+  @override
+  String get accountSearchHint => 'Name or email';
+
+  @override
+  String get askedJustNow => 'asked just now';
+
+  @override
+  String askedHoursAgo(int count) {
+    return 'asked $count h ago';
+  }
+
+  @override
+  String askedDaysAgo(int count) {
+    return 'asked $count d ago';
+  }
+
+  @override
+  String get registerHelp => 'Ride, track your form and keep your data.';
+
+  @override
+  String get passwordShow => 'Show';
+
+  @override
+  String get passwordHide => 'Hide';
+
+  @override
+  String get recordingScreenOff =>
+      'The ride keeps recording with the screen off. A banner above the navigation brings you back here from any page.';
+
+  @override
+  String get addRouteSourceTitle => 'Where does it come from?';
+
+  @override
+  String get addRouteChosen => 'Chosen';
+
+  @override
+  String get wellbeingDay => 'Day';
+
+  @override
+  String get wellbeingRpeColumn => 'RPE';
+
+  @override
+  String get importReadingArchive => 'Reading the archive';
+
+  @override
+  String clubMembersShowAll(int count) {
+    return 'Show all $count';
+  }
+
+  @override
+  String get clubMembersEmpty => 'No members yet.';
+
+  @override
+  String get shareRoutesHelper =>
+      'Your routes, so a shared ride shows its map.';
+
+  @override
+  String get clubStartUnavailable =>
+      'Club creation is turned off on this server.';
+
+  @override
+  String get twoFactorStateOff => 'Two-factor sign-in is off.';
+
+  @override
+  String sessionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count devices',
+      one: '1 device',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String privacyZoneRadiusLine(String distance) {
+    return 'Radius $distance';
+  }
+
+  @override
+  String get intensityEasy => 'Easy';
+
+  @override
+  String get intensityModerate => 'Moderate';
+
+  @override
+  String get intensityHard => 'Hard';
 }

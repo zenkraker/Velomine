@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- SessionPage: one planned session, and how it went. Guideline: SessionPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Session</title>
+<style>
+  .shape { display: block; width: 100%; height: 48px; margin-bottom: var(--space-md); }
+  .shape rect { fill: var(--bar-muted); }
+  .shape rect.hard { fill: var(--accent-strong); }
+  .vm-row .n { font-variant-numeric: tabular-nums; text-align: right; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+</style>
+</head>
+<body>
+<main class="vm-page narrow">
+  <div class="vm-head">
+    <div><p class="crumb caption">Training</p><h1 class="page-title">Strong and steady 3×10</h1><p class="sub body">Thursday 27 Nov · 1 h 15 · done</p></div>
+    <div class="vm-acts"><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div>
+  </div>
+
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">How it went</h3></div>
+    <div class="vm-number"><span class="kpi">92</span><span class="vm-unit">of 100</span></div>
+    <p class="vm-sentence body">Spot on. Textbook session.</p>
+    <div class="vm-facts">
+      <div><span class="l caption vm-muted">Time</span><span class="v body">1 h 15 planned · 1 h 12 ridden</span></div>
+      <div><span class="l caption vm-muted">Effort score</span><span class="v body">78 planned · 74 ridden</span></div>
+      <div><span class="l caption vm-muted">Main set</span><span class="v body">228 W planned · 224 W ridden</span></div>
+    </div>
+    <a class="vm-link body" href="#">Open the ride →</a>
+  </article>
+
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">Why this session</h3></div>
+    <p class="vm-sentence body">Long efforts just below your limit. They lift the power you can hold, and you will not need days to recover.</p>
+    <p class="caption vm-muted">Coaches call this sweet spot.</p>
+  </article>
+
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">The session</h3></div>
+    <svg class="shape" viewBox="0 0 300 48" preserveAspectRatio="none" role="img" aria-label="Warm-up, three blocks of 10 minutes with 5 minutes easy between, cool-down">
+      <rect x="0" y="28" width="45" height="20"/><rect class="hard" x="47" y="8" width="45" height="40"/><rect x="94" y="34" width="20" height="14"/><rect class="hard" x="116" y="8" width="45" height="40"/><rect x="163" y="34" width="20" height="14"/><rect class="hard" x="185" y="8" width="45" height="40"/><rect x="232" y="34" width="68" height="14"/>
+    </svg>
+    <div class="vm-rows">
+      <div class="vm-row"><div class="grow"><span class="t body">Warm-up</span><span class="d"><strong>140–185 W</strong> · 115–140 bpm · feel 2–3</span></div><span class="n body">15 min</span></div>
+      <div class="vm-row"><div class="grow"><span class="t body">3 × 10 min strong and steady, 5 min easy between</span><span class="d"><strong>220–235 W</strong> · 152–160 bpm · feel 5–6</span></div><span class="n body">40 min</span></div>
+      <div class="vm-row"><div class="grow"><span class="t body">Easy between</span><span class="d"><strong>under 140 W</strong> · under 125 bpm · feel 2</span></div><span class="n body">in the 40</span></div>
+      <div class="vm-row"><div class="grow"><span class="t body">Cool-down</span><span class="d"><strong>under 140 W</strong> · under 125 bpm · feel 2</span></div><span class="n body">10 min</span></div>
+    </div>
+    <p class="caption vm-muted">Feel 7: hard, you could hold it about an hour. Heart rate estimated from your maximum.</p>
+  </article>
+</main>
+</body>
+</html>
