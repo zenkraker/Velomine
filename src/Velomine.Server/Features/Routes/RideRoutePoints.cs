@@ -12,6 +12,7 @@ public enum RideRouteProblem
     NoMap,
     NothingLeft,
     Virtual,
+    TooShort,
 }
 
 public sealed record RideRoute(RideRouteProblem Problem, string FileName, IReadOnlyList<RoutePoint> Points);
@@ -24,8 +25,9 @@ public sealed record RideRoute(RideRouteProblem Problem, string FileName, IReadO
 /// </summary>
 public static class RideRoutePoints
 {
-    /// <summary>A virtual ride is the member's mistake to fix (400); the other problems are about the ride's state (409).</summary>
-    public static int StatusCode(RideRouteProblem problem) => problem == RideRouteProblem.Virtual ? 400 : 409;
+    /// <summary>A virtual ride or a ride too short to be a route is the member's mistake to fix (400); the other problems are about the ride's state (409).</summary>
+    public static int StatusCode(RideRouteProblem problem) =>
+        problem is RideRouteProblem.Virtual or RideRouteProblem.TooShort ? 400 : 409;
 
     public static async Task<RideRoute> LoadAsync(VelomineDbContext db, Guid userId, Guid rideId, CancellationToken ct)
     {
@@ -42,6 +44,16 @@ public static class RideRoutePoints
             : null;
         if (streams?.Latitude is null || streams.Longitude is null)
             return new RideRoute(RideRouteProblem.NoMap, ride.FileName, []);
+
+        // Measured before privacy: a line too short to be a route is refused as such, not blamed on the privacy settings.
+        var whole = new List<RoutePoint>();
+        for (var i = 0; i < streams.Time.Length; i++)
+        {
+            if (streams.Latitude[i] is not { } la || streams.Longitude[i] is not { } lo || !RouteGeometry.IsValid(la, lo)) continue;
+            whole.Add(new RoutePoint(la, lo, null));
+        }
+        if (whole.Count < 2 || RouteGeometry.Measure(whole).DistanceM < RouteGeometry.MinDistanceM)
+            return new RideRoute(RideRouteProblem.TooShort, ride.FileName, []);
 
         var privacy = await PrivacyRules.LoadAsync(db, userId, ride, ct);
         var visible = PrivacyRules.ForViewer(
@@ -68,6 +80,7 @@ public static class RideRoutePoints
     {
         RideRouteProblem.Virtual => "A ride in a virtual world cannot become a club route.",
         RideRouteProblem.NoMap => "This ride has no map: it is still being read, or it was recorded without GPS.",
+        RideRouteProblem.TooShort => "This ride's line is shorter than 100 metres, so it cannot be a club route.",
         _ => "Nothing is left of this ride to share once your privacy settings are applied.",
     };
 }

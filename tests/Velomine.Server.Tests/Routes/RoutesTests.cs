@@ -103,6 +103,22 @@ public sealed class RoutesTests(PostgresFixture postgres, RoutesHost host) : ICl
     }
 
     [Fact]
+    public async Task GetRideRouteDraft_ShouldExplainTooShort_WhenTheLineIsUnder100Metres()
+    {
+        var api = host.Api;
+        var world = await NewWorldAsync(api);
+        // Ten seconds at 8 m/s is 72 m: a ride with a GPS track, but too short to be a club route.
+        var rideId = await UploadAndWaitAsync(world.Rider.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 10)));
+
+        var response = await world.Rider.Client.GetAsync($"/api/v1/rides/{rideId}/route-draft", Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("shorter than 100 metres", body);
+        Assert.DoesNotContain("privacy", body);
+    }
+
+    [Fact]
     public async Task CreateRoute_ShouldIgnoreTheLineInTheRequest_WhenARideIsNamed()
     {
         var api = host.Api;
