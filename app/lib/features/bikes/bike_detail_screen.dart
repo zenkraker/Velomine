@@ -63,13 +63,10 @@ class BikeDetailScreen extends ConsumerWidget {
   Future<void> _saveTemplate(BuildContext context, WidgetRef ref) async {
     final name = await showTemplateNameDialog(context);
     if (name == null) return;
-    final saved = await ref
+    // The ViewModel queues the confirmation.
+    await ref
         .read(bikeDetailViewModelProvider(id).notifier)
         .saveTemplateFromBike(name);
-    if (saved && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.saved)));
-    }
   }
 
   Future<void> _applyTemplate(BuildContext context, WidgetRef ref) async {
@@ -79,13 +76,9 @@ class BikeDetailScreen extends ConsumerWidget {
       templates: templates,
     );
     if (template == null) return;
-    final applied = await ref
+    await ref
         .read(bikeDetailViewModelProvider(id).notifier)
         .applyTemplate(template.id);
-    if (applied && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.templateApplied)));
-    }
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {

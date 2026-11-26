@@ -290,7 +290,6 @@
   "clubMakeCoach": "Make coach",
   "clubMakeMember": "Make rider",
   "clubCopy": "Copy",
-  "clubCopied": "Copied",
   "clubMemberCount": "{count, plural, =1{1 member} other{{count} members}}",
   "@clubMemberCount": {
     "placeholders": {
@@ -2400,7 +2399,6 @@
     }
   },
   "reminderDone": "Done",
-  "reminderDoneSaved": "Done. It is in the service log.",
   "reminderDoneBody": "Counting starts again from the day you pick, and the job goes in the service log.",
   "doneOnDate": "Done on {date}",
   "@doneOnDate": {
@@ -2651,7 +2649,6 @@
   "calendarDeleteConfirmTitle": "Stop the calendar address?",
   "calendarDeleteConfirmBody": "Your calendar stops updating. You can make a new address at any time.",
   "calendarCopy": "Copy the address",
-  "calendarAddressCopied": "Address copied",
   "calendarShownOnce": "Copy it now. The server keeps only a hash, so it cannot show the address again; if you lose it, replace it.",
   "notificationClubRidePlanned": "{ride}: the club planned a ride.",
   "@notificationClubRidePlanned": {

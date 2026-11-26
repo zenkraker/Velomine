@@ -127,10 +127,7 @@ class CalendarFeedScreen extends ConsumerWidget {
                   key: const Key('copy-calendar-address'),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: s.address!));
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.calendarAddressCopied)),
-                    );
+                    notifier.copied();
                   },
                   icon: const Icon(Icons.copy),
                   label: Text(l10n.calendarCopy),

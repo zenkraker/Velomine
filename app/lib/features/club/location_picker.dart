@@ -3,6 +3,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/loading_state.dart';
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/l10n.dart';
@@ -11,110 +12,90 @@ import '../../core/map_defaults.dart';
 import '../rides/detail/geo.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/bottom_action_bar.dart';
+import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/page_scaffold.dart';
+import 'location_picker_state.dart';
+import 'location_picker_view_model.dart';
 
 /// Picks a point for a club, or for the rider's saved fallback. The map is always there: the pin stays at the
 /// centre and the map moves under it.
-class LocationPickerScreen extends StatefulWidget {
+///
+/// The point the page was opened with is read once, on the first build: the page is pushed, never rebuilt under
+/// another point.
+class LocationPickerScreen extends ConsumerStatefulWidget {
   const LocationPickerScreen({
     super.key,
     this.initial,
     required this.tileUrl,
     required this.attribution,
-    required this.locationService,
   });
 
   final GeoPoint? initial;
   final String tileUrl;
   final String attribution;
-  final LocationService locationService;
 
   @override
-  State<LocationPickerScreen> createState() => _LocationPickerScreenState();
+  ConsumerState<LocationPickerScreen> createState() =>
+      _LocationPickerScreenState();
 }
 
-class _LocationPickerScreenState extends State<LocationPickerScreen> {
-  static const _minZoom = 3;
-  static const _maxZoom = 18;
+class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
+  late final LocationPickerArgs _args = LocationPickerArgs(widget.initial);
 
-  double? _latitude;
-  double? _longitude;
-  double _zoom = 14;
-  bool _locating = false;
-
+  /// Gestures only: where a drag or a pinch started.
   Offset? _focalStart;
-  double? _latitudeStart;
-  double? _longitudeStart;
-  double _zoomStart = 14;
+  GeoPoint? _pointStart;
+  double _zoomStart = locationPickerZoom;
 
   @override
   void initState() {
     super.initState();
-    _latitude = widget.initial?.latitude;
-    _longitude = widget.initial?.longitude;
-    if (_latitude == null) {
-      _locate(tell: false);
-    }
-  }
-
-  Future<void> _locate({required bool tell}) async {
-    setState(() => _locating = true);
-    final point = await widget.locationService.current();
-    if (!mounted) return;
-    setState(() {
-      _locating = false;
-      if (point != null) {
-        _latitude = point.latitude;
-        _longitude = point.longitude;
-        _zoom = 15;
-      }
-    });
-    if (point == null && tell) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.locationCurrentUnavailable)),
+    // Opened without a point, the page asks the device once, silently.
+    if (widget.initial == null) {
+      Future.microtask(
+        () =>
+            ref.read(locationPickerViewModelProvider(_args).notifier).locate(),
       );
     }
   }
 
-  void _pan(ScaleUpdateDetails details) {
+  LocationPickerViewModel get _notifier =>
+      ref.read(locationPickerViewModelProvider(_args).notifier);
+
+  void _pan(LocationPickerState state, ScaleUpdateDetails details) {
     final start = _focalStart;
-    final latitudeStart = _latitudeStart;
-    final longitudeStart = _longitudeStart;
-    if (start == null || latitudeStart == null || longitudeStart == null) {
-      return;
-    }
+    final pointStart = _pointStart;
+    if (start == null || pointStart == null) return;
 
     final moved = pannedView(
-      center: (lat: latitudeStart, lon: longitudeStart),
+      center: (lat: pointStart.latitude, lon: pointStart.longitude),
       zoom: _zoomStart,
       delta: details.localFocalPoint - start,
       scale: details.scale,
-      minZoom: _minZoom,
-      maxZoom: _maxZoom,
+      minZoom: 3,
+      maxZoom: 18,
     );
-
-    setState(() {
-      _zoom = moved.zoom;
-      _latitude = moved.center.lat;
-      _longitude = moved.center.lon;
-    });
+    _notifier.moveTo((
+      latitude: moved.center.lat,
+      longitude: moved.center.lon,
+    ), zoom: moved.zoom);
   }
 
   void _use() {
-    final latitude = _latitude;
-    final longitude = _longitude;
-    if (latitude == null || longitude == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.locationMapFirst)));
-      return;
-    }
-    Navigator.of(context)
-        .pop<GeoPoint>((latitude: latitude, longitude: longitude));
+    final point = _notifier.use();
+    if (point == null) return;
+    Navigator.of(context).pop<GeoPoint>(point);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final state = ref.watch(locationPickerViewModelProvider(_args));
+    final note = switch (state.note) {
+      LocationPickerNote.deviceMissing => l10n.locationCurrentUnavailable,
+      LocationPickerNote.pointMissing => l10n.locationMapFirst,
+      null => null,
+    };
     // Outside the shell: the page asks for the header on a phone too. The map has a fixed height, so it
     // sits in the page's scroll view; its gestures claim the pointer at once so a drag moves the map.
     return Scaffold(
@@ -134,121 +115,119 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.medium),
-              child: SizedBox(height: AppClub.pickerMapHeight, child: _map()),
+              child: SizedBox(
+                height: AppClub.pickerMapHeight,
+                child: _map(state),
+              ),
             ),
+            if (note != null)
+              InlineError(note, key: const Key('location-error')),
           ],
         ),
       ),
     );
   }
 
-  Widget _map() {
-    final latitude = _latitude ?? 0;
-    final longitude = _longitude ?? 0;
-    return LayoutBuilder(
-      builder: (context, box) {
-        final size = Size(box.maxWidth, box.maxHeight);
-        final view = MapView.centered(
-          center: (lat: latitude, lon: longitude),
-          size: size,
-          zoom: _zoom,
-        );
-        final colors = Theme.of(context).colorScheme;
-        return Listener(
-          onPointerSignal: (event) {
-            if (event is PointerScrollEvent) {
-              setState(() {
-                _zoom = (_zoom + (event.scrollDelta.dy > 0 ? -1 : 1))
-                    .clamp(_minZoom, _maxZoom)
-                    .toDouble();
-              });
-            }
-          },
-          child: RawGestureDetector(
-            key: const Key('location-map'),
-            gestures: {
-              _EagerScaleRecognizer:
-                  GestureRecognizerFactoryWithHandlers<_EagerScaleRecognizer>(
-                    _EagerScaleRecognizer.new,
-                    (recognizer) {
-                      recognizer
-                        ..onStart = (details) {
-                          _focalStart = details.localFocalPoint;
-                          _latitudeStart = latitude;
-                          _longitudeStart = longitude;
-                          _zoomStart = _zoom;
-                        }
-                        ..onUpdate = _pan;
-                    },
-                  ),
-            },
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ColoredBox(color: colors.surfaceContainerHighest),
-                ),
-                for (final tile in view.tiles(widget.tileUrl))
-                  Positioned(
-                    left: tile.left,
-                    top: tile.top,
-                    width: view.tilePixels,
-                    height: view.tilePixels,
-                    child: Image.network(
-                      tile.url,
-                      headers: mapTileHeaders,
-                      fit: BoxFit.fill,
-                      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
-                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                    ),
-                  ),
-                Center(child: Icon(Icons.place, size: 44, color: colors.error)),
-                if (_locating) const LoadingState(),
-                Positioned(
-                  top: AppSpacing.sm,
-                  right: AppSpacing.sm,
-                  child: IconButton.filledTonal(
-                    key: const Key('location-current'),
-                    tooltip: context.l10n.locationPickerCurrent,
-                    onPressed: _locating ? null : () => _locate(tell: true),
-                    icon: const Icon(Icons.my_location),
-                  ),
-                ),
-                Positioned(
-                  left: AppSpacing.sm,
-                  bottom: AppSpacing.sm,
-                  child: AppCard(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    child: Text(
-                      '${decimal(latitude, 5)}, '
-                      '${decimal(longitude, 5)}',
-                      key: const Key('location-readout'),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    color: colors.surface.withValues(alpha: 0.75),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xs,
-                      vertical: AppSpacing.xs / 2,
-                    ),
-                    child: Text(
-                      widget.attribution,
-                      style: Theme.of(context).textTheme.labelSmall
-                          ?.copyWith(color: colors.onSurface),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+  Widget _map(LocationPickerState state) {
+    final point = state.point;
+    final latitude = point?.latitude ?? 0;
+    final longitude = point?.longitude ?? 0;
+    final colors = Theme.of(context).colorScheme;
+    final view = MapView.centered(
+      center: (lat: latitude, lon: longitude),
+      size: Size(MediaQuery.sizeOf(context).width, AppClub.pickerMapHeight),
+      zoom: state.zoom,
+    );
+    return Listener(
+      onPointerSignal: (event) {
+        if (event is PointerScrollEvent) {
+          _notifier.moveTo((
+            latitude: latitude,
+            longitude: longitude,
+          ), zoom: state.zoom + (event.scrollDelta.dy > 0 ? -1 : 1));
+        }
       },
+      child: RawGestureDetector(
+        key: const Key('location-map'),
+        gestures: {
+          _EagerScaleRecognizer:
+              GestureRecognizerFactoryWithHandlers<_EagerScaleRecognizer>(
+                _EagerScaleRecognizer.new,
+                (recognizer) {
+                  recognizer
+                    ..onStart = (details) {
+                      _focalStart = details.localFocalPoint;
+                      _pointStart = point;
+                      _zoomStart = state.zoom;
+                    }
+                    ..onUpdate = (details) => _pan(state, details);
+                },
+              ),
+        },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: ColoredBox(color: colors.surfaceContainerHighest),
+            ),
+            for (final tile in view.tiles(widget.tileUrl))
+              Positioned(
+                left: tile.left,
+                top: tile.top,
+                width: view.tilePixels,
+                height: view.tilePixels,
+                child: Image.network(
+                  tile.url,
+                  headers: mapTileHeaders,
+                  fit: BoxFit.fill,
+                  webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+            Center(child: Icon(Icons.place, size: 44, color: colors.error)),
+            if (state.locate.running) const LoadingState(),
+            Positioned(
+              top: AppSpacing.sm,
+              right: AppSpacing.sm,
+              child: IconButton.filledTonal(
+                key: const Key('location-current'),
+                tooltip: context.l10n.locationPickerCurrent,
+                onPressed: state.locate.running ? null : _notifier.locate,
+                icon: const Icon(Icons.my_location),
+              ),
+            ),
+            Positioned(
+              left: AppSpacing.sm,
+              bottom: AppSpacing.sm,
+              child: AppCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Text(
+                  '${decimal(latitude, 5)}, ${decimal(longitude, 5)}',
+                  key: const Key('location-readout'),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                color: colors.surface.withValues(alpha: 0.75),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs,
+                  vertical: AppSpacing.xs / 2,
+                ),
+                child: Text(
+                  widget.attribution,
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: colors.onSurface),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

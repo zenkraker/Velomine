@@ -252,7 +252,6 @@
   "clubMakeCoach": "Rendi allenatore",
   "clubMakeMember": "Rendi corridore",
   "clubCopy": "Copia",
-  "clubCopied": "Copiato",
   "clubMemberCount": "{count, plural, =1{1 membro} other{{count} membri}}",
 
   "sharingTitle": "Cosa condividi",
@@ -1492,7 +1491,6 @@
   "reminderStatusPaused": "In pausa",
   "reminderLastDone": "Ultimo intervento {date}",
   "reminderDone": "Fatto",
-  "reminderDoneSaved": "Fatto. Lo trovi nel registro interventi.",
   "reminderDoneBody": "Il conteggio riparte dal giorno scelto e l'intervento finisce nel registro.",
   "doneOnDate": "Fatto il {date}",
   "reminderPause": "Metti in pausa",
@@ -1666,7 +1664,6 @@
   "calendarDeleteConfirmTitle": "Fermare l'indirizzo del calendario?",
   "calendarDeleteConfirmBody": "Il calendario smette di aggiornarsi. Puoi creare un nuovo indirizzo quando vuoi.",
   "calendarCopy": "Copia l'indirizzo",
-  "calendarAddressCopied": "Indirizzo copiato",
   "calendarShownOnce": "Copialo ora. Il server conserva solo un hash, quindi non può mostrarlo di nuovo; se lo perdi, sostituiscilo.",
   "notificationClubRidePlanned": "{ride}: il club ha programmato un giro.",
   "notificationClubRideChanged": "{ride}: sono cambiati l'orario o il punto di ritrovo.",

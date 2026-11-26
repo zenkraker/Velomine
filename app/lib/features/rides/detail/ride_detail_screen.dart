@@ -499,7 +499,29 @@ class RideDetailScreen extends ConsumerWidget {
           _BikeCard(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
           false,
         ),
-      if (s.views case final views?) (_ViewsCard(views: views), false),
+      if (s.views case final views?)
+        // Who else has looked at this ride, most recent first. Only the owner ever sees this.
+        (
+          SectionCard(
+            key: const Key('ride-views'),
+            title: l10n.viewsTitle,
+            children: [
+              if (views.isEmpty)
+                EmptyState(
+                  key: const Key('ride-views-empty'),
+                  message: l10n.rideViewsEmpty,
+                  framed: false,
+                )
+              else
+                for (final view in views)
+                  Text(
+                    l10n.rideViewedBy(view.viewerName, weekdayTime(view.at)),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+            ],
+          ),
+          false,
+        ),
     ];
     if (!layout.foldAdvanced) return [for (final (widget, _) in items) widget];
     final folded = [
@@ -569,36 +591,6 @@ String decouplingWord(AppLocalizations l10n, double pct) => pct < 5
     : pct <= 10
     ? l10n.decouplingDrift
     : l10n.decouplingLargeDrift;
-
-/// Who else has looked at this ride, most recent first. Only the owner ever sees this.
-class _ViewsCard extends StatelessWidget {
-  const _ViewsCard({required this.views});
-
-  final List<ShareViewResponse> views;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return SectionCard(
-      key: const Key('ride-views'),
-      title: l10n.viewsTitle,
-      children: [
-        if (views.isEmpty)
-          Text(
-            l10n.rideViewsEmpty,
-            key: const Key('ride-views-empty'),
-            style: Theme.of(context).textTheme.bodyMedium,
-          )
-        else
-          for (final view in views)
-            Text(
-              l10n.rideViewedBy(view.viewerName, weekdayTime(view.at)),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-      ],
-    );
-  }
-}
 
 /// The ride's numbers as small tiles: only the ones the ride has, and only the ones this view shows.
 ///

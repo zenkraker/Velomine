@@ -10,7 +10,6 @@ import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_card.dart';
@@ -87,7 +86,6 @@ class ClubScreen extends ConsumerWidget {
         initial: initial,
         tileUrl: tileUrl,
         attribution: attribution,
-        locationService: ref.read(locationServiceProvider),
       ),
     ),
   );
@@ -121,15 +119,9 @@ class ClubScreen extends ConsumerWidget {
     }
   }
 
-  void _copy(BuildContext context, String code) {
-    final l10n = context.l10n;
+  void _copy(WidgetRef ref, String code) {
     Clipboard.setData(ClipboardData(text: '$serverUrl/join?code=$code'));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.clubCopied),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    ref.read(clubViewModelProvider.notifier).copied();
   }
 
   Future<void> _saveLocation(
@@ -249,7 +241,7 @@ class ClubScreen extends ConsumerWidget {
       if (owner && club.joinCode != null)
         ClubJoinCodeCard(
           code: club.joinCode!,
-          onCopy: () => _copy(context, club.joinCode!),
+          onCopy: () => _copy(ref, club.joinCode!),
         ),
     ];
 

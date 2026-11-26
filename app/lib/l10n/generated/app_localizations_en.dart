@@ -757,9 +757,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubCopy => 'Copy';
 
   @override
-  String get clubCopied => 'Copied';
-
-  @override
   String get sharingTitle => 'What you share';
 
   @override
@@ -4202,9 +4199,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderDone => 'Done';
 
   @override
-  String get reminderDoneSaved => 'Done. It is in the service log.';
-
-  @override
   String get reminderDoneBody =>
       'Counting starts again from the day you pick, and the job goes in the service log.';
 
@@ -4767,9 +4761,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarCopy => 'Copy the address';
-
-  @override
-  String get calendarAddressCopied => 'Address copied';
 
   @override
   String get calendarShownOnce =>

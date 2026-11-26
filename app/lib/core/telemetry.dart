@@ -222,7 +222,7 @@ final telemetryRuntimeProvider = Provider<TelemetryRuntime>(
 /// starts even if a stale local flag remains.
 Future<void> runWithTelemetry({
   required TelemetryChoice choice,
-  required Widget app,
+  required UncontrolledProviderScope app,
 }) async {
   if (!choice.enabled) {
     runApp(app);

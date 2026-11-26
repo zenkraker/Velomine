@@ -8,7 +8,6 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
@@ -126,7 +125,6 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
           initial: _point,
           tileUrl: widget.tileUrl ?? '',
           attribution: widget.attribution ?? '',
-          locationService: ref.read(locationServiceProvider),
         ),
       ),
     );

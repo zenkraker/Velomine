@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/bottom_action_bar.dart';
@@ -49,7 +48,6 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
         initial: initial,
         tileUrl: widget.tileUrl,
         attribution: widget.attribution,
-        locationService: ref.read(locationServiceProvider),
       ),
     ),
   );

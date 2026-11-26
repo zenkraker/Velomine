@@ -16,28 +16,31 @@ import 'package:velomine/core/l10n.dart';
 import 'package:velomine/core/theme.dart';
 import 'package:velomine/features/rides/detail/series_chart.dart';
 
-Widget _detailApp(
+Future<void> _pumpDetail(
+  WidgetTester tester,
   Session session,
   String id, {
   RiderModeLayout layout = RiderModeLayout.full,
   List<Uri>? opened,
-}) => ProviderScope(
-  overrides: [
-    sessionProvider.overrideWith((ref) => session),
-    ridePollIntervalProvider.overrideWithValue(
-      const Duration(milliseconds: 10),
-    ),
-  ],
-  child: MaterialApp(
-    localizationsDelegates: appLocalizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: Scaffold(
-      body: RideDetailScreen(
-        id: id,
-        layout: layout,
-        onDeleted: () {},
-        serverUrl: 'https://velomine.test',
-        openLink: (uri) async => opened?.add(uri),
+}) => tester.pumpWidget(
+  ProviderScope(
+    overrides: [
+      sessionProvider.overrideWith((ref) => session),
+      ridePollIntervalProvider.overrideWithValue(
+        const Duration(milliseconds: 10),
+      ),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: RideDetailScreen(
+          id: id,
+          layout: layout,
+          onDeleted: () {},
+          serverUrl: 'https://velomine.test',
+          openLink: (uri) async => opened?.add(uri),
+        ),
       ),
     ),
   ),
@@ -714,7 +717,7 @@ void main() {
     tester,
   ) async {
     final session = server.session(useCookies: true);
-    await tester.pumpWidget(_detailApp(session, 'nobody-has-this-ride'));
+    await _pumpDetail(tester, session, 'nobody-has-this-ride');
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('not-found')), findsOneWidget);
@@ -726,7 +729,7 @@ void main() {
   ) async {
     server.rides.add(rideJson('r3', 'processing', fileName: 'big.fit'));
     final session = server.session(useCookies: true);
-    await tester.pumpWidget(_detailApp(session, 'r3'));
+    await _pumpDetail(tester, session, 'r3');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 5));
     expect(find.byKey(const Key('processing')), findsOneWidget);

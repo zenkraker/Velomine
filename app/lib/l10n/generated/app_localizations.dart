@@ -1472,12 +1472,6 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get clubCopy;
 
-  /// No description provided for @clubCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Copied'**
-  String get clubCopied;
-
   /// No description provided for @sharingTitle.
   ///
   /// In en, this message translates to:
@@ -7178,12 +7172,6 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get reminderDone;
 
-  /// No description provided for @reminderDoneSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Done. It is in the service log.'**
-  String get reminderDoneSaved;
-
   /// No description provided for @reminderDoneBody.
   ///
   /// In en, this message translates to:
@@ -8221,12 +8209,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy the address'**
   String get calendarCopy;
-
-  /// No description provided for @calendarAddressCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Address copied'**
-  String get calendarAddressCopied;
 
   /// No description provided for @calendarShownOnce.
   ///

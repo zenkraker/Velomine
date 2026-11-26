@@ -327,10 +327,7 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
   late final int _subtitleLines = () {
     final painter =
         TextPainter(
-          text: TextSpan(
-            text: subtitle,
-            style: theme.textTheme.bodyMedium ?? const TextStyle(),
-          ),
+          text: TextSpan(text: subtitle, style: theme.textTheme.bodyMedium!),
           textDirection: TextDirection.ltr,
           textScaler: textScaler,
         )..layout(

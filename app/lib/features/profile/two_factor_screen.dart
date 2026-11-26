@@ -144,10 +144,7 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                       tooltip: l10n.clubCopy,
                       onPressed: () async {
                         await Clipboard.setData(ClipboardData(text: setup.key));
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.clubCopied)),
-                        );
+                        notifier.copied();
                       },
                       icon: const Icon(Icons.copy_outlined),
                     ),

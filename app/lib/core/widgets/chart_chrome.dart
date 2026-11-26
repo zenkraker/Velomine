@@ -111,7 +111,7 @@ class ChartHeader extends StatelessWidget {
 /// The style of the numbers written inside a chart's plot area: the axis size in the muted ink.
 TextStyle chartLabelStyle(BuildContext context) {
   final theme = Theme.of(context);
-  return (theme.textTheme.labelSmall ?? const TextStyle()).copyWith(
+  return theme.textTheme.labelSmall!.copyWith(
     color: theme.colorScheme.onSurfaceVariant,
   );
 }

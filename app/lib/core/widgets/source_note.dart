@@ -15,8 +15,7 @@ class SourceNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = theme.colorScheme.onSurfaceVariant;
-    final style = (theme.textTheme.bodySmall ?? const TextStyle(fontSize: 12))
-        .copyWith(color: color);
+    final style = theme.textTheme.bodySmall!.copyWith(color: color);
     return Semantics(
       container: true,
       button: onTap != null,

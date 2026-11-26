@@ -114,14 +114,10 @@ class ServiceSection extends ConsumerWidget {
       today: _today(),
     );
     if (day == null) return;
-    final ok = await ref
+    // The ViewModel queues the confirmation.
+    await ref
         .read(bikeDetailViewModelProvider(id).notifier)
         .completeReminder(reminder.id, day);
-    if (ok && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.reminderDoneSaved)));
-    }
   }
 
   Future<void> _removeReminder(

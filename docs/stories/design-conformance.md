@@ -39,7 +39,7 @@ An audit of all 45 routes over 44 screen classes, the 55 pages under `docs/desig
 - [ ] In a grid, the cards of one row are the same height and a row is full; 600–1199 dp shows the two columns the size classes name. **Blocked, not skipped:** `IntrinsicHeight` overflowed by 10 px on the Club page at 1300 dp, and a one-row `Table` broke hit testing (a tap on `open-athletes` missed; 61 tests). Two causes were suspected and **neither reproduces on Flutter 3.50** (probes with a `Wrap` of chips, a `ListTile` with a trailing `Wrap`, and a `LinearProgressIndicator` inside `IntrinsicHeight`): the 10 px is still undiagnosed, so the next attempt bisects the Club grid's cards before choosing a mechanism. The framework's own note still holds — *"the child will get less height than it otherwise would"* — and `Table`'s doc still says a single row is a `Row`, which the hit-test failure bore out. The column change cannot ship alone either — at 600 dp half-width rows crash `ListTile` ("trailing widget consumes the entire tile width", club members) — so it lands with the Phase 4 row rework, and the next attempt starts from those two dead ends.
 - [x] Every number a rider reads is formatted for the language (`69,7 km` in Italian, `69.7 km` in English) from one shared helper. **Done:** `decimal()` is public in `core/format.dart`, the 24 display sites use it, `format_test.dart` holds the Italian comma; text-field values that are parsed back keep `toStringAsFixed`.
 - [x] No feature builds its own card, labelled field or badge where `AppCard`, `AppTextField` or `AppBadge` exists. **Done 26 Nov:** no bare `Card(` or `TextField(` is left in `features/`.
-- [ ] `just ui-dupes` reports zero for `Card(`, `TextField(`, `TextStyle(`, `Color(0x`, `EdgeInsets.all(n)` and `spacing: n` outside `core/widgets/`.
+- [ ] `app/test/ui_duplicates_test.dart` has a budget of zero for `Card(`, `TextField(`, `TextStyle(`, `Color(0x`, `EdgeInsets.all(n)` and `spacing: n` outside `core/widgets/`.
 
 **1b · Every chart drawn by `fl_chart`**
 
@@ -272,7 +272,7 @@ This replaces the coarse file grouping. **One row per audit point** (`docs/desig
 |---|---|---|---|
 | Z1 ✅ | screenshot harness | `tools/screenshots.dart`, `docs/development.md` | run against `just up` |
 | Z2 ⬜ | Chrome is not pinned in the image | `.devcontainer/Dockerfile` (pinned, checksummed), `docs/development.md:45` | `tools/check-versions.sh` |
-| Z3 ⬜ | `just ui-dupes` is not a gate | `justfile`, `.github/workflows/ci.yml` | CI run |
+| Z3 ⬜ | the duplicate count is not a gate | `justfile`, `.github/workflows/ci.yml` | CI run |
 
 ### The whole-tree index
 
@@ -292,4 +292,4 @@ carries S1, S2, S4–S8, R2, R3, R7, R9, C1–C3, C7, F2, F3, O2, O3, K4, K10, K
 
 - The architect: does the sidebar foot gain a Settings entry, or does the theme control stay and the design page change?
 - The CEO: `docs/business.md` is not in the repository, so `value:` cannot cite a band here — confirm `rider`.
-- The CEO: does `just ui-dupes` become a gate with a budget that may only fall, or stay a report?
+- The CEO: does the duplicate count (`ui_duplicates_test.dart`) become a gate with a budget that may only fall, or stay a report?

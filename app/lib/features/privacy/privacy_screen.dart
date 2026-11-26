@@ -22,7 +22,6 @@ import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/units.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../club/location_picker.dart';
@@ -122,7 +121,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           initial: null,
           tileUrl: widget.tileUrl,
           attribution: widget.attribution,
-          locationService: ref.read(locationServiceProvider),
         ),
       ),
     );

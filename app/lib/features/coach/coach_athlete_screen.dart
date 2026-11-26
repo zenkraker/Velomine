@@ -82,7 +82,7 @@ class CoachAthleteScreen extends ConsumerWidget {
             columns: 2,
             tabletColumns: 2,
             children: [
-              if (c.plan case final plan?) _CoachPlanCard(plan: plan),
+              if (c.plan case final plan?) _coachPlanCard(context, plan),
               if (summary.sharesRides)
                 SectionCard(
                   key: const Key('coach-rides-card'),
@@ -100,10 +100,11 @@ class CoachAthleteScreen extends ConsumerWidget {
                         children: [
                           for (final (i, ride) in c.rides.indexed) ...[
                             if (i > 0) const Divider(),
-                            _CoachRideRow(
-                              ride: ride,
-                              units: units,
-                              onTap: () => onOpenRide(ride.id),
+                            _coachRideRow(
+                              context,
+                              ride,
+                              units,
+                              () => onOpenRide(ride.id),
                             ),
                           ],
                         ],
@@ -122,44 +123,36 @@ class CoachAthleteScreen extends ConsumerWidget {
 
 /// The athlete's auto plan for this week: the goal, the hours and one row per planned day. Read-only, with no score:
 /// the server sends no score, no make-easy reason and no check-in answer, and logs the look as a "Plan".
-class _CoachPlanCard extends StatelessWidget {
-  const _CoachPlanCard({required this.plan});
+Widget _coachPlanCard(BuildContext context, CoachPlanResponse plan) {
+  final l10n = context.l10n;
+  final text = Theme.of(context).textTheme;
+  final done = plan.sessions
+      .where((session) => session.state == 'done' || session.state == 'easy')
+      .length;
 
-  final CoachPlanResponse plan;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final done = plan.sessions
-        .where((session) => session.state == 'done' || session.state == 'easy')
-        .length;
-
-    return SectionCard(
-      key: const Key('coach-plan'),
-      title: l10n.coachPlan,
-      children: [
-        Text(
-          [
-            trainingGoalName(l10n, plan.goal),
-            l10n.trainingHoursLine(plan.hoursPerWeek),
-            // A week the planner has not written yet has no count to give.
-            if (plan.sessions.isNotEmpty)
-              l10n.coachPlanDone(done, plan.sessions.length),
-          ].join(' · '),
-          key: const Key('coach-plan-summary'),
-          style: text.bodyMedium,
-        ),
-        Column(
-          spacing: AppSpacing.xs,
-          children: [
-            for (final session in plan.sessions)
-              _CoachPlanRow(session: session),
-          ],
-        ),
-      ],
-    );
-  }
+  return SectionCard(
+    key: const Key('coach-plan'),
+    title: l10n.coachPlan,
+    children: [
+      Text(
+        [
+          trainingGoalName(l10n, plan.goal),
+          l10n.trainingHoursLine(plan.hoursPerWeek),
+          // A week the planner has not written yet has no count to give.
+          if (plan.sessions.isNotEmpty)
+            l10n.coachPlanDone(done, plan.sessions.length),
+        ].join(' · '),
+        key: const Key('coach-plan-summary'),
+        style: text.bodyMedium,
+      ),
+      Column(
+        spacing: AppSpacing.xs,
+        children: [
+          for (final session in plan.sessions) _CoachPlanRow(session: session),
+        ],
+      ),
+    ],
+  );
 }
 
 /// One planned day, as the week's rows read it: [WeekDayRow] with the session's own detail line. A skipped day says why
@@ -213,44 +206,36 @@ String? _coachPlanSkipReason(AppLocalizations l10n, String? reason) =>
     reason == null ? null : trainingSkipReason(l10n, reason);
 
 /// One shared ride as the mock-up's row: the ride's name over its day, distance and time.
-class _CoachRideRow extends StatelessWidget {
-  const _CoachRideRow({
-    required this.ride,
-    required this.units,
-    required this.onTap,
-  });
-
-  final RideResponse ride;
-  final Units units;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return ListTile(
-      key: Key('coach-ride-${ride.id}'),
-      contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.directions_bike),
-      title: Text(
-        rideTitle(l10n, ride),
-        style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+Widget _coachRideRow(
+  BuildContext context,
+  RideResponse ride,
+  Units units,
+  VoidCallback onTap,
+) {
+  final l10n = context.l10n;
+  final text = Theme.of(context).textTheme;
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  return ListTile(
+    key: Key('coach-ride-${ride.id}'),
+    contentPadding: EdgeInsets.zero,
+    leading: const Icon(Icons.directions_bike),
+    title: Text(
+      rideTitle(l10n, ride),
+      style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+    ),
+    subtitle: Text(
+      [
+        DateFormat.MMMd(locale)
+            .format((ride.startTime ?? ride.uploadedAt).toLocal()),
+        km(units, ride.distanceM),
+        duration(ride.movingS),
+      ].join(' · '),
+      style: text.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
-      subtitle: Text(
-        [
-          DateFormat.MMMd(locale)
-              .format((ride.startTime ?? ride.uploadedAt).toLocal()),
-          km(units, ride.distanceM),
-          duration(ride.movingS),
-        ].join(' · '),
-        style: text.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-      onTap: onTap,
-    );
-  }
+    ),
+    onTap: onTap,
+  );
 }
 
 /// What a coach may see of wellbeing: daily scores and per-ride RPE, never the member's notes, as the mock-up's

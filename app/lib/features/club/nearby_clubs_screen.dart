@@ -7,7 +7,6 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
-import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import 'location_picker.dart';
 import 'nearby_clubs_state.dart';
@@ -56,7 +55,6 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
         initial: initial,
         tileUrl: widget.tileUrl,
         attribution: widget.attribution,
-        locationService: ref.read(locationServiceProvider),
       ),
     ),
   );

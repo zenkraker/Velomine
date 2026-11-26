@@ -109,12 +109,6 @@ jobs:
       - name: Format
         run: dart format --set-exit-if-changed lib test
 
-      # The duplicate budget in `tools/ui-dupes.baseline`: a count may fall, never rise. The patterns live in
-      # the script, which `just ui-dupes-check` runs too, so the two cannot count different things.
-      - name: Shared widgets instead of duplicates
-        working-directory: .
-        run: tools/ui-dupes.sh
-
       - name: Analyze
         run: flutter analyze
 

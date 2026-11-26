@@ -106,6 +106,11 @@ class ClubViewModel extends _$ClubViewModel {
     after: refresh,
   );
 
+  /// The join code went to the clipboard.
+  void copied() => state = state.copyWith(
+    messages: [...state.messages, CopiedMessage(_messageId++)],
+  );
+
   void messageShown(int id) => state = state.copyWith(
     messages: [
       for (final message in state.messages)

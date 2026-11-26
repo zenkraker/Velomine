@@ -143,7 +143,7 @@ class PlanRideViewModel extends _$PlanRideViewModel {
     return const PlanRideState();
   }
 
-  bool get editing => id.isNotEmpty;
+  bool get _editing => id.isNotEmpty;
 
   Future<void> load() async {
     state = state.copyWith(load: state.load.start());
@@ -151,7 +151,7 @@ class PlanRideViewModel extends _$PlanRideViewModel {
     final routes = await ref.read(routesDataProvider).list();
     ClubRideDetailResponse? detail;
     Failure? failure = routes.failureOrNull;
-    if (editing) {
+    if (_editing) {
       final result = await data.ride(id);
       detail = result.valueOrNull;
       failure = failure ?? result.failureOrNull;
@@ -185,7 +185,7 @@ class PlanRideViewModel extends _$PlanRideViewModel {
     state = state.copyWith(action: state.action.start());
     final data = ref.read(clubRidesDataProvider);
     final Result<ClubRideDetailResponse?> result;
-    if (editing) {
+    if (_editing) {
       result = await data.update(
         id,
         UpdateClubRideRequest(
@@ -309,6 +309,11 @@ class CalendarFeedViewModel extends _$CalendarFeedViewModel {
     state = state.copyWith(active: false, clearAddress: true, createdAt: null);
     return true;
   }
+
+  /// The address went to the clipboard.
+  void copied() => state = state.copyWith(
+    messages: [...state.messages, CopiedMessage(_messageId++)],
+  );
 
   void messageShown(int id) => state = state.copyWith(
     messages: [

@@ -763,9 +763,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubCopy => 'Copia';
 
   @override
-  String get clubCopied => 'Copiato';
-
-  @override
   String get sharingTitle => 'Cosa condividi';
 
   @override
@@ -4230,9 +4227,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get reminderDone => 'Fatto';
 
   @override
-  String get reminderDoneSaved => 'Fatto. Lo trovi nel registro interventi.';
-
-  @override
   String get reminderDoneBody =>
       'Il conteggio riparte dal giorno scelto e l\'intervento finisce nel registro.';
 
@@ -4799,9 +4793,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get calendarCopy => 'Copia l\'indirizzo';
-
-  @override
-  String get calendarAddressCopied => 'Indirizzo copiato';
 
   @override
   String get calendarShownOnce =>

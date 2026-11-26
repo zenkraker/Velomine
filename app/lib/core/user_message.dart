@@ -22,6 +22,11 @@ final class SavedMessage extends UserMessage {
   const SavedMessage(super.id);
 }
 
+/// A build template's parts were fitted to the bike.
+final class TemplateAppliedMessage extends UserMessage {
+  const TemplateAppliedMessage(super.id);
+}
+
 final class CopiedMessage extends UserMessage {
   const CopiedMessage(super.id);
 }

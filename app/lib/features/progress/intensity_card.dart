@@ -29,7 +29,7 @@ class IntensityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final small = text.bodySmall ?? const TextStyle();
+    final small = text.bodySmall!;
     final scheme = Theme.of(context).colorScheme;
     final palette = VelomineColors.of(context);
     // The design draws the three shares as rows in ink-muted, bar-muted and accent-strong, not as the

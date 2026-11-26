@@ -76,9 +76,6 @@ class ProfileViewModel extends _$ProfileViewModel {
     return true;
   }
 
-  /// The zones in use: every set's bounds, and the heart-rate model they are read against.
-  ZonesResponse? get zones => state.zones;
-
   /// Saves the rider's own bounds for one set. Null on success, or the failure for the sheet to word.
   Future<Failure?> setZones(String set, List<double> bounds) =>
       _saveZones((data) => data.setZones(set, bounds));

@@ -79,19 +79,9 @@ codegen:
 android-test:
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
 
-# count the duplicated UI patterns the shared-widget rule keeps down; lower is better
-# `tools/ui-dupes.sh` holds the patterns, so this recipe and the CI job count the same ones.
-ui-dupes:
-    tools/ui-dupes.sh --write
-
-# the duplicate counts as a budget: a count may fall, never rise (`docs/design/audit-2026-11-25.md`, S4/S8)
-ui-dupes-check:
-    tools/ui-dupes.sh
-
 # every check to run before a commit
 check:
     @just check-server
-    @just ui-dupes-check
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
 

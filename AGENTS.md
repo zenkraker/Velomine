@@ -5,10 +5,10 @@ Rules for code, tests, dependencies and tooling in this repository. `README.md` 
 ## Commands
 
 - `just up` builds and starts the whole stack in Docker on http://localhost:8080 (run it again after any change). `just logs`, `just down`, and `just nuke` (also deletes the data).
-- `just check` before every commit: server format check and tests, the UI duplicate budget, Riverpod codegen, `dart format`, `flutter analyze`, `flutter test` and the Android unit tests. `just check-server` when no file under `app/` changed.
+- `just check` before every commit: server format check and tests, Riverpod codegen, `dart format`, `flutter analyze`, `flutter test` and the Android unit tests. `just check-server` when no file under `app/` changed.
 - One server test: `dotnet test --project tests/Velomine.Server.Tests --filter-method "*TestName*"`. One app test: `cd app && flutter test test/<file>_test.dart`.
 - `just codegen` after changing a `@riverpod` provider; the `.g.dart` files are committed. `just api-client` after changing an endpoint; commit the regenerated client. `just migration Name` adds an EF Core migration.
-- `just ui-dupes-check` fails when the count of a duplicated UI pattern rises above `tools/ui-dupes.baseline`. Use the shared widget instead of raising it.
+- `app/test/ui_duplicates_test.dart` fails when the count of a duplicated UI pattern (counted on the syntax tree with the official `analyzer`) differs from its budget in that file. A rise means use the shared widget; a fall means lower the number. `riverpod_lint` runs inside `flutter analyze` (`app/analysis_options.yaml`).
 
 ## Where the rules are
 

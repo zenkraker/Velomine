@@ -72,13 +72,13 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
   @override
   void initState() {
     super.initState();
-    // The ViewModel keeps the offset; the list has no size yet, so it is applied after the frame.
-    final vm = ref.read(ridesViewModelProvider.notifier);
-    if (vm.scrollOffset <= 0) return;
+    // The offset is kept outside the screen; the list has no size yet, so it is applied after the frame.
+    final scroll = ref.read(ridesScrollProvider);
+    if (scroll.offset <= 0) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !vm.scroll.hasClients) return;
-      vm.scroll.jumpTo(
-        vm.scrollOffset.clamp(0, vm.scroll.position.maxScrollExtent),
+      if (!mounted || !scroll.controller.hasClients) return;
+      scroll.controller.jumpTo(
+        scroll.offset.clamp(0, scroll.controller.position.maxScrollExtent),
       );
     });
   }
@@ -199,7 +199,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
       subtitle: l10n.ridesSubtitle,
       primaryAction: primaryAction,
       menu: menu,
-      controller: notifier.scroll,
+      controller: ref.read(ridesScrollProvider).controller,
       refresh: notifier.refresh,
       children: [
         // The way in on the page itself, not only while a file is dragged over it.
