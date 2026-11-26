@@ -17,10 +17,10 @@ Run it on your own computer in about a minute, from the published images:
 ```
 git clone https://github.com/zenkraker/Velomine.git
 cd Velomine
-VELOMINE_VERSION=0.1.22 docker compose up --no-build
+VELOMINE_VERSION=0.2.0 docker compose up --no-build
 ```
 
-Open **http://localhost:8080**, press *Sign in*, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`. Use the newest version from [Releases](https://github.com/zenkraker/Velomine/releases/latest) in place of `0.1.22`. These defaults are for trying it on your own machine; [Self-hosting](https://velomine.eu/docs/self-hosting/) sets it up properly, and [Try it from source](https://velomine.eu/docs/self-hosting/#try-it-from-source) builds it yourself.
+Open **http://localhost:8080**, press *Sign in*, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`. Use the newest version from [Releases](https://github.com/zenkraker/Velomine/releases/latest) in place of `0.2.0`. These defaults are for trying it on your own machine; [Self-hosting](https://velomine.eu/docs/self-hosting/) sets it up properly, and [Try it from source](https://velomine.eu/docs/self-hosting/#try-it-from-source) builds it yourself.
 
 The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/releases/latest) page as an APK: install it and type your server's address when it asks.
 
