@@ -313,8 +313,9 @@ void main() {
       expect(row, findsOneWidget);
       // A date block leads the row, not an icon and a date string.
       // The row shows the day at the ride's own offset (utcOffsetMinutes: 60), not the machine's.
-      final shown =
-          DateTime.now().toUtc().add(const Duration(days: 3, minutes: 60));
+      final shown = DateTime.now().toUtc().add(
+        const Duration(days: 3, minutes: 60),
+      );
       final date = DateFormat('d').format(shown);
       expect(
         find.descendant(of: row, matching: find.text(date)),
