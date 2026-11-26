@@ -5,7 +5,7 @@
 #
 # Flutter's official release, pinned by version and checksum (tools/check-versions.sh keeps the dev container in step). It only
 # exists for Linux x64; its output is plain files, so on an Apple Silicon host this stage runs emulated.
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:11.0@sha256:2794448a07118a6eaf00f29ab5d2bf44928517ce5ff86505a63a69230374f599 AS build
 ARG FLUTTER_VERSION=3.50.0
 ARG FLUTTER_SHA256=6ea2d806fd57269ae783e6788e2a81fc26eaad782f1e0d0ff38623bb765ff9f5
 RUN apt-get update && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
@@ -29,7 +29,7 @@ RUN flutter build web --release --no-web-resources-cdn \
     && find build/web -name '*.map' -delete
 
 # The official nginx image, as the unprivileged nginx user, on port 8080. It writes only to /tmp.
-FROM nginx:1.30.6-alpine@sha256:583b7f2fce1cdb8da5ad5c39ebd3c33b98b87d493190e548bdee1fa8c619c311 AS runtime
+FROM nginx:1.31.0-alpine@sha256:2f07d83bf561b506400dc183b1b2003803e39efbd22451f848adaba14d28c7c7 AS runtime
 ARG VERSION=0.0.0
 ARG REVISION=unknown
 COPY app/nginx.conf /etc/nginx/nginx.conf
