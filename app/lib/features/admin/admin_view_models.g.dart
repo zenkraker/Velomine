@@ -229,7 +229,7 @@ final class AdminSettingsViewModelProvider
 }
 
 String _$adminSettingsViewModelHash() =>
-    r'0a3c1604c2a063caf4f6ac91ac3765bf1a263b7d';
+    r'd221dbfd86d78743747782e563539ce5ebd2227b';
 
 /// The server settings the admin may change. The form is held here, not in the
 /// widget, so switching tabs does not lose an edit.

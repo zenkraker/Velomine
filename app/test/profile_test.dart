@@ -4,10 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine/core/units.dart';
 import 'package:velomine/core/widgets/section_card.dart';
+import 'package:velomine/core/widgets/saved_mark.dart';
 import 'package:velomine/core/widgets/source_note.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
 
 import 'fake_server.dart';
+
+bool savedMarkVisible(WidgetTester tester) =>
+    tester.widget<SavedMark>(find.byKey(const Key('profile-saved'))).visible;
+
+/// Goes back from the profile with a field still focused, the way the back action pops the route.
+void popProfile(WidgetTester tester) {
+  Navigator.of(tester.element(find.byKey(const Key('profile-name')))).pop();
+}
 
 void main() {
   late FakeServer server;
@@ -434,7 +443,7 @@ void main() {
     };
     await openProfile(tester);
 
-    // 64.5 kg reads as 142.2 lb, and is sent back to the server in kilograms.
+    // 64.5 kg reads as 142.2 lb. A new figure in pounds is sent to the server in kilograms.
     expect(
       tester
           .widget<TextField>(find.byKey(const Key('profile-weight')))
@@ -442,12 +451,14 @@ void main() {
           .text,
       '142.2',
     );
-    await tester.tap(find.byKey(const Key('profile-save')));
+    await tester.enterText(find.byKey(const Key('profile-weight')), '150');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
     expect(
       server.profiles['rider@example.com']!['weightKg'],
-      closeTo(64.5, 0.05),
+      closeTo(68.0, 0.05),
     );
   });
 
@@ -459,7 +470,7 @@ void main() {
 
       // 44 lb is exactly 20 kg, the lightest the server takes. It must not be refused here.
       await tester.enterText(find.byKey(const Key('profile-weight')), '44');
-      await tester.tap(find.byKey(const Key('profile-save')));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
       expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
@@ -509,9 +520,14 @@ void main() {
     await openProfile(tester);
 
     await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.enterText(find.byKey(const Key('profile-ftp')), '265');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.enterText(find.byKey(const Key('profile-weight')), '68,5');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.enterText(find.byKey(const Key('profile-birth-year')), '1985');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-zone')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('UTC').last);
@@ -519,8 +535,6 @@ void main() {
     await tester.tap(find.byKey(const Key('profile-first-day')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Saturday').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
 
     expect(server.profiles['rider@example.com'], {
@@ -535,17 +549,16 @@ void main() {
       'emailTrainingNotifications': false,
       'hasPassword': true,
     });
-    expect(find.byKey(const Key('profile-saved')), findsOneWidget);
     expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
   });
 
-  testWidgets('ProfileScreen_ShouldRejectOutOfRangeValue_WhenSaving', (
+  testWidgets('ProfileScreen_ShouldRejectOutOfRangeValue_WhenSubmitted', (
     tester,
   ) async {
     await openProfile(tester);
 
     await tester.enterText(find.byKey(const Key('profile-birth-year')), '1800');
-    await tester.tap(find.byKey(const Key('profile-save')));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
     expect(
@@ -553,6 +566,222 @@ void main() {
       findsOneWidget,
     );
     expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+  });
+
+  testWidgets('ProfileScreen_ShouldSaveName_WhenFocusLeavesIt', (tester) async {
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
+    await tester.tap(find.byKey(const Key('profile-ftp')));
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    expect(server.profiles['rider@example.com']!['displayName'], 'Ada L');
+  });
+
+  testWidgets('ProfileScreen_ShouldSendNothing_WhenAthleteValueIsInvalid', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-ftp')), '1500');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('FTP is 30 to 1000 watts.'), findsOneWidget);
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+  });
+
+  testWidgets('ProfileScreen_ShouldSendNothing_WhenAthleteValueIsUnchanged', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': 250,
+      'weightKg': 64.5,
+      'birthYear': 1990,
+      'timeZone': 'Europe/Rome',
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+    };
+    await openProfile(tester);
+
+    // Leaving every athlete field as it is, the way a rider taps through them, writes nothing.
+    await tester.tap(find.byKey(const Key('profile-ftp')));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.tap(find.byKey(const Key('profile-weight')));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+  });
+
+  testWidgets('ProfileScreen_ShouldSaveName_WhenLeftWhileStillTyping', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    // The name still has the focus when the rider goes back: it is saved on the way out.
+    await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
+    popProfile(tester);
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    expect(server.profiles['rider@example.com']!['displayName'], 'Ada L');
+  });
+
+  testWidgets('ProfileScreen_ShouldSaveHeartRate_WhenLeftWhileStillTyping', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-max-hr')), '190');
+    popProfile(tester);
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/accounts/me/heart-rate/max'));
+    expect(server.profiles['rider@example.com']!['maxHeartRate'], 190);
+  });
+
+  testWidgets('ProfileScreen_ShouldSaveHeartRate_WhenFocusLeavesIt', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('profile-threshold-hr')),
+      '170',
+    );
+    await tester.tap(find.byKey(const Key('profile-ftp')));
+    await tester.pumpAndSettle();
+
+    expect(
+      server.requests,
+      contains('PUT /api/v1/accounts/me/heart-rate/threshold'),
+    );
+    expect(server.profiles['rider@example.com']!['thresholdHeartRate'], 170);
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldSendNothing_WhenAthleteValueIsInvalidAndLeft',
+    (tester) async {
+      await openProfile(tester);
+
+      await tester.enterText(find.byKey(const Key('profile-ftp')), '1500');
+      popProfile(tester);
+      await tester.pumpAndSettle();
+
+      expect(
+        server.requests,
+        isNot(contains('PUT /api/v1/accounts/me/profile')),
+      );
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldSendNothing_WhenAthleteValueIsUnchangedAndLeft',
+    (tester) async {
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': 250,
+        'weightKg': 64.5,
+        'birthYear': 1990,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+      };
+      await openProfile(tester);
+
+      await tester.tap(find.byKey(const Key('profile-ftp')));
+      popProfile(tester);
+      await tester.pumpAndSettle();
+
+      expect(
+        server.requests,
+        isNot(contains('PUT /api/v1/accounts/me/profile')),
+      );
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldSendOnce_WhenFocusLeftBeforeTheScreenCloses',
+    (tester) async {
+      await openProfile(tester);
+
+      await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
+      await tester.tap(find.byKey(const Key('profile-ftp')));
+      await tester.pumpAndSettle();
+      popProfile(tester);
+      await tester.pumpAndSettle();
+
+      // The name was saved when it was left; leaving the screen does not send it a second time.
+      expect(
+        server.requests.where((r) => r == 'PUT /api/v1/accounts/me/profile'),
+        hasLength(1),
+      );
+      expect(server.profiles['rider@example.com']!['displayName'], 'Ada L');
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldShowSavedMark_WhenNameIsSaved', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
+    await tester.tap(find.byKey(const Key('profile-ftp')));
+    await tester.pumpAndSettle();
+
+    expect(savedMarkVisible(tester), isTrue);
+    expect(find.text('Saved.'), findsOneWidget);
+
+    // The mark goes on its own once the two seconds have passed.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(savedMarkVisible(tester), isFalse);
+  });
+
+  testWidgets('ProfileScreen_ShouldNotShowSavedMark_WhenValueIsUnchanged', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': 250,
+      'weightKg': 64.5,
+      'birthYear': 1990,
+      'timeZone': 'Europe/Rome',
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+    };
+    await openProfile(tester);
+
+    await tester.tap(find.byKey(const Key('profile-ftp')));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(savedMarkVisible(tester), isFalse);
+  });
+
+  testWidgets('ProfileScreen_ShouldNotShowSavedMark_WhenSaveFails', (
+    tester,
+  ) async {
+    await openProfile(tester);
+    server.failing.add('/api/v1/accounts/me/profile');
+
+    await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
+    await tester.tap(find.byKey(const Key('profile-ftp')));
+    await tester.pumpAndSettle();
+
+    expect(savedMarkVisible(tester), isFalse);
   });
 
   testWidgets(
@@ -579,10 +808,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-email')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('profile-save')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('profile-save')));
-    await tester.pumpAndSettle();
 
     expect(server.profiles['rider@example.com']!['emailNotifications'], false);
   });
@@ -596,10 +821,6 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('profile-email-training')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-email-training')));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('profile-save')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
 
     expect(

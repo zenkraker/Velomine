@@ -224,6 +224,10 @@ class FakeServer {
   /// The member's RPE and note per ride id.
   final rideFeels = <String, Map<String, Object?>>{};
 
+  /// Every feel body the app sent, in order, and whether the next save is refused.
+  final feelSaves = <Map<String, Object?>>[];
+  bool failFeelSave = false;
+
   /// Whether the fake server can take a supporter key, and the keys it accepts.
   /// Any other key is refused as invalid.
   bool supporterAvailable = true;
@@ -930,6 +934,10 @@ class FakeServer {
       }
       if (request.method == 'PUT') {
         final body = jsonDecode(request.body) as Map<String, Object?>;
+        feelSaves.add(body);
+        if (failFeelSave) {
+          return http.Response('{"detail":"Try again."}', 500);
+        }
         rideFeels[rideId] = body;
       }
       final feel = rideFeels[rideId];

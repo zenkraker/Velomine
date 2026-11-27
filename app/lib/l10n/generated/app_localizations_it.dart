@@ -642,9 +642,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Velomine funziona anche da soli. Entra in un club quando vuoi uscire in gruppo e condividere con i suoi coach.';
 
   @override
-  String get clubNoneTitleShort => 'Il tuo club';
-
-  @override
   String get clubNoneSubtitle => 'Esci da solo, oppure in un club.';
 
   @override
@@ -746,12 +743,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shareRoutes => 'Percorsi';
 
   @override
-  String get audienceNone => 'Nessuno';
-
-  @override
-  String get audienceCoaches => 'I miei allenatori';
-
-  @override
   String get routesNeedRides =>
       'Attiva prima i giri; i percorsi aggiungono la mappa.';
 
@@ -847,9 +838,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get athletesTitle => 'Atleti';
-
-  @override
-  String get coachViewAthletes => 'Vedi atleti';
 
   @override
   String get athletesSubtitle =>
@@ -1033,13 +1021,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bulkChooseFiles => 'Scegli i file';
-
-  @override
-  String get zwiftTitle => 'Da Zwift';
-
-  @override
-  String get zwiftHint =>
-      'Zwift conserva ogni giro come file FIT in Documents/Zwift/Activities. Scegli quella cartella per portarli dentro tutti.';
 
   @override
   String get bulkDropTitle => 'Rilascia per aggiungere i tuoi giri';
@@ -1535,9 +1516,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get noParts =>
       'Nessun componente. Aggiungi catena, copertoni o pastiglie dei freni per vedere quanto sono usurati.';
-
-  @override
-  String get replacedParts => 'Componenti sostituiti';
 
   @override
   String get wearReplace => 'Sostituiscilo';
@@ -2968,24 +2946,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingSleep => 'Sonno';
 
   @override
-  String get wellbeingShortFatigue => 'Aff';
-
-  @override
-  String get wellbeingShortSoreness => 'Ind';
-
-  @override
-  String get wellbeingShortMood => 'Umo';
-
-  @override
-  String get wellbeingShortStress => 'Str';
-
-  @override
-  String get wellbeingShortMotivation => 'Mot';
-
-  @override
-  String get wellbeingShortSleep => 'Son';
-
-  @override
   String get wellbeingHistory14 => 'Ultimi 14 giorni';
 
   @override
@@ -2999,10 +2959,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Nessun check-in oggi. La prontezza viene misurata solo sui tuoi giri.';
 
   @override
-  String get wellbeingPrivate =>
-      'Lo vedi solo tu. Prontezza e note non arrivano mai a un coach.';
-
-  @override
   String get wellbeingRpe => 'Quanto è stata dura?';
 
   @override
@@ -3010,9 +2966,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wellbeingNotes => 'Note (facoltative)';
-
-  @override
-  String get wellbeingRpeSave => 'Salva';
 
   @override
   String wellbeingRpeSaved(int rpe) {
@@ -3379,9 +3332,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideTextDescription => 'Descrizione';
 
   @override
-  String get rideTextAdd => 'Aggiungi una descrizione';
-
-  @override
   String get actionSaveRideDetails => 'salvare titolo e descrizione';
 
   @override
@@ -3614,9 +3564,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get clubLocationHelp =>
       'Dove si ritrova il club. Serve solo a mostrarlo ai corridori vicini.';
-
-  @override
-  String get clubLocationOnMap => 'Visibile sulla mappa';
 
   @override
   String get clubLocationNone => 'Nessuna posizione';
@@ -4838,9 +4785,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo server non accetta licenze da sostenitore.';
 
   @override
-  String get supporterActivated => 'Licenza attivata';
-
-  @override
   String supporterThanksName(String name) {
     return 'Grazie, $name.';
   }
@@ -4855,9 +4799,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get supporterKeyVerified => 'Chiave verificata';
-
-  @override
   String get supporterReplayLink => 'Rivedi il momento';
 
   @override
@@ -4869,9 +4810,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get supporter => 'Sostenitore';
-
-  @override
-  String get supporterAppearsOnProfile => 'compare sul tuo profilo';
 
   @override
   String get supporterHideBadge => 'Nascondi badge sostenitore';
@@ -5288,9 +5226,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get goalAddEvent => 'Aggiungi un evento';
-
-  @override
   String get trainingDaysLabel => 'Giorni in cui puoi pedalare';
 
   @override
@@ -5683,15 +5618,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get formStateBuilding => 'In costruzione';
-
-  @override
-  String get totalsTableWeekly => 'Settimana per settimana';
-
-  @override
-  String get totalsTableMonthly => 'Mese per mese';
-
-  @override
-  String get totalsTableYearly => 'Anno per anno';
 
   @override
   String get totalsColumnWeek => 'Settimana';

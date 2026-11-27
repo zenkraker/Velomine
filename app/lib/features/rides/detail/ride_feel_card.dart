@@ -1,3 +1,5 @@
+import 'dart:async' show Timer;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
@@ -5,6 +7,7 @@ import '../../../core/l10n.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/saved_mark.dart';
 
 /// How hard the ride felt and an optional note. Owner-only; coaches see the RPE but never the note.
 class RideFeelCard extends StatefulWidget {
@@ -26,45 +29,96 @@ class RideFeelCard extends StatefulWidget {
 }
 
 class _RideFeelCardState extends State<RideFeelCard> {
-  late final TextEditingController _notes = TextEditingController(
-    text: widget.feel?.notes ?? '',
-  );
+  static const _savedFor = Duration(seconds: 2);
+
+  final _notes = TextEditingController();
+  final _notesFocus = FocusNode();
   int? _rpe;
-  bool _editing = false;
+
+  /// What the server holds, as this card last saw it: a save sends only what differs from it.
+  int? _savedRpe;
+  String? _savedNotes;
+
+  /// Saves run one after another, so a save queued during another is sent after it, not dropped.
+  Future<void> _saves = Future.value();
+  bool _inFlight = false;
+
+  /// Whether the "Saved." mark shows, and the timer that hides it again.
+  bool _savedShown = false;
+  Timer? _savedTimer;
 
   @override
   void initState() {
     super.initState();
+    _syncFromFeel();
+    _notesFocus.addListener(_onNotesFocusChanged);
+  }
+
+  void _syncFromFeel() {
     _rpe = widget.feel?.rpe;
+    _savedRpe = widget.feel?.rpe;
+    _savedNotes = widget.feel?.notes;
+    _notes.text = widget.feel?.notes ?? '';
   }
 
   @override
   void didUpdateWidget(RideFeelCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_editing && oldWidget.feel?.rpe != widget.feel?.rpe) {
-      _rpe = widget.feel?.rpe;
-      _notes.text = widget.feel?.notes ?? '';
+    // A reload never overwrites what the member is typing or what is being sent.
+    if (!_inFlight && !_notesFocus.hasFocus && oldWidget.feel != widget.feel) {
+      _syncFromFeel();
     }
   }
 
   @override
   void dispose() {
+    _savedTimer?.cancel();
+    _notesFocus.removeListener(_onNotesFocusChanged);
+    _notesFocus.dispose();
     _notes.dispose();
     super.dispose();
   }
 
+  void _onNotesFocusChanged() {
+    if (!_notesFocus.hasFocus) _queueSave();
+  }
+
+  void _queueSave() => _saves = _saves.then((_) => _save());
+
+  /// Sends the chosen RPE with the notes as they are. Nothing is sent before an RPE is chosen or when neither
+  /// changed; a failed save keeps what the member typed and shows no mark.
   Future<void> _save() async {
-    if (_rpe == null) return;
-    final notes = _notes.text.trim();
-    final ok = await widget.onSave(_rpe!, notes.isEmpty ? null : notes);
-    if (ok && mounted) setState(() => _editing = false);
+    final rpe = _rpe;
+    if (!mounted || rpe == null) return;
+    final text = _notes.text.trim();
+    final notes = text.isEmpty ? null : text;
+    if (rpe == _savedRpe && notes == _savedNotes) return;
+    _inFlight = true;
+    final ok = await widget.onSave(rpe, notes);
+    _inFlight = false;
+    if (!mounted) return;
+    if (ok) {
+      _savedRpe = rpe;
+      _savedNotes = notes;
+    }
+    _showSaved(ok);
+  }
+
+  /// Shows the "Saved." mark for two seconds after a save that went through. A failed save hides it.
+  void _showSaved(bool saved) {
+    _savedTimer?.cancel();
+    setState(() => _savedShown = saved);
+    if (saved) {
+      _savedTimer = Timer(_savedFor, () {
+        if (mounted) setState(() => _savedShown = false);
+      });
+    }
   }
 
   Future<void> _delete() async {
     final ok = await widget.onDelete();
     if (ok && mounted) {
       setState(() {
-        _editing = false;
         _rpe = null;
         _notes.clear();
       });
@@ -85,87 +139,51 @@ class _RideFeelCardState extends State<RideFeelCard> {
       );
     }
 
-    final showForm = _editing || feel.rpe == null;
     return AppCard(
       key: const Key('ride-feel-card'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Text(l10n.wellbeingRpe, style: text.titleMedium),
+          Text(l10n.wellbeingRpeHint, style: text.bodySmall),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
             children: [
-              Expanded(child: Text(l10n.wellbeingRpe, style: text.titleMedium)),
-              if (!showForm && feel.rpe != null)
-                TextButton(
-                  key: const Key('ride-feel-edit'),
-                  onPressed: () => setState(() => _editing = true),
-                  child: Text(l10n.wellbeingEdit),
+              for (var i = 1; i <= 10; i++)
+                ChoiceChip(
+                  key: Key('ride-feel-$i'),
+                  label: Text('$i'),
+                  selected: _rpe == i,
+                  onSelected: widget.saving
+                      ? null
+                      : (_) {
+                          setState(() => _rpe = i);
+                          _queueSave();
+                        },
                 ),
             ],
           ),
-          if (!showForm && feel.rpe != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              l10n.wellbeingRpeSaved(feel.rpe!),
-              key: const Key('ride-feel-saved'),
-              style: text.titleSmall,
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
+            fieldKey: const Key('ride-feel-notes'),
+            controller: _notes,
+            focusNode: _notesFocus,
+            onDone: (_) => _queueSave(),
+            maxLength: 500,
+            maxLines: 2,
+            label: l10n.wellbeingNotes,
+          ),
+          if (feel.rpe != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                onPressed: widget.saving ? null : _delete,
+                child: Text(l10n.wellbeingRpeDelete),
+              ),
             ),
-            if (feel.notes case final notes? when notes.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(notes, style: text.bodySmall),
-            ],
-          ] else ...[
-            Text(l10n.wellbeingRpeHint, style: text.bodySmall),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: [
-                for (var i = 1; i <= 10; i++)
-                  ChoiceChip(
-                    key: Key('ride-feel-$i'),
-                    label: Text('$i'),
-                    selected: _rpe == i,
-                    onSelected: widget.saving
-                        ? null
-                        : (_) => setState(() => _rpe = i),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              fieldKey: const Key('ride-feel-notes'),
-              controller: _notes,
-              maxLength: 500,
-              maxLines: 2,
-              label: l10n.wellbeingNotes,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                FilledButton(
-                  key: const Key('ride-feel-save'),
-                  onPressed: widget.saving || _rpe == null ? null : _save,
-                  child: Text(l10n.wellbeingRpeSave),
-                ),
-                if (feel.rpe != null) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  TextButton(
-                    onPressed: widget.saving ? null : _delete,
-                    child: Text(l10n.wellbeingRpeDelete),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => setState(() {
-                      _editing = false;
-                      _rpe = feel.rpe;
-                      _notes.text = feel.notes ?? '';
-                    }),
-                    child: Text(l10n.cancel),
-                  ),
-                ],
-              ],
-            ),
-          ],
+          SavedMark(key: const Key('ride-feel-mark'), visible: _savedShown),
         ],
       ),
     );

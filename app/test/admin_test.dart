@@ -1,14 +1,17 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/failure.dart';
+import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/result.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/widgets/badge.dart';
-import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/core/widgets/empty_state.dart';
 import 'package:velomine/core/widgets/error_state.dart';
+import 'package:velomine/core/widgets/saved_mark.dart';
 import 'package:velomine/core/widgets/section_card.dart';
 import 'package:velomine/features/admin/admin_data.dart';
+import 'package:velomine/features/admin/admin_view_models.dart';
 import 'package:velomine_api/api.dart';
 
 import 'fake_server.dart';
@@ -225,13 +228,17 @@ void main() {
     expect(find.byKey(const Key('save-club')), findsOneWidget);
   });
 
-  testWidgets('SettingsTab_ShouldSaveSettings_WhenSaved', (tester) async {
+  bool savedMarkVisible(WidgetTester tester) =>
+      tester.widget<SavedMark>(find.byKey(const Key('settings-saved'))).visible;
+
+  testWidgets('SettingsTab_ShouldSaveAndShowTheMark_WhenASwitchChanges', (
+    tester,
+  ) async {
     await openAdmin(tester);
     await tester.tap(find.byKey(const Key('tab-settings')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('setting-approval')));
-    await tester.tap(find.byKey(const Key('setting-save')));
     await tester.pumpAndSettle();
 
     expect(server.adminSettings, {
@@ -239,7 +246,41 @@ void main() {
       'requireAdminApproval': false,
       'clubCreationEnabled': false,
     });
-    expect(find.byKey(const Key('settings-saved')), findsOneWidget);
+    expect(savedMarkVisible(tester), isTrue);
+  });
+
+  test('SettingsTab_ShouldNotSend_WhenSwitchIsAlreadyItsSavedValue', () async {
+    final session = server.session(useCookies: true);
+    await session.restore();
+    final container = ProviderContainer(
+      overrides: [sessionProvider.overrideWith((ref) => session)],
+    );
+    addTearDown(container.dispose);
+    container.listen(adminSettingsViewModelProvider, (_, _) {});
+    await pumpEventQueue();
+    final notifier = container.read(adminSettingsViewModelProvider.notifier);
+
+    expect(await notifier.setSignUpEnabled(true), isFalse);
+    expect(server.requests, isNot(contains('PUT /api/v1/admin/settings')));
+  });
+
+  testWidgets('SettingsTab_ShouldHideTheMark_WhenTheSaveFails', (tester) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-settings')));
+    await tester.pumpAndSettle();
+    server.failing.add('/api/v1/admin/settings');
+
+    await tester.tap(find.byKey(const Key('setting-approval')));
+    await tester.pumpAndSettle();
+
+    expect(savedMarkVisible(tester), isFalse);
+    // The switch goes back to the value the server holds, under the error.
+    expect(
+      tester
+          .widget<SwitchListTile>(find.byKey(const Key('setting-approval')))
+          .value,
+      isTrue,
+    );
   });
 
   testWidgets('SettingsTab_ShouldShowSsoReadOnly_WhenOpened', (tester) async {
@@ -598,24 +639,6 @@ void main() {
     expect(paid.dy, members.dy);
     expect(paid.dx, greaterThan(members.dx));
     expect(find.textContaining('@'), findsNothing);
-  });
-
-  testWidgets('SettingsTab_ShouldPinSaveUnderTheContent_WhenOpened', (
-    tester,
-  ) async {
-    await openAdmin(tester);
-    await tester.tap(find.byKey(const Key('tab-settings')));
-    await tester.pumpAndSettle();
-
-    final save = find.byKey(const Key('setting-save'));
-    expect(
-      find.descendant(of: find.byType(SectionCard), matching: save),
-      findsNothing,
-    );
-    expect(
-      find.descendant(of: find.byType(BottomActionBar), matching: save),
-      findsOneWidget,
-    );
   });
 
   for (final width in [390.0, 1300.0]) {

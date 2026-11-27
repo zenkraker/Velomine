@@ -640,9 +640,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.';
 
   @override
-  String get clubNoneTitleShort => 'Your club';
-
-  @override
   String get clubNoneSubtitle => 'Ride on your own, or with a club.';
 
   @override
@@ -741,12 +738,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareRoutes => 'Routes';
 
   @override
-  String get audienceNone => 'Nobody';
-
-  @override
-  String get audienceCoaches => 'My coaches';
-
-  @override
   String get routesNeedRides =>
       'Turn on rides first; routes add the map to them.';
 
@@ -841,9 +832,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get athletesTitle => 'Athletes';
-
-  @override
-  String get coachViewAthletes => 'View athletes';
 
   @override
   String get athletesSubtitle =>
@@ -1026,13 +1014,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bulkChooseFiles => 'Choose files';
-
-  @override
-  String get zwiftTitle => 'From Zwift';
-
-  @override
-  String get zwiftHint =>
-      'Zwift keeps every ride as a FIT file in Documents/Zwift/Activities. Choose that folder to bring them all in.';
 
   @override
   String get bulkDropTitle => 'Drop to add your rides';
@@ -1527,9 +1508,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noParts =>
       'No parts yet. Add the chain, tyres or brake pads to see how worn they are.';
-
-  @override
-  String get replacedParts => 'Replaced parts';
 
   @override
   String get wearReplace => 'Replace it';
@@ -2946,24 +2924,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingSleep => 'Sleep';
 
   @override
-  String get wellbeingShortFatigue => 'Fat';
-
-  @override
-  String get wellbeingShortSoreness => 'Sor';
-
-  @override
-  String get wellbeingShortMood => 'Mood';
-
-  @override
-  String get wellbeingShortStress => 'Str';
-
-  @override
-  String get wellbeingShortMotivation => 'Mot';
-
-  @override
-  String get wellbeingShortSleep => 'Slp';
-
-  @override
   String get wellbeingHistory14 => 'Last 14 days';
 
   @override
@@ -2977,10 +2937,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'No check-in today. Your readiness is measured from your rides alone.';
 
   @override
-  String get wellbeingPrivate =>
-      'Only you see this. Readiness and notes never reach a coach.';
-
-  @override
   String get wellbeingRpe => 'How hard was it?';
 
   @override
@@ -2988,9 +2944,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wellbeingNotes => 'Notes (optional)';
-
-  @override
-  String get wellbeingRpeSave => 'Save';
 
   @override
   String wellbeingRpeSaved(int rpe) {
@@ -3357,9 +3310,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideTextDescription => 'Description';
 
   @override
-  String get rideTextAdd => 'Add a description';
-
-  @override
   String get actionSaveRideDetails => 'save the title and description';
 
   @override
@@ -3592,9 +3542,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clubLocationHelp =>
       'Where the club meets. Only used to show the club to riders nearby.';
-
-  @override
-  String get clubLocationOnMap => 'Shown on the map';
 
   @override
   String get clubLocationNone => 'No location yet';
@@ -4807,9 +4754,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This server does not accept supporter licences.';
 
   @override
-  String get supporterActivated => 'Licence activated';
-
-  @override
   String supporterThanksName(String name) {
     return 'Thank you, $name.';
   }
@@ -4824,9 +4768,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get supporterKeyVerified => 'Key verified';
-
-  @override
   String get supporterReplayLink => 'Play the celebration again';
 
   @override
@@ -4838,9 +4779,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supporter => 'Supporter';
-
-  @override
-  String get supporterAppearsOnProfile => 'appears on your profile';
 
   @override
   String get supporterHideBadge => 'Hide supporter badge';
@@ -5255,9 +5193,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get goalAddEvent => 'Add an event';
-
-  @override
   String get trainingDaysLabel => 'Days you can ride';
 
   @override
@@ -5645,15 +5580,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formStateBuilding => 'Building';
-
-  @override
-  String get totalsTableWeekly => 'Week by week';
-
-  @override
-  String get totalsTableMonthly => 'Month by month';
-
-  @override
-  String get totalsTableYearly => 'Year by year';
 
   @override
   String get totalsColumnWeek => 'Week';

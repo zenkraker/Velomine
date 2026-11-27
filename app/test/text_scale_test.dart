@@ -66,7 +66,7 @@ void main() {
     await open(tester);
     await openAccount(tester, 'profile');
 
-    expect(find.byKey(const Key('profile-save')), findsOneWidget);
+    expect(find.byKey(const Key('profile-name')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

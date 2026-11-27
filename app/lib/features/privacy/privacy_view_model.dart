@@ -39,17 +39,18 @@ class PrivacyViewModel extends _$PrivacyViewModel {
   }
 
   /// Saves both trims in one request, so a half-saved screen cannot leave the
-  /// member believing the start or the end is hidden when it is not.
-  Future<void> saveSettings({
+  /// member believing the start or the end is hidden when it is not. Returns
+  /// whether the server took it.
+  Future<bool> saveSettings({
     required int trimStartM,
     required int trimEndM,
   }) async {
-    if (state.save.running) return;
+    if (state.save.running) return false;
     state = state.copyWith(save: state.save.start());
     final result = await ref
         .read(privacyDataProvider)
         .save(UpdatePrivacyRequest(trimStartM: trimStartM, trimEndM: trimEndM));
-    if (!ref.mounted) return;
+    if (!ref.mounted) return false;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
         save: state.save.finish(result),
@@ -57,15 +58,17 @@ class PrivacyViewModel extends _$PrivacyViewModel {
       ),
       Failed(:final failure) => _failed(result, failure),
     };
+    return result.isOk;
   }
 
-  Future<void> addZone({
+  /// Returns whether the server took the place.
+  Future<bool> addZone({
     required String name,
     required double latitude,
     required double longitude,
     required int radiusM,
   }) async {
-    if (state.save.running) return;
+    if (state.save.running) return false;
     state = state.copyWith(save: state.save.start());
     final result = await ref
         .read(privacyDataProvider)
@@ -77,12 +80,13 @@ class PrivacyViewModel extends _$PrivacyViewModel {
             radiusM: radiusM,
           ),
         );
-    if (!ref.mounted) return;
+    if (!ref.mounted) return false;
     state = switch (result) {
       Ok() => state.copyWith(save: state.save.finish(result)),
       Failed(:final failure) => _failed(result, failure),
     };
     if (result.isOk) await load();
+    return result.isOk;
   }
 
   Future<void> deleteZone(String id) async {

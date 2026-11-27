@@ -52,8 +52,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               icon: const Icon(Icons.add),
               label: Text(l10n.adminCreateClub),
             ),
-      // The settings area is one form, so its Save is pinned under the content.
-      bottomAction: _tab == 3 ? const AdminSettingsSave() : null,
       children: [
         // Chips in one row that scrolls sideways, as the admin pages draw them (`.vm-chips`): a
         // segmented track stretched across the whole window instead of sitting in its corner.

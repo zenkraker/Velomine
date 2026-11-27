@@ -110,6 +110,30 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> showFeel(WidgetTester tester) async {
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('ride-feel-card')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  double markOpacity(WidgetTester tester) => tester
+      .widget<AnimatedOpacity>(
+        find.descendant(
+          of: find.byKey(const Key('ride-feel-mark')),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      )
+      .opacity;
+
+  /// Leaves the notes field, which saves them when they changed.
+  Future<void> leaveNotes(WidgetTester tester) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+  }
+
   testWidgets(
     'RideDetailScreen_ShouldShowNumbersRouteAndCharts_WhenRideIsOpened',
     (tester) async {
@@ -749,6 +773,27 @@ void main() {
     expect(find.text('1.0 km'), findsOneWidget);
   });
 
+  testWidgets(
+    'RideDetailScreen_ShouldSaveTheNotes_WhenTheRiderGoesBackWhileTyping',
+    (tester) async {
+      server.wellbeingConsent = true;
+      await open(tester);
+      await showFeel(tester);
+      await tester.tap(find.byKey(const Key('ride-feel-7')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('ride-feel-notes')),
+        'Left early',
+      );
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(server.feelSaves.last, {'rpe': 7, 'notes': 'Left early'});
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldGoBack_WhenBackIsTapped', (tester) async {
     await open(tester);
 
@@ -869,30 +914,129 @@ void main() {
     expect(find.byKey(const Key('full-route-map')), findsNothing);
   });
 
-  testWidgets('RideDetailScreen_ShouldSaveRpeAndNote_WhenWellbeingIsSetUp', (
+  testWidgets(
+    'RideDetailScreen_ShouldSaveRpeAndShowTheMark_WhenAChipIsTapped',
+    (tester) async {
+      server.wellbeingConsent = true;
+      await open(tester);
+      await showFeel(tester);
+
+      await tester.tap(find.byKey(const Key('ride-feel-7')));
+      await tester.pumpAndSettle();
+
+      expect(server.feelSaves, [
+        {'rpe': 7, 'notes': null},
+      ]);
+      expect(markOpacity(tester), 1);
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldSaveNotesOnBlur_WhenTheNotesChange', (
     tester,
   ) async {
     server.wellbeingConsent = true;
     await open(tester);
-
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('ride-feel-card')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
+    await showFeel(tester);
     await tester.tap(find.byKey(const Key('ride-feel-7')));
+    await tester.pumpAndSettle();
+
     await tester.enterText(
       find.byKey(const Key('ride-feel-notes')),
       'Felt strong',
     );
-    await tester.tap(find.byKey(const Key('ride-feel-save')));
+    await leaveNotes(tester);
+
+    expect(server.feelSaves.last, {'rpe': 7, 'notes': 'Felt strong'});
+    expect(markOpacity(tester), 1);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('RideDetailScreen_ShouldSendNothing_WhenNothingChanged', (
+    tester,
+  ) async {
+    server.wellbeingConsent = true;
+    await open(tester);
+    await showFeel(tester);
+    await tester.tap(find.byKey(const Key('ride-feel-7')));
     await tester.pumpAndSettle();
 
-    expect(server.rideFeels['r1']?['rpe'], 7);
-    expect(server.rideFeels['r1']?['notes'], 'Felt strong');
-    expect(find.byKey(const Key('ride-feel-saved')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('ride-feel-7')));
+    await leaveNotes(tester);
+
+    expect(server.feelSaves, hasLength(1));
+    await tester.pump(const Duration(seconds: 3));
   });
+
+  testWidgets('RideDetailScreen_ShouldSendNothing_WhenNoRpeIsChosen', (
+    tester,
+  ) async {
+    server.wellbeingConsent = true;
+    await open(tester);
+    await showFeel(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('ride-feel-notes')),
+      'Felt strong',
+    );
+    await leaveNotes(tester);
+
+    expect(server.feelSaves, isEmpty);
+    expect(markOpacity(tester), 0);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldKeepTheChoiceAndShowNoMark_WhenTheSaveFails',
+    (tester) async {
+      server.wellbeingConsent = true;
+      server.failFeelSave = true;
+      await open(tester);
+      await showFeel(tester);
+
+      await tester.tap(find.byKey(const Key('ride-feel-7')));
+      await tester.pumpAndSettle();
+
+      expect(server.feelSaves, hasLength(1));
+      expect(
+        tester
+            .widget<ChoiceChip>(find.byKey(const Key('ride-feel-7')))
+            .selected,
+        isTrue,
+      );
+      expect(markOpacity(tester), 0);
+
+      // The typing stays on screen, and a failed save shows no mark.
+      await tester.enterText(
+        find.byKey(const Key('ride-feel-notes')),
+        'Felt strong',
+      );
+      await leaveNotes(tester);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('ride-feel-notes')),
+          matching: find.text('Felt strong'),
+        ),
+        findsOneWidget,
+      );
+      expect(server.feelSaves.last, {'rpe': 7, 'notes': 'Felt strong'});
+      expect(markOpacity(tester), 0);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowOnlyTheConsentPrompt_WhenConsentIsMissing',
+    (tester) async {
+      await open(tester);
+      await showFeel(tester);
+
+      expect(
+        find.text('Set up wellbeing in Progress to add how a ride felt.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('ride-feel-7')), findsNothing);
+      expect(server.feelSaves, isEmpty);
+    },
+  );
 
   testWidgets(
     'RideDetailScreen_ShouldPromptForDetails_WhenTheRideHasNoDimensions',

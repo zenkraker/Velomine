@@ -292,8 +292,6 @@ void main() {
     expect(server.adminSettings['clubCreationEnabled'], isFalse);
     await tester.ensureVisible(find.byKey(const Key('setting-club-creation')));
     await tester.tap(find.byKey(const Key('setting-club-creation')));
-    await tester.ensureVisible(find.byKey(const Key('setting-save')));
-    await tester.tap(find.byKey(const Key('setting-save')));
     await tester.pumpAndSettle();
 
     expect(server.adminSettings['clubCreationEnabled'], isTrue);

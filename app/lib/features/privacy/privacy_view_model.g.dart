@@ -47,7 +47,7 @@ final class PrivacyViewModelProvider
   }
 }
 
-String _$privacyViewModelHash() => r'04ffed3407ced1eef4cb1c37d23325bd5ec71d7b';
+String _$privacyViewModelHash() => r'adc5c82b92a1d90cbe60ff2f528cfb4a1fd6a71a';
 
 /// The member's privacy choices. Route-scoped, so leaving the screen drops
 /// them; a sign-out or account change rebuilds it empty.

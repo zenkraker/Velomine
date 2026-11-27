@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
-import '../../core/command.dart';
 import '../../core/failure.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
@@ -203,6 +202,9 @@ class AdminClubsViewModel extends _$AdminClubsViewModel {
 class AdminSettingsViewModel extends _$AdminSettingsViewModel {
   int _messageId = 0;
 
+  /// The saves the switches queue, one after another, so each reads the switches as they are when its turn comes.
+  Future<bool> _saves = Future.value(false);
+
   @override
   AdminSettingsState build() {
     if (ref.watch(signedInUserIdProvider) == null) {
@@ -239,23 +241,34 @@ class AdminSettingsViewModel extends _$AdminSettingsViewModel {
     };
   }
 
-  void setSignUpEnabled(bool value) => state = state.copyWith(
-    signUpEnabled: value,
-    save: const CommandState.idle(),
-  );
+  /// Each switch saves the moment it changes; it resolves to whether the save went through.
+  Future<bool> setSignUpEnabled(bool value) {
+    state = state.copyWith(signUpEnabled: value);
+    return _queueSave();
+  }
 
-  void setRequireAdminApproval(bool value) => state = state.copyWith(
-    requireAdminApproval: value,
-    save: const CommandState.idle(),
-  );
+  Future<bool> setRequireAdminApproval(bool value) {
+    state = state.copyWith(requireAdminApproval: value);
+    return _queueSave();
+  }
 
-  void setClubCreationEnabled(bool value) => state = state.copyWith(
-    clubCreationEnabled: value,
-    save: const CommandState.idle(),
-  );
+  Future<bool> setClubCreationEnabled(bool value) {
+    state = state.copyWith(clubCreationEnabled: value);
+    return _queueSave();
+  }
 
-  Future<bool> saveSettings() async {
-    if (state.save.running) return false;
+  Future<bool> _queueSave() => _saves = _saves.then((_) => _saveChanged());
+
+  /// Sends the settings when a switch differs from what the server holds, with the other switches kept as they are.
+  /// A failed save puts the switches back to the saved values and shows the error.
+  Future<bool> _saveChanged() async {
+    final saved = state.settings;
+    if (saved == null) return false;
+    if (state.signUpEnabled == saved.signUpEnabled &&
+        state.requireAdminApproval == saved.requireAdminApproval &&
+        state.clubCreationEnabled == saved.clubCreationEnabled) {
+      return false;
+    }
     state = state.copyWith(save: state.save.start());
     final result = await ref
         .read(adminDataProvider)
@@ -275,7 +288,12 @@ class AdminSettingsViewModel extends _$AdminSettingsViewModel {
       );
       return true;
     }
-    state = state.copyWith(save: state.save.finish(result));
+    state = state.copyWith(
+      save: state.save.finish(result),
+      signUpEnabled: saved.signUpEnabled,
+      requireAdminApproval: saved.requireAdminApproval,
+      clubCreationEnabled: saved.clubCreationEnabled,
+    );
     if (result case Failed(:final failure)) _fail(failure);
     return false;
   }

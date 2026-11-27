@@ -1,8 +1,9 @@
-import 'dart:async' show scheduleMicrotask;
+import 'dart:async' show Timer, scheduleMicrotask;
 
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
+import '../../core/widgets/saved_mark.dart';
 import '../../core/widgets/inline_error.dart';
 
 import 'package:material_ui/material_ui.dart';
@@ -71,6 +72,9 @@ String weekDayName(AppLocalizations l10n, String day) => switch (day) {
 
 enum _ProfileProblem { name, ftp, weight, birthYear, heartRate }
 
+/// The athlete fields that save themselves when the rider leaves them or presses done.
+enum _AthleteField { name, ftp, weight, birthYear }
+
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({
     super.key,
@@ -125,9 +129,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _emailTraining = false;
   _ProfileProblem? _problem;
 
-  /// Whether the last save came from the Preferences card, so its answer is shown there and not under the
-  /// athlete fields it never touched.
+  /// Whether the last save came from the Preferences card or its notification switches, so its answer is shown
+  /// there and not under the athlete fields it never touched.
   bool _preferenceSave = false;
+
+  /// Whether a field is saving itself. The screen keeps the text the rider is typing while it is true.
+  bool _saving = false;
+
+  /// How long the "Saved." mark stays after a save that went through.
+  static const _savedFor = Duration(seconds: 2);
+
+  /// Whether the "Saved." mark shows, and the timer that hides it again.
+  bool _savedShown = false;
+  Timer? _savedTimer;
+
+  final _nameFocus = FocusNode();
+  final _ftpFocus = FocusNode();
+  final _weightFocus = FocusNode();
+  final _birthYearFocus = FocusNode();
+  final _maxHrFocus = FocusNode();
+  final _thresholdHrFocus = FocusNode();
+
+  /// Field saves run one after another, so a field left during another's save is sent after it, not dropped.
+  Future<void> _fieldSaves = Future.value();
+
+  /// The text of each field save not yet done, so the same text is never queued twice, and how many are not yet done.
+  final _queuedText = <TextEditingController, String>{};
+  int _pendingSaves = 0;
+
+  /// Read through this, not `ref`, because a queued save can run after the State is disposed.
+  late final ProviderContainer _container;
 
   /// The time zone the account holds. Null when it holds none.
   String? _zone;
@@ -148,15 +179,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _container = ProviderScope.containerOf(context, listen: false);
     _zoneFocus.addListener(() {
       if (!_zoneFocus.hasFocus && mounted) _settleZone();
+    });
+    _nameFocus.addListener(() => _leaveSaves(_nameFocus, _AthleteField.name));
+    _ftpFocus.addListener(() => _leaveSaves(_ftpFocus, _AthleteField.ftp));
+    _weightFocus.addListener(
+      () => _leaveSaves(_weightFocus, _AthleteField.weight),
+    );
+    _birthYearFocus.addListener(
+      () => _leaveSaves(_birthYearFocus, _AthleteField.birthYear),
+    );
+    _maxHrFocus.addListener(() {
+      if (!_maxHrFocus.hasFocus && mounted) _commitHeartRate('max');
+    });
+    _thresholdHrFocus.addListener(() {
+      if (!_thresholdHrFocus.hasFocus && mounted) _commitHeartRate('threshold');
     });
     _profileSub = ref.listenManual(profileViewModelProvider, (_, next) {
       final profile = next.profile;
       if (profile == null) return;
-      // A preference saving itself must not rewrite the athlete fields the rider is still typing in.
-      if (_preferenceSave) return;
-      _fill(profile);
+      // A field saving itself must not rewrite the fields the rider is still typing in.
+      if (!_preferenceSave && !_saving) _fill(profile);
       _readFtpSourceRide(profile);
       _readHeartRateRides(profile);
     }, fireImmediately: true);
@@ -206,7 +251,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   /// The weight the member types, in the units on screen.
-  Units get _units => ref.read(unitsChoiceViewModelProvider);
+  Units get _units => _container.read(unitsChoiceViewModelProvider);
 
   String _weightText(double? kg) => kg == null
       ? ''
@@ -248,6 +293,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
+    _savedTimer?.cancel();
+    // Only the field still being typed in can hold a value nobody has saved: the others were saved when they were
+    // left. Its save takes the text now, so it still sends once the State is gone.
+    if (_nameFocus.hasFocus) _commitAthlete(_AthleteField.name);
+    if (_ftpFocus.hasFocus) _commitAthlete(_AthleteField.ftp);
+    if (_weightFocus.hasFocus) _commitAthlete(_AthleteField.weight);
+    if (_birthYearFocus.hasFocus) _commitAthlete(_AthleteField.birthYear);
+    if (_maxHrFocus.hasFocus) _commitHeartRate('max');
+    if (_thresholdHrFocus.hasFocus) _commitHeartRate('threshold');
     _profileSub.close();
     for (final c in [
       _name,
@@ -259,6 +313,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _zoneText,
     ]) {
       c.dispose();
+    }
+    for (final f in [
+      _nameFocus,
+      _ftpFocus,
+      _weightFocus,
+      _birthYearFocus,
+      _maxHrFocus,
+      _thresholdHrFocus,
+    ]) {
+      f.dispose();
     }
     _zoneFocus.dispose();
     super.dispose();
@@ -332,78 +396,186 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (deleted) widget.onAccountDeleted();
   }
 
-  Future<void> _save() async {
-    final ftp = _read(_ftp.text, 30, 1000);
-    // The range is the server's, in kilograms, whichever unit was typed. Round to
-    // the grams the field holds, so 44 lb is exactly the 20 kg the server accepts.
-    final typedWeight = double.tryParse(
-      _weight.text.trim().replaceAll(',', '.'),
-    );
-    final weightKg = typedWeight == null ? null : _weightKg(typedWeight);
-    final weight = (
-      weightKg == null || (weightKg.round() >= 20 && weightKg.round() <= 300),
-      typedWeight,
-    );
-    final birthYear = _read(_birthYear.text, 1900, DateTime.now().year - 10);
-    final problem = _name.text.trim().isEmpty
-        ? _ProfileProblem.name
-        : !ftp.$1
-        ? _ProfileProblem.ftp
-        : !weight.$1
-        ? _ProfileProblem.weight
-        : !birthYear.$1
-        ? _ProfileProblem.birthYear
-        : null;
-    setState(() {
-      _problem = problem;
-      _preferenceSave = false;
-    });
-    if (problem != null) return;
-
-    // The Preferences card saves its own choices, so this one keeps what the account already holds.
-    final profile = ref.read(profileViewModelProvider).profile;
-    final ok = await ref
-        .read(profileViewModelProvider.notifier)
-        .save(
-          UpdateProfileRequest(
-            displayName: _name.text.trim(),
-            ftpW: ftp.$2?.toInt(),
-            weightKg: _weightKg(weight.$2?.toDouble()),
-            birthYear: birthYear.$2?.toInt(),
-            timeZone: profile?.timeZone,
-            firstDayOfWeek: profile?.firstDayOfWeek ?? _firstDay,
-            emailNotifications: Optional.present(_email),
-            emailAccountNotifications: Optional.present(_emailAccount),
-            emailTrainingNotifications: Optional.present(_emailTraining),
-          ),
-        );
-    if (!mounted) return;
-    if (ok) setState(() {});
+  /// A focus change that leaves an athlete field saves it.
+  void _leaveSaves(FocusNode node, _AthleteField field) {
+    if (!node.hasFocus && mounted) _commitAthlete(field);
   }
 
-  /// Saves one preference the moment it is chosen, as the design draws the Preferences card: no Save of its
-  /// own. The other fields keep the values the account holds, so nothing else is written.
+  /// Saves one athlete field when the rider leaves it or presses done. Only that field is checked and sent; the
+  /// others keep the values the account holds. Nothing is sent for a value the account already holds.
+  void _commitAthlete(_AthleteField field) {
+    final controller = switch (field) {
+      _AthleteField.name => _name,
+      _AthleteField.ftp => _ftp,
+      _AthleteField.weight => _weight,
+      _AthleteField.birthYear => _birthYear,
+    };
+    _queueSave(controller, (text) => _saveAthleteField(field, text));
+  }
+
+  /// Saves a heart-rate field when the rider leaves it or presses done, within the server's range for it.
+  void _commitHeartRate(String kind) {
+    final isMax = kind == 'max';
+    final (min, max) = isMax ? (120, 230) : (90, 220);
+    _queueSave(
+      isMax ? _maxHr : _thresholdHr,
+      (text) => _saveHeartRate(kind, text, min, max),
+    );
+  }
+
+  /// Queues one field's save with the text the field holds now. The text is taken here, not when the save runs, so
+  /// a save that runs after the screen is gone still sends what was typed. The same text is never queued twice.
+  void _queueSave(
+    TextEditingController controller,
+    Future<void> Function(String text) save,
+  ) {
+    final text = controller.text;
+    if (_queuedText[controller] == text) return;
+    _queuedText[controller] = text;
+    Future<void> run() async {
+      try {
+        await save(text);
+      } finally {
+        _pendingSaves--;
+        if (_queuedText[controller] == text) _queuedText.remove(controller);
+      }
+    }
+
+    // Idle, the save starts now, so the request is out before the screen is gone; busy, it waits its turn.
+    _pendingSaves++;
+    _fieldSaves = _pendingSaves == 1 ? run() : _fieldSaves.then((_) => run());
+  }
+
+  /// Only the field that was left is read; the others are sent as the account holds them. It may run after the
+  /// screen is disposed, so it touches the widget only while mounted.
+  Future<void> _saveAthleteField(_AthleteField field, String text) async {
+    final profile = _container.read(profileViewModelProvider).profile;
+    if (profile == null) return;
+    final name = text.trim();
+    final ftp = _read(text, 30, 1000);
+    final birthYear = _read(text, 1900, DateTime.now().year - 10);
+    // The range is the server's, in kilograms, whichever unit was typed. Round to the grams the field holds, so
+    // 44 lb is exactly the 20 kg the server accepts.
+    final typedWeight = double.tryParse(text.trim().replaceAll(',', '.'));
+    final weightKg = typedWeight == null ? null : _weightKg(typedWeight);
+    final weightOk =
+        weightKg == null || (weightKg.round() >= 20 && weightKg.round() <= 300);
+    // Weight is compared at the one decimal the field shows, so a value typed back in another unit is not resent.
+    final (valid, changed) = switch (field) {
+      _AthleteField.name => (name.isNotEmpty, name != profile.displayName),
+      _AthleteField.ftp => (ftp.$1, ftp.$2?.toInt() != profile.ftpW),
+      _AthleteField.weight => (
+        weightOk,
+        weightKg?.toStringAsFixed(1) != profile.weightKg?.toStringAsFixed(1),
+      ),
+      _AthleteField.birthYear => (
+        birthYear.$1,
+        birthYear.$2?.toInt() != profile.birthYear,
+      ),
+    };
+    final problem = _ProfileProblem.values.byName(field.name);
+    if (!valid) {
+      if (mounted) setState(() => _problem = problem);
+      return;
+    }
+    if (_problem == problem && mounted) setState(() => _problem = null);
+    if (!changed) return;
+
+    _showSaved(
+      await _holdFields(
+        () => _container
+            .read(profileViewModelProvider.notifier)
+            .save(
+              UpdateProfileRequest(
+                displayName: field == _AthleteField.name
+                    ? name
+                    : profile.displayName,
+                ftpW: field == _AthleteField.ftp
+                    ? ftp.$2?.toInt()
+                    : profile.ftpW,
+                weightKg: field == _AthleteField.weight
+                    ? weightKg
+                    : profile.weightKg,
+                birthYear: field == _AthleteField.birthYear
+                    ? birthYear.$2?.toInt()
+                    : profile.birthYear,
+                timeZone: profile.timeZone,
+                firstDayOfWeek: profile.firstDayOfWeek,
+              ),
+            ),
+      ),
+    );
+  }
+
+  /// Runs one save that the rider's own typing caused, with the fields kept as they are until it is done. Whether
+  /// it went through comes back.
+  Future<bool> _holdFields(Future<bool> Function() save) async {
+    if (mounted) setState(() => _saving = true);
+    try {
+      return await save();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  /// Shows the "Saved." mark for [_savedFor] after a save that went through. A failed save hides it; a save that
+  /// sent nothing (unchanged or refused) leaves it as it is.
+  void _showSaved(bool saved) {
+    if (!mounted) return;
+    final vm = ref.read(profileViewModelProvider);
+    final failed = vm.save.failure != null || vm.heartRate.failure != null;
+    if (!saved && !failed) return;
+    _savedTimer?.cancel();
+    setState(() => _savedShown = saved);
+    if (saved) {
+      _savedTimer = Timer(_savedFor, () {
+        if (mounted) setState(() => _savedShown = false);
+      });
+    }
+  }
+
+  /// Saves one preference the moment it is chosen, as the design draws the Preferences card. The other fields keep
+  /// the values the account holds, so nothing else is written unless the notification switches changed.
   Future<void> _savePreference({
     String? timeZone,
     String? firstDayOfWeek,
+    bool notifications = false,
   }) async {
     final profile = ref.read(profileViewModelProvider).profile;
     if (profile == null) return;
     final zone = (timeZone ?? profile.timeZone)?.trim();
-    // The card keeps the answer: the athlete Save's own "Saved" line belongs to the Athlete card.
     setState(() => _preferenceSave = true);
-    await ref
-        .read(profileViewModelProvider.notifier)
-        .save(
-          UpdateProfileRequest(
-            displayName: profile.displayName,
-            ftpW: profile.ftpW,
-            weightKg: profile.weightKg,
-            birthYear: profile.birthYear,
-            timeZone: zone == null || zone.isEmpty ? null : zone,
-            firstDayOfWeek: firstDayOfWeek ?? profile.firstDayOfWeek,
-          ),
-        );
+    _showSaved(
+      await _holdFields(
+        () => ref
+            .read(profileViewModelProvider.notifier)
+            .save(
+              UpdateProfileRequest(
+                displayName: profile.displayName,
+                ftpW: profile.ftpW,
+                weightKg: profile.weightKg,
+                birthYear: profile.birthYear,
+                timeZone: zone == null || zone.isEmpty ? null : zone,
+                firstDayOfWeek: firstDayOfWeek ?? profile.firstDayOfWeek,
+                emailNotifications: notifications
+                    ? Optional.present(_email)
+                    : const Optional.absent(),
+                emailAccountNotifications: notifications
+                    ? Optional.present(_emailAccount)
+                    : const Optional.absent(),
+                emailTrainingNotifications: notifications
+                    ? Optional.present(_emailTraining)
+                    : const Optional.absent(),
+              ),
+            ),
+      ),
+    );
+  }
+
+  /// Turns one notification switch and saves it at once, as the Preferences card does.
+  void _toggleNotification(VoidCallback change) {
+    setState(change);
+    _savePreference(notifications: true);
   }
 
   /// Saves one heart-rate number as soon as its field is done. The range is the server's, so a number outside it never
@@ -416,13 +588,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   ) async {
     final typed = int.tryParse(text.trim());
     if (typed != null && (typed < min || typed > max)) {
-      setState(() => _problem = _ProfileProblem.heartRate);
+      if (mounted) setState(() => _problem = _ProfileProblem.heartRate);
       return;
     }
-    setState(() => _problem = null);
-    await ref
-        .read(profileViewModelProvider.notifier)
-        .commitHeartRate(kind, text);
+    if (mounted) setState(() => _problem = null);
+    _showSaved(
+      await _holdFields(
+        () => _container
+            .read(profileViewModelProvider.notifier)
+            .commitHeartRate(kind, text),
+      ),
+    );
   }
 
   Future<void> _setTelemetry({required bool crash, required bool usage}) async {
@@ -484,10 +660,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String? helper,
     String? hint,
     bool decimals = false,
+    FocusNode? focusNode,
     ValueChanged<String>? onDone,
   }) => AppTextField(
     fieldKey: Key(key),
     controller: c,
+    focusNode: focusNode,
     hint: hint,
     keyboardType: TextInputType.numberWithOptions(decimal: decimals),
     inputFormatters: [
@@ -583,7 +761,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             AppTextField(
               fieldKey: const Key('profile-name'),
               controller: _name,
+              focusNode: _nameFocus,
               label: l10n.name,
+              textInputAction: TextInputAction.done,
+              onDone: (_) => _commitAthlete(_AthleteField.name),
             ),
             _number(
               'profile-birth-year',
@@ -591,11 +772,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               l10n.birthYear,
               '',
               helper: l10n.birthYearHelper,
+              focusNode: _birthYearFocus,
+              onDone: (_) => _commitAthlete(_AthleteField.birthYear),
             ),
           ),
           _FieldPair(
             _cell(
-              _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
+              _number(
+                'profile-ftp',
+                _ftp,
+                'FTP',
+                'W',
+                helper: l10n.ftpHelper,
+                focusNode: _ftpFocus,
+                onDone: (_) => _commitAthlete(_AthleteField.ftp),
+              ),
               ftpNote == null
                   ? null
                   : SourceNote(ftpNote, key: const Key('profile-ftp-source')),
@@ -613,6 +804,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         (s.profile?.hasRidesWithoutPower.orElse(false) ?? false)
                     ? l10n.profileWeightEstimateHint
                     : null,
+                focusNode: _weightFocus,
+                onDone: (_) => _commitAthlete(_AthleteField.weight),
               ),
             ),
           ),
@@ -628,7 +821,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   s.profile?.maxHeartRate,
                   s.profile?.maxHeartRateSource.orElse(null),
                 ),
-                onDone: (text) => _saveHeartRate('max', text, 120, 230),
+                focusNode: _maxHrFocus,
+                onDone: (_) => _commitHeartRate('max'),
               ),
               maxHrNote == null
                   ? null
@@ -652,7 +846,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   s.profile?.thresholdHeartRate.orElse(null),
                   s.profile?.thresholdHeartRateSource.orElse(null),
                 ),
-                onDone: (text) => _saveHeartRate('threshold', text, 90, 220),
+                focusNode: _thresholdHrFocus,
+                onDone: (_) => _commitHeartRate('threshold'),
               ),
               thresholdHrNote == null
                   ? null
@@ -680,16 +875,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : null))
               case final message?)
             InlineError(message, key: const Key('profile-error')),
-          if (s.save.completed && !_preferenceSave)
-            Text(l10n.saved, key: const Key('profile-saved')),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              key: const Key('profile-save'),
-              onPressed: s.save.running ? null : _save,
-              child: Text(l10n.save),
-            ),
-          ),
+          SavedMark(key: const Key('profile-saved'), visible: _savedShown),
         ],
       ),
       // The zones in use, from the numbers above: a list, with their limits editable and back to automatic.
@@ -870,7 +1056,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   : l10n.emailUnavailableHelp,
             ),
             onChanged: widget.emailAvailable
-                ? (v) => setState(() => _email = v)
+                ? (v) => _toggleNotification(() => _email = v)
                 : null,
           ),
           SwitchListTile(
@@ -880,7 +1066,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: Text(l10n.emailAccountNotifications),
             subtitle: Text(l10n.emailAccountNotificationsHelp),
             onChanged: _email && widget.emailAvailable
-                ? (v) => setState(() => _emailAccount = v)
+                ? (v) => _toggleNotification(() => _emailAccount = v)
                 : null,
           ),
           SwitchListTile(
@@ -890,7 +1076,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: Text(l10n.emailTrainingNotifications),
             subtitle: Text(l10n.emailTrainingNotificationsHelp),
             onChanged: _email && widget.emailAvailable
-                ? (v) => setState(() => _emailTraining = v)
+                ? (v) => _toggleNotification(() => _emailTraining = v)
                 : null,
           ),
         ],

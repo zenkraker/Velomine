@@ -1268,12 +1268,6 @@ abstract class AppLocalizations {
   /// **'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.'**
   String get clubNoneBody;
 
-  /// No description provided for @clubNoneTitleShort.
-  ///
-  /// In en, this message translates to:
-  /// **'Your club'**
-  String get clubNoneTitleShort;
-
   /// No description provided for @clubNoneSubtitle.
   ///
   /// In en, this message translates to:
@@ -1442,18 +1436,6 @@ abstract class AppLocalizations {
   /// **'Routes'**
   String get shareRoutes;
 
-  /// No description provided for @audienceNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Nobody'**
-  String get audienceNone;
-
-  /// No description provided for @audienceCoaches.
-  ///
-  /// In en, this message translates to:
-  /// **'My coaches'**
-  String get audienceCoaches;
-
   /// No description provided for @routesNeedRides.
   ///
   /// In en, this message translates to:
@@ -1621,12 +1603,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Athletes'**
   String get athletesTitle;
-
-  /// No description provided for @coachViewAthletes.
-  ///
-  /// In en, this message translates to:
-  /// **'View athletes'**
-  String get coachViewAthletes;
 
   /// No description provided for @athletesSubtitle.
   ///
@@ -1945,18 +1921,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose files'**
   String get bulkChooseFiles;
-
-  /// No description provided for @zwiftTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'From Zwift'**
-  String get zwiftTitle;
-
-  /// No description provided for @zwiftHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Zwift keeps every ride as a FIT file in Documents/Zwift/Activities. Choose that folder to bring them all in.'**
-  String get zwiftHint;
 
   /// No description provided for @bulkDropTitle.
   ///
@@ -2677,12 +2641,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No parts yet. Add the chain, tyres or brake pads to see how worn they are.'**
   String get noParts;
-
-  /// No description provided for @replacedParts.
-  ///
-  /// In en, this message translates to:
-  /// **'Replaced parts'**
-  String get replacedParts;
 
   /// No description provided for @wearReplace.
   ///
@@ -5138,42 +5096,6 @@ abstract class AppLocalizations {
   /// **'Sleep'**
   String get wellbeingSleep;
 
-  /// No description provided for @wellbeingShortFatigue.
-  ///
-  /// In en, this message translates to:
-  /// **'Fat'**
-  String get wellbeingShortFatigue;
-
-  /// No description provided for @wellbeingShortSoreness.
-  ///
-  /// In en, this message translates to:
-  /// **'Sor'**
-  String get wellbeingShortSoreness;
-
-  /// No description provided for @wellbeingShortMood.
-  ///
-  /// In en, this message translates to:
-  /// **'Mood'**
-  String get wellbeingShortMood;
-
-  /// No description provided for @wellbeingShortStress.
-  ///
-  /// In en, this message translates to:
-  /// **'Str'**
-  String get wellbeingShortStress;
-
-  /// No description provided for @wellbeingShortMotivation.
-  ///
-  /// In en, this message translates to:
-  /// **'Mot'**
-  String get wellbeingShortMotivation;
-
-  /// No description provided for @wellbeingShortSleep.
-  ///
-  /// In en, this message translates to:
-  /// **'Slp'**
-  String get wellbeingShortSleep;
-
   /// No description provided for @wellbeingHistory14.
   ///
   /// In en, this message translates to:
@@ -5198,12 +5120,6 @@ abstract class AppLocalizations {
   /// **'No check-in today. Your readiness is measured from your rides alone.'**
   String get wellbeingNoToday;
 
-  /// No description provided for @wellbeingPrivate.
-  ///
-  /// In en, this message translates to:
-  /// **'Only you see this. Readiness and notes never reach a coach.'**
-  String get wellbeingPrivate;
-
   /// No description provided for @wellbeingRpe.
   ///
   /// In en, this message translates to:
@@ -5221,12 +5137,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notes (optional)'**
   String get wellbeingNotes;
-
-  /// No description provided for @wellbeingRpeSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get wellbeingRpeSave;
 
   /// No description provided for @wellbeingRpeSaved.
   ///
@@ -5762,12 +5672,6 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get rideTextDescription;
 
-  /// No description provided for @rideTextAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a description'**
-  String get rideTextAdd;
-
   /// No description provided for @actionSaveRideDetails.
   ///
   /// In en, this message translates to:
@@ -6205,12 +6109,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Where the club meets. Only used to show the club to riders nearby.'**
   String get clubLocationHelp;
-
-  /// No description provided for @clubLocationOnMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Shown on the map'**
-  String get clubLocationOnMap;
 
   /// No description provided for @clubLocationNone.
   ///
@@ -8258,12 +8156,6 @@ abstract class AppLocalizations {
   /// **'This server does not accept supporter licences.'**
   String get supporterUnavailable;
 
-  /// No description provided for @supporterActivated.
-  ///
-  /// In en, this message translates to:
-  /// **'Licence activated'**
-  String get supporterActivated;
-
   /// No description provided for @supporterThanksName.
   ///
   /// In en, this message translates to:
@@ -8281,12 +8173,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Supporter no. {serial} · {date}'**
   String supporterSerialNumber(int serial, String date);
-
-  /// No description provided for @supporterKeyVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Key verified'**
-  String get supporterKeyVerified;
 
   /// No description provided for @supporterReplayLink.
   ///
@@ -8311,12 +8197,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Supporter'**
   String get supporter;
-
-  /// No description provided for @supporterAppearsOnProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'appears on your profile'**
-  String get supporterAppearsOnProfile;
 
   /// No description provided for @supporterHideBadge.
   ///
@@ -8990,12 +8870,6 @@ abstract class AppLocalizations {
   /// **'{name} · {date}'**
   String goalNextEvent(String name, String date);
 
-  /// No description provided for @goalAddEvent.
-  ///
-  /// In en, this message translates to:
-  /// **'Add an event'**
-  String get goalAddEvent;
-
   /// No description provided for @trainingDaysLabel.
   ///
   /// In en, this message translates to:
@@ -9661,24 +9535,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Building'**
   String get formStateBuilding;
-
-  /// No description provided for @totalsTableWeekly.
-  ///
-  /// In en, this message translates to:
-  /// **'Week by week'**
-  String get totalsTableWeekly;
-
-  /// No description provided for @totalsTableMonthly.
-  ///
-  /// In en, this message translates to:
-  /// **'Month by month'**
-  String get totalsTableMonthly;
-
-  /// No description provided for @totalsTableYearly.
-  ///
-  /// In en, this message translates to:
-  /// **'Year by year'**
-  String get totalsTableYearly;
 
   /// No description provided for @totalsColumnWeek.
   ///

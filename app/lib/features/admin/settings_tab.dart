@@ -1,3 +1,5 @@
+import 'dart:async' show Timer;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,38 +9,55 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/more_details.dart';
+import '../../core/widgets/saved_mark.dart';
 import '../../core/widgets/section_card.dart';
 
-/// The settings area's one action: the page pins it under the content ([PageScaffold.bottomAction]).
-class AdminSettingsSave extends ConsumerWidget {
-  const AdminSettingsSave({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(adminSettingsViewModelProvider);
-    // Nothing to save until the settings have arrived; the tab shows why meanwhile.
-    if (s.settings == null) return const SizedBox.shrink();
-    return BottomActionBar.button(
-      buttonKey: const Key('setting-save'),
-      label: context.l10n.save,
-      busy: s.save.running,
-      onPressed: () =>
-          ref.read(adminSettingsViewModelProvider.notifier).saveSettings(),
-    );
-  }
-}
-
-/// The settings an admin can change, and (read-only) what only the server's environment sets.
-class SettingsTab extends ConsumerWidget {
+/// The settings an admin can change, and (read-only) what only the server's environment sets. Each switch saves
+/// the moment it changes.
+class SettingsTab extends ConsumerStatefulWidget {
   const SettingsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsTab> createState() => _SettingsTabState();
+}
+
+class _SettingsTabState extends ConsumerState<SettingsTab> {
+  /// How long the "Saved." mark stays after a save that went through.
+  static const _savedFor = Duration(seconds: 2);
+
+  /// Whether the "Saved." mark shows, and the timer that hides it again.
+  bool _savedShown = false;
+  Timer? _savedTimer;
+
+  @override
+  void dispose() {
+    _savedTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Shows the mark when a switch's save went through. A failed save hides it; a change that sent nothing leaves it
+  /// as it is.
+  Future<void> _showSaved(Future<bool> save) async {
+    final saved = await save;
+    if (!mounted) return;
+    final failed =
+        ref.read(adminSettingsViewModelProvider).save.failure != null;
+    if (!saved && !failed) return;
+    _savedTimer?.cancel();
+    setState(() => _savedShown = saved);
+    if (saved) {
+      _savedTimer = Timer(_savedFor, () {
+        if (mounted) setState(() => _savedShown = false);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final s = ref.watch(adminSettingsViewModelProvider);
     final l10n = context.l10n;
     final settings = s.settings;
@@ -87,18 +106,22 @@ class SettingsTab extends ConsumerWidget {
                       contentPadding: EdgeInsets.zero,
                       value: s.signUpEnabled,
                       title: Text(l10n.peopleCanCreate),
-                      onChanged: (v) => ref
-                          .read(adminSettingsViewModelProvider.notifier)
-                          .setSignUpEnabled(v),
+                      onChanged: (v) => _showSaved(
+                        ref
+                            .read(adminSettingsViewModelProvider.notifier)
+                            .setSignUpEnabled(v),
+                      ),
                     ),
                     SwitchListTile(
                       key: const Key('setting-approval'),
                       contentPadding: EdgeInsets.zero,
                       value: s.requireAdminApproval,
                       title: Text(l10n.newAccountsApproval),
-                      onChanged: (v) => ref
-                          .read(adminSettingsViewModelProvider.notifier)
-                          .setRequireAdminApproval(v),
+                      onChanged: (v) => _showSaved(
+                        ref
+                            .read(adminSettingsViewModelProvider.notifier)
+                            .setRequireAdminApproval(v),
+                      ),
                     ),
                     SwitchListTile(
                       key: const Key('setting-club-creation'),
@@ -106,17 +129,21 @@ class SettingsTab extends ConsumerWidget {
                       value: s.clubCreationEnabled,
                       title: Text(l10n.adminClubCreation),
                       subtitle: Text(l10n.adminClubCreationHelp),
-                      onChanged: (v) => ref
-                          .read(adminSettingsViewModelProvider.notifier)
-                          .setClubCreationEnabled(v),
+                      onChanged: (v) => _showSaved(
+                        ref
+                            .read(adminSettingsViewModelProvider.notifier)
+                            .setClubCreationEnabled(v),
+                      ),
                     ),
                     if (s.load.failure case final failure?)
                       InlineError(
                         failureText(l10n, failure),
                         key: const Key('settings-error'),
                       ),
-                    if (s.save.completed)
-                      Text(l10n.saved, key: const Key('settings-saved')),
+                    SavedMark(
+                      key: const Key('settings-saved'),
+                      visible: _savedShown,
+                    ),
                   ],
                 ),
                 SectionCard(

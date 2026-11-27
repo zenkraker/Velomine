@@ -2,9 +2,25 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine/core/widgets/bottom_action_bar.dart';
+import 'package:velomine/core/widgets/saved_mark.dart';
 import 'package:velomine/core/widgets/section_card.dart';
 
 import 'fake_server.dart';
+
+bool savedMarkVisible(WidgetTester tester) =>
+    tester.widget<SavedMark>(find.byKey(const Key('privacy-saved'))).visible;
+
+/// Leaves whatever field has the focus, the way a rider taps away from it.
+Future<void> leaveField(WidgetTester tester) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
+}
+
+/// Goes back from the privacy screen with a field still focused, the way the back action pops the route.
+void popPrivacy(WidgetTester tester) {
+  Navigator.of(tester.element(find.byKey(const Key('privacy-trim-start'))))
+      .pop();
+}
 
 void main() {
   late FakeServer server;
@@ -30,21 +46,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('PrivacyScreen_ShouldKeepSaveInTheBottomBar_WhenItOpens', (
+  testWidgets('PrivacyScreen_ShouldHaveNoSaveButton_WhenItOpens', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', clubRole: null);
     server.signInBrowser(rider);
     await openPrivacy(tester);
 
-    // One save for both cards, pinned under the content instead of inside the first card.
-    expect(
-      find.descendant(
-        of: find.byType(BottomActionBar),
-        matching: find.byKey(const Key('privacy-save')),
-      ),
-      findsOneWidget,
-    );
+    // Each trim saves when its field is left, so there is no bottom save bar.
+    expect(find.byType(BottomActionBar), findsNothing);
+    expect(find.byKey(const Key('privacy-save')), findsNothing);
   });
 
   testWidgets('PrivacyScreen_ShouldDrawBothGroupsAsCards_WhenItOpens', (
@@ -108,21 +119,180 @@ void main() {
     expect(find.byKey(const Key('privacy-add-zone')), findsOneWidget);
   });
 
-  testWidgets('PrivacyScreen_ShouldSaveTheTrimWithoutTheSwitches_WhenSaved', (
+  testWidgets(
+    'PrivacyScreen_ShouldSaveTheTrimAndShowTheMark_WhenTheMemberLeavesTheField',
+    (tester) async {
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      await openPrivacy(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('privacy-trim-start')),
+        '500',
+      );
+      await leaveField(tester);
+
+      expect(server.privacyTrimStartM, 500);
+      expect(server.privacyStreams['hidePower'], isFalse);
+      expect(savedMarkVisible(tester), isTrue);
+      expect(find.text('Saved.'), findsOneWidget);
+
+      // The mark goes on its own once the two seconds have passed.
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(savedMarkVisible(tester), isFalse);
+    },
+  );
+
+  testWidgets('PrivacyScreen_ShouldSaveOnDone_WhenTheMemberPressesDone', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', clubRole: null);
     server.signInBrowser(rider);
     await openPrivacy(tester);
 
+    await tester.enterText(find.byKey(const Key('privacy-trim-end')), '300');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(server.privacyTrimEndM, 300);
+    expect(savedMarkVisible(tester), isTrue);
+  });
+
+  testWidgets('PrivacyScreen_ShouldSendNothing_WhenTheFieldIsUnchanged', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+
+    await tester.tap(find.byKey(const Key('privacy-trim-start')));
+    await leaveField(tester);
+
+    expect(server.requests, isNot(contains('PUT /api/v1/privacy/settings')));
+    expect(savedMarkVisible(tester), isFalse);
+  });
+
+  testWidgets(
+    'PrivacyScreen_ShouldNotResendTheRoundedTrim_WhenUnitsAreImperial',
+    (tester) async {
+      final rider = server.add(
+        'rider@example.com',
+        clubRole: null,
+        units: 'imperial',
+      );
+      server.signInBrowser(rider);
+      // 500 m is shown as 0.3 mi; leaving that field must not write 483 m instead.
+      server.privacyTrimStartM = 500;
+      await openPrivacy(tester);
+
+      await tester.tap(find.byKey(const Key('privacy-trim-start')));
+      await leaveField(tester);
+
+      expect(server.requests, isNot(contains('PUT /api/v1/privacy/settings')));
+      expect(server.privacyTrimStartM, 500);
+    },
+  );
+
+  testWidgets('PrivacyScreen_ShouldHideTheMark_WhenTheSaveFails', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+    server.failing.add('/api/v1/privacy/settings');
+
     await tester.enterText(find.byKey(const Key('privacy-trim-start')), '500');
-    await tester.ensureVisible(find.byKey(const Key('privacy-save')));
-    await tester.tap(find.byKey(const Key('privacy-save')));
+    await leaveField(tester);
+
+    expect(savedMarkVisible(tester), isFalse);
+    expect(server.privacyTrimStartM, 0);
+    // What the member typed stays in the field so they can fix it.
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('privacy-trim-start')))
+          .controller!
+          .text,
+      '500',
+    );
+  });
+
+  testWidgets('PrivacyScreen_ShouldSaveTheTrim_WhenLeftWhileStillTyping', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+
+    // The field still has the focus when the member goes back: the typed trim is saved on the way out.
+    await tester.enterText(find.byKey(const Key('privacy-trim-start')), '500');
+    popPrivacy(tester);
     await tester.pumpAndSettle();
 
     expect(server.privacyTrimStartM, 500);
-    expect(server.privacyStreams['hidePower'], isFalse);
+    expect(
+      server.requests.where((r) => r == 'PUT /api/v1/privacy/settings'),
+      hasLength(1),
+    );
   });
+
+  testWidgets('PrivacyScreen_ShouldSendNothing_WhenUnchangedAndLeft', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+
+    await tester.tap(find.byKey(const Key('privacy-trim-start')));
+    popPrivacy(tester);
+    await tester.pumpAndSettle();
+
+    expect(server.requests, isNot(contains('PUT /api/v1/privacy/settings')));
+  });
+
+  testWidgets(
+    'PrivacyScreen_ShouldRefuseAFiveKilometreTrim_WhenLeftWhileStillTyping',
+    (tester) async {
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      await openPrivacy(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('privacy-trim-start')),
+        '6000',
+      );
+      popPrivacy(tester);
+      await tester.pumpAndSettle();
+
+      // Over five kilometres is never sent, even when the member leaves the screen before the field.
+      expect(server.requests, isNot(contains('PUT /api/v1/privacy/settings')));
+      expect(server.privacyTrimStartM, 0);
+    },
+  );
+
+  testWidgets(
+    'PrivacyScreen_ShouldSendOnce_WhenFocusLeftBeforeTheScreenCloses',
+    (tester) async {
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      await openPrivacy(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('privacy-trim-start')),
+        '500',
+      );
+      await leaveField(tester);
+      popPrivacy(tester);
+      await tester.pumpAndSettle();
+
+      // The field was saved when it was left; leaving the screen does not send it again.
+      expect(
+        server.requests.where((r) => r == 'PUT /api/v1/privacy/settings'),
+        hasLength(1),
+      );
+      expect(server.privacyTrimStartM, 500);
+    },
+  );
 
   testWidgets('PrivacyScreen_ShouldAskAndRemoveAZone_WhenTheMemberDeletesIt', (
     tester,
@@ -157,7 +327,7 @@ void main() {
     expect(server.privacyZones, isEmpty);
   });
 
-  testWidgets('PrivacyScreen_ShouldSaveTrims_WhenTheMemberEntersMetres', (
+  testWidgets('PrivacyScreen_ShouldRefuseAFiveKilometreTrim_WhenLeft', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', clubRole: null);
@@ -165,21 +335,52 @@ void main() {
     await openPrivacy(tester);
 
     await tester.enterText(find.byKey(const Key('privacy-trim-start')), '6000');
-    await tester.ensureVisible(find.byKey(const Key('privacy-save')));
-    await tester.tap(find.byKey(const Key('privacy-save')));
-    await tester.pumpAndSettle();
+    await leaveField(tester);
 
-    // Over five kilometres is refused before the server is asked.
+    // Over five kilometres is refused before the server is asked: nothing is sent and no mark shows.
     expect(find.byKey(const Key('privacy-error')), findsOneWidget);
+    expect(server.requests, isNot(contains('PUT /api/v1/privacy/settings')));
     expect(server.privacyTrimStartM, 0);
+    expect(savedMarkVisible(tester), isFalse);
+  });
+
+  testWidgets('PrivacyScreen_ShouldSaveEachTrimOnItsOwn_WhenLeft', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
 
     await tester.enterText(find.byKey(const Key('privacy-trim-start')), '500');
+    await leaveField(tester);
     await tester.enterText(find.byKey(const Key('privacy-trim-end')), '300');
-    await tester.tap(find.byKey(const Key('privacy-save')));
-    await tester.pumpAndSettle();
+    await leaveField(tester);
 
+    // Each save sends the trim that was edited and the other one as the account holds it.
     expect(server.privacyTrimStartM, 500);
     expect(server.privacyTrimEndM, 300);
+    expect(
+      server.requests.where((r) => r == 'PUT /api/v1/privacy/settings'),
+      hasLength(2),
+    );
+  });
+
+  testWidgets('PrivacyScreen_ShouldClearTheError_WhenTheTrimIsFixed', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+
+    await tester.enterText(find.byKey(const Key('privacy-trim-start')), '6000');
+    await leaveField(tester);
+    expect(find.byKey(const Key('privacy-error')), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('privacy-trim-start')), '500');
+    await leaveField(tester);
+
+    expect(find.byKey(const Key('privacy-error')), findsNothing);
+    expect(server.privacyTrimStartM, 500);
   });
 
   testWidgets(
@@ -229,6 +430,7 @@ void main() {
       // 0.2 mi is 322 m: inside the range, and stored in metres.
       await typeRadius('0.2');
       expect(server.privacyZones.single['radiusM'], 322);
+      expect(savedMarkVisible(tester), isTrue);
     },
   );
 
