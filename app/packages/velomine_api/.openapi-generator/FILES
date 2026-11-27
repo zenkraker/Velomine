@@ -109,7 +109,6 @@ lib/model/list_service_entries_response.dart
 lib/model/list_service_jobs_response.dart
 lib/model/list_templates_response.dart
 lib/model/login_request.dart
-lib/model/login_two_factor_request.dart
 lib/model/main_set_target.dart
 lib/model/maintenance_job.dart
 lib/model/maintenance_reminder_response.dart
@@ -170,7 +169,6 @@ lib/model/search_parts_response.dart
 lib/model/server_info_response.dart
 lib/model/service_entry_response.dart
 lib/model/session_note.dart
-lib/model/session_response.dart
 lib/model/session_result.dart
 lib/model/set_club_location_request.dart
 lib/model/set_club_member_role_request.dart
@@ -214,7 +212,6 @@ lib/model/training_session_notice.dart
 lib/model/training_week.dart
 lib/model/training_week_session.dart
 lib/model/training_weeks_response.dart
-lib/model/two_factor_required_response.dart
 lib/model/two_factor_setup.dart
 lib/model/two_factor_state.dart
 lib/model/update_bike_request.dart

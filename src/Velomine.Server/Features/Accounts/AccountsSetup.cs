@@ -31,9 +31,6 @@ public static class AccountsSetup
         services.AddScoped<AccountExport>();
         services.AddScoped<SetFtpValue>();
         services.AddScoped<SetHeartRateValue>();
-        services.AddScoped<UserSessions>();
-        services.AddScoped<SessionSignIn>();
-        services.AddSingleton<TwoFactorChallenges>();
         services.AddSingleton<ExportTokens>();
         services.AddSingleton<RideFileTokens>();
         services.AddScoped<PasswordResetLinks>();
@@ -55,13 +52,6 @@ public static class AccountsSetup
             .AddSignInManager<VelomineSignInManager>();
         services.AddAuthorization();
 
-        // A revoked session must be noticed quickly by a cookie, and an access token must not outlive a revoked session
-        // for long. Fifteen minutes is short enough to matter and long enough not to refresh constantly.
-        services.Configure<BearerTokenOptions>(IdentityConstants.BearerScheme, o => o.BearerTokenExpiration = TimeSpan.FromMinutes(15));
-        services.Configure<SecurityStampValidatorOptions>(o => o.ValidationInterval = TimeSpan.FromMinutes(5));
-        services.Replace(ServiceDescriptor.Scoped<ISecurityStampValidator, UserSessionValidator>());
-        if (configuration.GetValue("Velomine:Background:Enabled", true))
-            services.AddHostedService<SessionCleanup>();
 
         AddSso(services, configuration.GetSection("Velomine:Sso").Get<SsoOptions>() ?? new SsoOptions());
         if (configuration.GetValue("Velomine:Background:Enabled", true))

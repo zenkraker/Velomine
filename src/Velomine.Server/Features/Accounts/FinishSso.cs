@@ -21,7 +21,6 @@ public sealed class FinishSso(
     SignInManager<User> signIn,
     UserManager<User> users,
     VelomineDbContext db,
-    SessionSignIn sessions,
     IOptions<SsoOptions> sso,
     SettingsReader settings,
     TimeProvider clock) : Endpoint<FinishSsoRequest>
@@ -58,8 +57,8 @@ public sealed class FinishSso(
             user = await users.FindByLoginAsync(SsoOptions.Scheme, subject);
         }
 
-        // Sign-in is done here rather than by ExternalLoginSignInAsync, so the session row exists and the cookie carries
-        // its id. The checks are the ones that method makes: approval, then lockout.
+        // Sign-in is done here rather than by ExternalLoginSignInAsync because the account is created above when it is
+        // new. The checks are the ones that method makes: approval, then lockout.
         if (user is null)
             await Fail(returnUrl, "failed", ct);
         else if (await users.IsLockedOutAsync(user))
@@ -68,7 +67,8 @@ public sealed class FinishSso(
             await Fail(returnUrl, Login.Refusal(user), ct);
         else
         {
-            await sessions.SignInAsync(user, IdentityConstants.ApplicationScheme, isPersistent: false, "Web - single sign-on", ct);
+            signIn.AuthenticationScheme = IdentityConstants.ApplicationScheme;
+            await signIn.SignInAsync(user, isPersistent: false);
             await Send.RedirectAsync(returnUrl, allowRemoteRedirects: false);
         }
     }

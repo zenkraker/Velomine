@@ -17,17 +17,12 @@ class AuthData {
 
   final Session _session;
 
-  Future<({AuthProblem? problem, String? challenge})> signIn(
+  Future<({AuthProblem? problem, bool needsCode})> signIn(
     String email,
     String password, {
     bool rememberMe = true,
-  }) => _session.signIn(email, password, rememberMe: rememberMe);
-
-  Future<AuthProblem?> completeTwoFactor(
-    String challenge,
-    String code, {
-    required bool rememberMe,
-  }) => _session.completeTwoFactor(challenge, code, rememberMe: rememberMe);
+    String? code,
+  }) => _session.signIn(email, password, rememberMe: rememberMe, code: code);
 
   Future<({AuthProblem? problem, bool approved, bool needsConfirmation})>
   signUp(String email, String displayName, String password) =>

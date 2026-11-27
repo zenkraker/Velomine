@@ -353,39 +353,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorEnabled => 'L\'accesso a due fattori è attivo.';
 
   @override
-  String get sessionsTitle => 'Dispositivi e sessioni';
-
-  @override
-  String get sessionsIntro =>
-      'Dove hai effettuato l\'accesso adesso. Disconnettere un dispositivo richiede di nuovo la password lì.';
-
-  @override
-  String get sessionThisDevice => 'Questo dispositivo';
-
-  @override
-  String get sessionLastUsed => 'Ultimo uso';
-
-  @override
-  String get sessionRevoke => 'Disconnetti';
-
-  @override
-  String get sessionLogoutOthers => 'Disconnetti gli altri dispositivi';
-
-  @override
-  String get sessionLogoutOthersBody =>
-      'Disconnette ogni dispositivo tranne questo. Dovranno accedere di nuovo.';
-
-  @override
-  String get sessionsEmpty => 'Nessun altro dispositivo è connesso.';
-
-  @override
-  String get sessionRevoked => 'Quel dispositivo è disconnesso.';
-
-  @override
-  String get sessionOthersRevoked =>
-      'Tutti gli altri dispositivi sono disconnessi.';
-
-  @override
   String get ssoEmailNotVerified =>
       'Il tuo provider di accesso non ha verificato il tuo indirizzo email.';
 
@@ -5806,17 +5773,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get twoFactorStateOff => 'L\'accesso a due fattori è disattivato.';
-
-  @override
-  String sessionsCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dispositivi',
-      one: '1 dispositivo',
-    );
-    return '$_temp0';
-  }
 
   @override
   String privacyZoneRadiusLine(String distance) {

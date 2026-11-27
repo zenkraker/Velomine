@@ -44,7 +44,6 @@ import '../training/training_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
-import 'sessions_view_model.dart';
 import 'solo_trial_badge.dart';
 import 'two_factor_view_model.dart';
 import 'zones_card.dart';
@@ -546,7 +545,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // The account rows say what they are about. Both answers come from their own view models, so the
     // row is drawn without its line until they arrive, never with a spinner.
     final twoFactor = ref.watch(twoFactorViewModelProvider).load.value;
-    final sessions = ref.watch(sessionsViewModelProvider).load.value;
     // Where the athlete's numbers came from, each a line under its own field.
     final athlete = s.profile;
     final ftpNote = athlete == null
@@ -977,15 +975,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? l10n.twoFactorStateOn
                 : l10n.twoFactorStateOff,
             onTap: () => context.push('/profile/two-factor'),
-          ),
-          _SettingsRow(
-            rowKey: const Key('sessions'),
-            icon: Icons.devices,
-            title: l10n.sessionsTitle,
-            subtitle: sessions == null
-                ? null
-                : l10n.sessionsCount(sessions.length),
-            onTap: () => context.push('/profile/sessions'),
           ),
         ],
       ),

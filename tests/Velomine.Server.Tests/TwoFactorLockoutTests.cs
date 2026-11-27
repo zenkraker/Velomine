@@ -19,13 +19,13 @@ public sealed class TwoFactorLockoutTests(PostgresFixture postgres, DexFixture d
         var login = await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         login.EnsureSuccessStatusCode();
         // The admin has no second factor yet, so this is an ordinary sign-in; enable it, then sign in again.
-        var first = await EnableTwoFactorAsync(api);
+        await EnableTwoFactorAsync(api);
 
         for (var attempt = 0; attempt < 5; attempt++)
         {
             var wrong = await api.CreateClient().PostAsJsonAsync(
-                "/api/v1/accounts/login/two-factor",
-                new LoginTwoFactorRequest(first.Challenge, "000000"),
+                "/api/v1/accounts/login",
+                new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, TwoFactorCode: "000000"),
                 Ct);
             Assert.True(
                 wrong.StatusCode is HttpStatusCode.Unauthorized or (HttpStatusCode)423,
@@ -72,8 +72,8 @@ public sealed class TwoFactorLockoutTests(PostgresFixture postgres, DexFixture d
             .RootElement.GetProperty("accessToken").GetString()));
     }
 
-    /// <summary>Turns the admin's second factor on and starts a sign-in that waits for a code.</summary>
-    private static async Task<TwoFactorRequiredResponse> EnableTwoFactorAsync(TestApi api)
+    /// <summary>Turns the admin's second factor on; a sign-in with only the password is then refused.</summary>
+    private static async Task EnableTwoFactorAsync(TestApi api)
     {
         var client = api.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
@@ -84,8 +84,7 @@ public sealed class TwoFactorLockoutTests(PostgresFixture postgres, DexFixture d
             new EnableTwoFactorRequest(TestApi.AdminPassword, Totp.Code(setup!.Key, DateTimeOffset.UtcNow)), Ct)).EnsureSuccessStatusCode();
 
         var login = await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        Assert.Equal(HttpStatusCode.Accepted, login.StatusCode);
-        return (await login.Content.ReadFromJsonAsync<TwoFactorRequiredResponse>(Ct))!;
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
     }
 
     private static async Task<string> TokenAsync(TestApi api)

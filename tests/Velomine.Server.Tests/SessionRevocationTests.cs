@@ -2,25 +2,23 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
 /// <summary>
-/// What a security change ends: a revoked session, a second factor, and every other device. A member who loses a
-/// phone or a password must be able to get everyone else out.
+/// What a security change ends: it moves the account's security stamp, and Identity refuses every older cookie and
+/// refresh token. A member who loses a phone or a password must be able to get everyone else out.
 /// </summary>
 public sealed class SessionRevocationTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private static async Task<(string Access, string Refresh)> LoginAsync(
-        TestApi api, string email = TestApi.AdminEmail, string password = TestApi.AdminPassword, string? label = "Phone")
+        TestApi api, string email = TestApi.AdminEmail, string password = TestApi.AdminPassword)
     {
-        var response = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(email, password, DeviceLabel: label), Ct);
+        var response = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(email, password), Ct);
         response.EnsureSuccessStatusCode();
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
         return (json.RootElement.GetProperty("accessToken").GetString()!, json.RootElement.GetProperty("refreshToken").GetString()!);
@@ -34,33 +32,13 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RevokeSession_ShouldStopTheCookieAtItsNextCheck_WhenTheSessionIsEnded()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-        // The browser signs in with a cookie; the phone then ends that same session from its own list.
-        var web = await LoginCookiesAsync(api);
-        Assert.Equal(HttpStatusCode.OK, (await web.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-        var sessions = await web.GetFromJsonAsync<SessionResponse[]>("/api/v1/accounts/me/sessions", Ct);
-        var cookieSession = Assert.Single(sessions!, s => s.Current);
-
-        Assert.Equal(HttpStatusCode.NoContent, (await web.DeleteAsync($"/api/v1/accounts/me/sessions/{cookieSession.Id}", Ct)).StatusCode);
-
-        // A cookie is revalidated at most every five minutes; the session check runs at the next one, so shorten it.
-        await using (var scope = api.Services.CreateAsyncScope())
-            await scope.ServiceProvider.GetRequiredService<VelomineDbContext>().Database.ExecuteSqlRawAsync(
-                "UPDATE accounts.user_sessions SET last_used_at = last_used_at", Ct);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await web.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-    }
-
-    [Fact]
-    public async Task PasswordReset_ShouldEndEverySession_WhenThePasswordIsReset()
+    public async Task PasswordChange_ShouldEndEveryRefreshToken_WhenThePasswordIsChanged()
     {
         await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
         var first = await LoginAsync(api, email, TestApi.MemberPassword);
-        var second = await LoginAsync(api, email, TestApi.MemberPassword, "Tablet");
+        var second = await LoginAsync(api, email, TestApi.MemberPassword);
 
         var change = await WithToken(api, first.Access).PutAsJsonAsync("/api/v1/accounts/me/password",
             new ChangePasswordRequest(TestApi.MemberPassword, "Another-password-1"), Ct);
@@ -72,7 +50,7 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AdminTwoFactorReset_ShouldEndEverySessionOfThatAccount_WhenItIsReset()
+    public async Task AdminTwoFactorReset_ShouldEndEveryRefreshTokenOfThatAccount_WhenItIsReset()
     {
         await using var api = await TestApi.StartAsync(postgres,
             b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
@@ -80,7 +58,7 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
         var first = await LoginAsync(api, email, TestApi.MemberPassword);
-        var second = await LoginAsync(api, email, TestApi.MemberPassword, "Tablet");
+        var second = await LoginAsync(api, email, TestApi.MemberPassword);
         await EnableAsync(api, email, TestApi.MemberPassword);
         await using var scope = api.Services.CreateAsyncScope();
         var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<User>>();
@@ -89,27 +67,11 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
         var reset = await (await AdminAsync(api)).PostAsync($"/api/v1/admin/users/{member!.Id}/two-factor/reset", null, Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
-        // The reset revokes every session: neither refresh token works any more.
+        // The reset moves the security stamp: neither refresh token works any more.
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(first.Refresh), Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(second.Refresh), Ct)).StatusCode);
-    }
-
-    [Fact]
-    public async Task EnableTwoFactor_ShouldSignOutTheOtherDevices_WhenItIsTurnedOn()
-    {
-        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        await LoginAsync(api, email, TestApi.MemberPassword, "Old phone");
-
-        await EnableAsync(api, email, TestApi.MemberPassword);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var alive = await scope.ServiceProvider.GetRequiredService<VelomineDbContext>().UserSessions.AsNoTracking()
-            .Where(s => s.Label == "Old phone" && s.RevokedAt == null).CountAsync(Ct);
-        Assert.Equal(0, alive);
     }
 
     [Fact]
@@ -122,26 +84,48 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.BadRequest, wrong.StatusCode);
         var login = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword), Ct);
-        Assert.Equal(HttpStatusCode.Accepted, login.StatusCode); // the code is asked for again: still on
-        Assert.True((await login.Content.ReadFromJsonAsync<TwoFactorRequiredResponse>(Ct))!.TwoFactorRequired);
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode); // the code is asked for again: still on
+        Assert.Contains("two_factor_required", await login.Content.ReadAsStringAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Refresh_ShouldIssueANewPair_WhenTheTokenIsValid()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+        var (_, refresh) = await LoginAsync(api);
+
+        var response = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(refresh), Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        Assert.False(string.IsNullOrEmpty(json.RootElement.GetProperty("accessToken").GetString()));
+        Assert.False(string.IsNullOrEmpty(json.RootElement.GetProperty("refreshToken").GetString()));
+    }
+
+    [Fact]
+    public async Task Refresh_ShouldBeRefused_WhenAnAdminLockedTheAccount()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        var (_, refresh) = await LoginAsync(api, email, TestApi.MemberPassword);
+        await using var scope = api.Services.CreateAsyncScope();
+        var member = await scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<User>>().FindByEmailAsync(email);
+
+        var lockResponse = await (await AdminAsync(api)).PostAsync($"/api/v1/admin/users/{member!.Id}/lock", null, Ct);
+
+        Assert.Equal(HttpStatusCode.NoContent, lockResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(refresh), Ct)).StatusCode);
     }
 
     private static Task<HttpClient> AdminAsync(TestApi api) => api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-
-    private static async Task<HttpClient> LoginCookiesAsync(TestApi api)
-    {
-        var client = api.CreateClient(handleCookies: true);
-        var response = await client.PostAsJsonAsync("/api/v1/accounts/login",
-            new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, UseCookies: true), Ct);
-        response.EnsureSuccessStatusCode();
-        return client;
-    }
 
     private static async Task<(HttpClient Client, string Key, string[] Codes)> EnableAsync(TestApi api, string? email = null, string? password = null)
     {
         var access = email is null
             ? (await LoginAsync(api)).Access
-            : (await LoginAsync(api, email, password ?? TestApi.MemberPassword, "Phone")).Access;
+            : (await LoginAsync(api, email, password ?? TestApi.MemberPassword)).Access;
         var client = WithToken(api, access);
         var setup = await (await client.PostAsync("/api/v1/accounts/me/two-factor/start", null, Ct))
             .Content.ReadFromJsonAsync<TwoFactorSetup>(Ct);

@@ -783,51 +783,6 @@ class AccountsApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /api/v1/accounts/me/sessions' operation and returns the [Response].
-  Future<Response> listSessionsWithHttpInfo({ Future<void>? abortTrigger, }) async {
-    // ignore: prefer_const_declarations
-    final path = r'/api/v1/accounts/me/sessions';
-
-    // ignore: prefer_final_locals
-    Object? postBody;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-    const contentTypes = <String>[];
-
-
-    return apiClient.invokeAPI(
-      path,
-      'GET',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-      abortTrigger: abortTrigger,
-    );
-  }
-
-  Future<List<SessionResponse>?> listSessions({ Future<void>? abortTrigger, }) async {
-    final response = await listSessionsWithHttpInfo(abortTrigger: abortTrigger,);
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
-    // When a remote server returns no body with a status of 204, we shall not decode it.
-    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
-    // FormatException when trying to decode an empty string.
-    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      final responseBody = await _decodeBodyBytes(response);
-      return (await apiClient.deserializeAsync(responseBody, 'List<SessionResponse>') as List)
-        .cast<SessionResponse>()
-        .toList(growable: false);
-
-    }
-    return null;
-  }
-
   /// Performs an HTTP 'GET /api/v1/accounts/users' operation and returns the [Response].
   /// Parameters:
   ///
@@ -916,54 +871,6 @@ class AccountsApi {
   /// * [LoginRequest] loginRequest (required):
   Future<TokenResponse?> login(LoginRequest loginRequest, { Future<void>? abortTrigger, }) async {
     final response = await loginWithHttpInfo(loginRequest, abortTrigger: abortTrigger,);
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
-    // When a remote server returns no body with a status of 204, we shall not decode it.
-    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
-    // FormatException when trying to decode an empty string.
-    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TokenResponse',) as TokenResponse;
-    
-    }
-    return null;
-  }
-
-  /// Performs an HTTP 'POST /api/v1/accounts/login/two-factor' operation and returns the [Response].
-  /// Parameters:
-  ///
-  /// * [LoginTwoFactorRequest] loginTwoFactorRequest (required):
-  Future<Response> loginTwoFactorWithHttpInfo(LoginTwoFactorRequest loginTwoFactorRequest, { Future<void>? abortTrigger, }) async {
-    // ignore: prefer_const_declarations
-    final path = r'/api/v1/accounts/login/two-factor';
-
-    // ignore: prefer_final_locals
-    Object? postBody = loginTwoFactorRequest;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-    const contentTypes = <String>['application/json'];
-
-
-    return apiClient.invokeAPI(
-      path,
-      'POST',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-      abortTrigger: abortTrigger,
-    );
-  }
-
-  /// Parameters:
-  ///
-  /// * [LoginTwoFactorRequest] loginTwoFactorRequest (required):
-  Future<TokenResponse?> loginTwoFactor(LoginTwoFactorRequest loginTwoFactorRequest, { Future<void>? abortTrigger, }) async {
-    final response = await loginTwoFactorWithHttpInfo(loginTwoFactorRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -1282,81 +1189,6 @@ class AccountsApi {
     
     }
     return null;
-  }
-
-  /// Performs an HTTP 'POST /api/v1/accounts/me/sessions/logout-others' operation and returns the [Response].
-  Future<Response> revokeOtherSessionsWithHttpInfo({ Future<void>? abortTrigger, }) async {
-    // ignore: prefer_const_declarations
-    final path = r'/api/v1/accounts/me/sessions/logout-others';
-
-    // ignore: prefer_final_locals
-    Object? postBody;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-    const contentTypes = <String>[];
-
-
-    return apiClient.invokeAPI(
-      path,
-      'POST',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-      abortTrigger: abortTrigger,
-    );
-  }
-
-  Future<void> revokeOtherSessions({ Future<void>? abortTrigger, }) async {
-    final response = await revokeOtherSessionsWithHttpInfo(abortTrigger: abortTrigger,);
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
-  }
-
-  /// Performs an HTTP 'DELETE /api/v1/accounts/me/sessions/{id}' operation and returns the [Response].
-  /// Parameters:
-  ///
-  /// * [String] id (required):
-  Future<Response> revokeSessionWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
-    // ignore: prefer_const_declarations
-    final path = r'/api/v1/accounts/me/sessions/{id}'
-      .replaceAll('{id}', id);
-
-    // ignore: prefer_final_locals
-    Object? postBody;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-    const contentTypes = <String>[];
-
-
-    return apiClient.invokeAPI(
-      path,
-      'DELETE',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-      abortTrigger: abortTrigger,
-    );
-  }
-
-  /// Parameters:
-  ///
-  /// * [String] id (required):
-  Future<void> revokeSession(String id, { Future<void>? abortTrigger, }) async {
-    final response = await revokeSessionWithHttpInfo(id, abortTrigger: abortTrigger,);
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
   }
 
   /// Performs an HTTP 'PUT /api/v1/accounts/me/ftp' operation and returns the [Response].

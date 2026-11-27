@@ -17,7 +17,8 @@ class LoginRequest {
     required this.password,
     this.useCookies = const Optional.present(false),
     this.rememberMe = const Optional.present(true),
-    this.deviceLabel = const Optional.absent(),
+    this.twoFactorCode = const Optional.absent(),
+    this.twoFactorRecoveryCode = const Optional.absent(),
   });
 
   final String email;
@@ -34,7 +35,15 @@ class LoginRequest {
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
-  final Optional<String?> deviceLabel;
+  final Optional<String?> twoFactorCode;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> twoFactorRecoveryCode;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is LoginRequest &&
@@ -42,7 +51,8 @@ class LoginRequest {
     other.password == password &&
     other.useCookies == useCookies &&
     other.rememberMe == rememberMe &&
-    other.deviceLabel == deviceLabel;
+    other.twoFactorCode == twoFactorCode &&
+    other.twoFactorRecoveryCode == twoFactorRecoveryCode;
 
   @override
   int get hashCode =>
@@ -51,10 +61,11 @@ class LoginRequest {
     (password.hashCode) +
     (useCookies.hashCode) +
     (rememberMe.hashCode) +
-    (deviceLabel == null ? 0 : deviceLabel!.hashCode);
+    (twoFactorCode == null ? 0 : twoFactorCode!.hashCode) +
+    (twoFactorRecoveryCode == null ? 0 : twoFactorRecoveryCode!.hashCode);
 
   @override
-  String toString() => 'LoginRequest[email=$email, password=$password, useCookies=$useCookies, rememberMe=$rememberMe, deviceLabel=$deviceLabel]';
+  String toString() => 'LoginRequest[email=$email, password=$password, useCookies=$useCookies, rememberMe=$rememberMe, twoFactorCode=$twoFactorCode, twoFactorRecoveryCode=$twoFactorRecoveryCode]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -68,9 +79,13 @@ class LoginRequest {
       final value = this.rememberMe.value;
       json[r'rememberMe'] = value;
     }
-    if (this.deviceLabel.isPresent) {
-      final value = this.deviceLabel.value;
-      json[r'deviceLabel'] = value;
+    if (this.twoFactorCode.isPresent) {
+      final value = this.twoFactorCode.value;
+      json[r'twoFactorCode'] = value;
+    }
+    if (this.twoFactorRecoveryCode.isPresent) {
+      final value = this.twoFactorRecoveryCode.value;
+      json[r'twoFactorRecoveryCode'] = value;
     }
     return json;
   }
@@ -82,13 +97,15 @@ class LoginRequest {
     String? password,
     Optional<bool?>? useCookies,
     Optional<bool?>? rememberMe,
-    Optional<String?>? deviceLabel,
+    Optional<String?>? twoFactorCode,
+    Optional<String?>? twoFactorRecoveryCode,
   }) => LoginRequest(
     email: email ?? this.email,
     password: password ?? this.password,
     useCookies: useCookies ?? this.useCookies,
     rememberMe: rememberMe ?? this.rememberMe,
-    deviceLabel: deviceLabel ?? this.deviceLabel,
+    twoFactorCode: twoFactorCode ?? this.twoFactorCode,
+    twoFactorRecoveryCode: twoFactorRecoveryCode ?? this.twoFactorRecoveryCode,
   );
 
   /// Returns a new [LoginRequest] instance and imports its values from
@@ -114,7 +131,8 @@ class LoginRequest {
         password: mapValueOfType<String>(json, r'password')!,
         useCookies: json.containsKey(r'useCookies') ? Optional.present(mapValueOfType<bool>(json, r'useCookies')) : const Optional.absent(),
         rememberMe: json.containsKey(r'rememberMe') ? Optional.present(mapValueOfType<bool>(json, r'rememberMe')) : const Optional.absent(),
-        deviceLabel: json.containsKey(r'deviceLabel') ? Optional.present(mapValueOfType<String>(json, r'deviceLabel')) : const Optional.absent(),
+        twoFactorCode: json.containsKey(r'twoFactorCode') ? Optional.present(mapValueOfType<String>(json, r'twoFactorCode')) : const Optional.absent(),
+        twoFactorRecoveryCode: json.containsKey(r'twoFactorRecoveryCode') ? Optional.present(mapValueOfType<String>(json, r'twoFactorRecoveryCode')) : const Optional.absent(),
       );
     }
     return null;

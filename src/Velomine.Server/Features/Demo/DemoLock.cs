@@ -29,8 +29,6 @@ public static class DemoLock
         ("POST", "accounts/me/two-factor/enable"),
         ("POST", "accounts/me/two-factor/disable"),
         ("POST", "accounts/me/two-factor/recovery-codes"),
-        ("DELETE", "accounts/me/sessions/{id}"),
-        ("POST", "accounts/me/sessions/logout-others"),
         ("POST", "club/leave"),
         ("POST", "club/join-code"),
         ("PUT", "club/members/{userId}/role"),

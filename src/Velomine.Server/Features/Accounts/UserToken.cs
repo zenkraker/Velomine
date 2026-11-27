@@ -50,17 +50,3 @@ public sealed class RideFileTokens(IDataProtectionProvider provider, TimeProvide
 
     public override TimeSpan Lifetime => TimeSpan.FromMinutes(2);
 }
-
-/// <summary>
-/// The short-lived proof that a password was just checked, handed back by the code step. The code step cannot be
-/// attempted with only an email known.
-/// </summary>
-public sealed class TwoFactorChallenges(IDataProtectionProvider provider, TimeProvider time)
-    : UserToken(provider, time)
-{
-    protected override string Purpose => "velomine.two-factor";
-
-    public override TimeSpan Lifetime => TimeSpan.FromMinutes(5);
-}
-
-public sealed record TwoFactorRequiredResponse(bool TwoFactorRequired, string Challenge);

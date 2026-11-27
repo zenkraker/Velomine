@@ -19,7 +19,7 @@ public sealed class ChangePasswordValidator : Validator<ChangePasswordRequest>
 /// Changes the password of a signed-in account. The current password is the confirmation; a single sign-on account has
 /// none and is refused. The security stamp changes, so the app signs out on every device.
 /// </summary>
-public sealed class ChangePassword(UserManager<User> users, SignInManager<User> signIn, UserSessions sessions)
+public sealed class ChangePassword(UserManager<User> users, SignInManager<User> signIn)
     : Endpoint<ChangePasswordRequest>
 {
     public override void Configure()
@@ -64,7 +64,6 @@ public sealed class ChangePassword(UserManager<User> users, SignInManager<User> 
         }
 
         await users.UpdateSecurityStampAsync(user);
-        await sessions.RevokeAllAsync(user.Id, ct);
         await Send.NoContentAsync(ct);
     }
 }

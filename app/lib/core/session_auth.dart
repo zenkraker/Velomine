@@ -136,7 +136,7 @@ class SessionAuth implements Authentication {
     final running = _refreshing;
     if (running != null) return running;
 
-    final future = _doRefresh();
+    final future = _refreshNow();
     _refreshing = future;
     future.whenComplete(() {
       if (identical(_refreshing, future)) _refreshing = null;
@@ -144,19 +144,8 @@ class SessionAuth implements Authentication {
     return future;
   }
 
-  Future<bool> _doRefresh() async {
-    try {
-      return await store.locked(_refreshNow);
-    } on TokenLockBusy {
-      // The worker is rotating the same token. Keep it and try again later rather than start a second rotation.
-      _lastRefreshUnavailable = true;
-      return false;
-    }
-  }
-
   Future<bool> _refreshNow() async {
-    // The background upload worker rotates the same token file; use whatever is stored now, so a token it just
-    // renewed is not presented again as stolen.
+    // The background upload worker refreshes too and keeps the newer token in the store; use that one.
     final saved = await store.readRefreshToken();
     if (saved != null && saved.isNotEmpty) _refreshToken = saved;
     final refreshToken = _refreshToken;

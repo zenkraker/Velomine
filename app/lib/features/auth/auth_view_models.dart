@@ -23,7 +23,7 @@ class SignInViewModel extends _$SignInViewModel {
     state = state.copyWith(
       command: state.command.start(),
       clearProblem: true,
-      clearChallenge: true,
+      needsCode: false,
       rememberMe: rememberMe,
     );
     final result = await ref
@@ -33,36 +33,31 @@ class SignInViewModel extends _$SignInViewModel {
     state = state.copyWith(
       command: state.command.finish(const Ok(null)),
       problem: result.problem,
-      challenge: result.challenge,
+      needsCode: result.needsCode,
     );
   }
 
-  /// The code from the authenticator app, or one recovery code.
-  Future<void> verifyCode(String code) async {
-    if (state.command.running ||
-        state.challenge == null ||
-        code.trim().isEmpty) {
+  /// Signs in again with the code from the authenticator app, or one recovery code, as the server takes them
+  /// together with the password.
+  Future<void> verifyCode(String email, String password, String code) async {
+    if (state.command.running || !state.needsCode || code.trim().isEmpty) {
       return;
     }
     state = state.copyWith(command: state.command.start(), clearProblem: true);
-    final problem = await ref
+    final result = await ref
         .read(authDataProvider)
-        .completeTwoFactor(
-          state.challenge!,
-          code,
-          rememberMe: state.rememberMe,
-        );
+        .signIn(email, password, rememberMe: state.rememberMe, code: code);
     if (!ref.mounted) return;
     state = state.copyWith(
       command: state.command.finish(const Ok(null)),
-      problem: problem,
-      clearChallenge: problem == null,
+      problem: result.problem,
+      needsCode: result.problem != null,
     );
   }
 
   /// Back to email and password, for a member who has the wrong account.
   void useAnotherAccount() =>
-      state = state.copyWith(clearChallenge: true, clearProblem: true);
+      state = state.copyWith(needsCode: false, clearProblem: true);
 
   void retryRestore() => ref.read(authDataProvider).retryRestore();
 }

@@ -352,38 +352,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoFactorEnabled => 'Two-factor sign-in is on.';
 
   @override
-  String get sessionsTitle => 'Devices and sessions';
-
-  @override
-  String get sessionsIntro =>
-      'Where you are signed in now. Signing a device out asks for the password again there.';
-
-  @override
-  String get sessionThisDevice => 'This device';
-
-  @override
-  String get sessionLastUsed => 'Last used';
-
-  @override
-  String get sessionRevoke => 'Sign out';
-
-  @override
-  String get sessionLogoutOthers => 'Log out other devices';
-
-  @override
-  String get sessionLogoutOthersBody =>
-      'This signs out every device except this one. They will need to sign in again.';
-
-  @override
-  String get sessionsEmpty => 'No other devices are signed in.';
-
-  @override
-  String get sessionRevoked => 'That device is signed out.';
-
-  @override
-  String get sessionOthersRevoked => 'Every other device is signed out.';
-
-  @override
   String get ssoEmailNotVerified =>
       'Your sign-in provider has not verified your email address.';
 
@@ -5767,17 +5735,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get twoFactorStateOff => 'Two-factor sign-in is off.';
-
-  @override
-  String sessionsCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count devices',
-      one: '1 device',
-    );
-    return '$_temp0';
-  }
 
   @override
   String privacyZoneRadiusLine(String distance) {

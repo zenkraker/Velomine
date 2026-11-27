@@ -33,7 +33,6 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var rides = await db.Rides.AsNoTracking().Where(r => r.UserId == userId).OrderBy(r => r.StartTime).ThenBy(r => r.UploadedAt).ToListAsync(ct);
         var goals = await db.Set<Goal>().AsNoTracking().Where(g => g.UserId == userId).OrderBy(g => g.CreatedAt).ToListAsync(ct);
         var notifications = await db.Notifications.AsNoTracking().Where(n => n.UserId == userId).OrderBy(n => n.CreatedAt).ToListAsync(ct);
-        var sessions = await db.UserSessions.AsNoTracking().Where(s => s.UserId == userId).OrderByDescending(s => s.LastUsedAt).ToListAsync(ct);
         var imports = await db.RideImports.AsNoTracking().Where(i => i.UserId == userId).OrderBy(i => i.CreatedAt).ToListAsync(ct);
         var checkIns = await db.DailyCheckIns.AsNoTracking()
             .Where(c => c.UserId == userId).OrderBy(c => c.LocalDate).ToListAsync(ct);
@@ -227,7 +226,6 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             e.RideId,
             e.CreatedAt,
         }), ct);
-        await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
         // The session score is computed from the ride that was the session and never stored (docs/training-models.md,
         // L8), so the export works it out here exactly as the app's session page does.
         await AddJsonAsync(zip, "training-plan.json", new
@@ -398,7 +396,6 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         heart-rate-suggestions.json  the heart-rate numbers Velomine noticed in your rides, and what you did with each
         notifications.json  your notifications
         events.json         the races, sportives and tours you added, with the ride that was each one
-        sessions.json       where you are signed in: the device label and the times, never an address
         training-plan.json  your auto-training setup and every session it planned, with how each went
         imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent

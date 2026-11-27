@@ -101,28 +101,4 @@ public sealed class AccountsTests(PostgresFixture postgres)
         var locked = await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         Assert.Equal((HttpStatusCode)423, locked.StatusCode);
     }
-
-    [Fact]
-    public async Task Accounts_ShouldRejectTheRefresh_WhenTheTokenIsGarbage()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var response = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest("not-a-token"), Ct);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Accounts_ShouldKeepTheCookieSessionUntilLogout_WhenTheWebAppSignsIn()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-        var web = api.CreateClient(handleCookies: true);
-
-        var login = await web.PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, UseCookies: true), Ct);
-        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode); // the session is in the cookie, there is no body
-        Assert.Equal(HttpStatusCode.OK, (await web.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-
-        await web.PostAsync("/api/v1/accounts/logout", null, Ct);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await web.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-    }
 }

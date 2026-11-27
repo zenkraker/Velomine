@@ -11,9 +11,9 @@ public sealed class UserIdRequest
 
 /// <summary>
 /// Locks an account: it cannot sign in, and its sessions stop renewing (an access token already issued still works until
-/// it expires, at most an hour). Nothing is deleted. Unlock brings it back as it was.
+/// it expires, one hour by default). Nothing is deleted. Unlock brings it back as it was.
 /// </summary>
-public sealed class LockUser(UserManager<User> users, UserSessions sessions) : Endpoint<UserIdRequest>
+public sealed class LockUser(UserManager<User> users) : Endpoint<UserIdRequest>
 {
     public override void Configure()
     {
@@ -40,7 +40,6 @@ public sealed class LockUser(UserManager<User> users, UserSessions sessions) : E
         await users.SetLockoutEnabledAsync(user, true);
         await users.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
         await users.UpdateSecurityStampAsync(user); // signed-in browsers and renewable sessions stop being valid
-        await sessions.RevokeAllAsync(user.Id, ct);
         await Send.NoContentAsync(ct);
     }
 }

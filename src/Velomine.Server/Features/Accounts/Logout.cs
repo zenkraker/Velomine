@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>Ends the current session: the row is revoked, so it leaves the member's list and stops renewing.</summary>
-public sealed class Logout(SignInManager<User> signIn, UserSessions sessions) : EndpointWithoutRequest
+/// <summary>
+/// Ends the browser's cookie. A bearer token is stateless and cannot be revoked here: the phone discards it and it
+/// expires on its own (docs/rules/api.md).
+/// </summary>
+public sealed class Logout(SignInManager<User> signIn) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -14,7 +17,6 @@ public sealed class Logout(SignInManager<User> signIn, UserSessions sessions) : 
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        if (User.SessionId() is { } session) await sessions.RevokeAsync(session, User.UserId(), ct);
         await signIn.SignOutAsync();
         await Send.NoContentAsync(ct);
     }

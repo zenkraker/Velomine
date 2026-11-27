@@ -3,14 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
-import 'package:velomine/features/profile/sessions_screen.dart';
 import 'package:velomine/features/profile/two_factor_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
 
 import 'package:velomine/core/l10n.dart';
-import 'package:velomine/core/widgets/badge.dart';
 
 void main() {
   late FakeServer server;
@@ -108,60 +106,6 @@ void main() {
     expect(find.byKey(const Key('email')), findsOneWidget);
   });
 
-  testWidgets(
-    'SessionsScreen_ShouldListDevicesAndSignOneOut_WhenTheMemberAsks',
-    (tester) async {
-      server.signInBrowser(server.add('rider@example.com'));
-      server.sessions.add({
-        'id': 's-other',
-        'label': 'Web app',
-        'createdAt': '2026-11-01T10:00:00Z',
-        'lastUsedAt': '2026-11-09T10:00:00Z',
-        'current': false,
-      });
-      await pumpScreen(tester, const SessionsScreen(), server: server);
-
-      expect(find.text('Android app'), findsOneWidget);
-      expect(find.text('Web app'), findsOneWidget);
-      expect(find.text('This device'), findsOneWidget);
-      // The mock-up puts a glyph before the device and says when it was last used in words.
-      expect(find.byIcon(Icons.smartphone), findsOneWidget);
-      expect(find.textContaining('Last used'), findsNWidgets(2));
-
-      await tester.tap(find.byKey(const Key('revoke-s-other')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Web app'), findsNothing);
-      expect(find.text('That device is signed out.'), findsOneWidget);
-    },
-  );
-
-  testWidgets('SessionsScreen_ShouldKeepOnlyTheCurrent_WhenLoggingOutOthers', (
-    tester,
-  ) async {
-    server.signInBrowser(server.add('rider@example.com'));
-    server.sessions.add({
-      'id': 's-other',
-      'label': 'Web app',
-      'createdAt': '2026-11-01T10:00:00Z',
-      'lastUsedAt': '2026-11-09T10:00:00Z',
-      'current': false,
-    });
-    await pumpScreen(tester, const SessionsScreen(), server: server);
-
-    await tester.tap(find.byKey(const Key('sessions-actions')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('logout-others')));
-    await tester.pumpAndSettle();
-    // It asks first.
-    expect(find.text('Web app'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('confirm-logout-others')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Web app'), findsNothing);
-    expect(find.text('Android app'), findsOneWidget);
-  });
-
   /// Opens the profile page in the app, where the account rows live.
   Future<void> openProfile(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1000, 2400);
@@ -179,29 +123,18 @@ void main() {
     await openProfile(tester);
 
     expect(find.text('Two-factor sign-in is off.'), findsOneWidget);
-    // The device count is the session list's own length, said in words.
-    expect(find.text('1 device'), findsOneWidget);
   });
 
-  testWidgets(
-    'ProfileScreen_ShouldSayTwoFactorIsOnAndCountTheDevices_WhenTheyAreSet',
-    (tester) async {
-      final account = server.add('rider@example.com');
-      account.twoFactorEnabled = true;
-      server.signInBrowser(account);
-      server.sessions.add({
-        'id': 's-other',
-        'label': 'Web app',
-        'createdAt': '2026-11-01T10:00:00Z',
-        'lastUsedAt': '2026-11-09T10:00:00Z',
-        'current': false,
-      });
-      await openProfile(tester);
+  testWidgets('ProfileScreen_ShouldSayTwoFactorIsOn_WhenItIsEnabled', (
+    tester,
+  ) async {
+    final account = server.add('rider@example.com');
+    account.twoFactorEnabled = true;
+    server.signInBrowser(account);
+    await openProfile(tester);
 
-      expect(find.text('Two-factor sign-in is on.'), findsOneWidget);
-      expect(find.text('2 devices'), findsOneWidget);
-    },
-  );
+    expect(find.text('Two-factor sign-in is on.'), findsOneWidget);
+  });
 
   testWidgets('TwoFactorScreen_ShouldShowTheKey_WhenTheMemberStartsSetup', (
     tester,
@@ -281,39 +214,7 @@ void main() {
     },
   );
 
-  testWidgets(
-    'SessionsScreen_ShouldMarkTheCurrentDeviceWithABadge_WhenListed',
-    (tester) async {
-      server.signInBrowser(server.add('rider@example.com'));
-      await pumpScreen(tester, const SessionsScreen(), server: server);
-
-      expect(find.widgetWithText(AppBadge, 'This device'), findsOneWidget);
-    },
-  );
-
   for (final width in [390.0, 1300.0]) {
-    testWidgets(
-      'SessionsScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
-      (tester) async {
-        server.signInBrowser(server.add('rider@example.com'));
-        server.sessions.add({
-          'id': 's-other',
-          'label': 'Web app',
-          'createdAt': '2026-11-01T10:00:00Z',
-          'lastUsedAt': '2026-11-09T10:00:00Z',
-          'current': false,
-        });
-        await pumpScreen(
-          tester,
-          const SessionsScreen(),
-          server: server,
-          size: Size(width, 1600),
-        );
-
-        expect(tester.takeException(), isNull);
-      },
-    );
-
     testWidgets(
       'TwoFactorScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
       (tester) async {

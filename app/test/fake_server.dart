@@ -301,17 +301,8 @@ class FakeServer {
   int refreshCount = 0; // how many times the app refreshed its token
   bool? lastRememberMe; // the stay-signed-in choice of the last login
 
-  /// The code the fake accepts for the second factor, and the devices the session list returns.
+  /// The code the fake accepts for the second factor.
   String twoFactorCode = '123456';
-  final sessions = <Map<String, Object?>>[
-    {
-      'id': 's-current',
-      'label': 'Android app',
-      'createdAt': '2026-11-01T10:00:00Z',
-      'lastUsedAt': '2026-11-10T10:00:00Z',
-      'current': true,
-    },
-  ];
 
   /// Who a test email was sent to, and what the mail server answered.
   final testEmails = <String>[];
@@ -597,34 +588,11 @@ class FakeServer {
         return http.Response('{"error":"email_not_confirmed"}', 403);
       }
       if (account.twoFactorEnabled) {
-        return http.Response(
-          jsonEncode({
-            'twoFactorRequired': true,
-            'challenge': 'c-${account.email}',
-          }),
-          202,
-        );
-      }
-      if (body['useCookies'] == true) {
-        _cookieUser = account;
-        return http.Response('', 204);
-      }
-      return json({
-        'tokenType': 'Bearer',
-        'accessToken': 't-${account.email}',
-        'expiresIn': tokenExpiresIn,
-        'refreshToken': 'r-${account.email}',
-      });
-    }
-    if (path == '/api/v1/accounts/login/two-factor') {
-      final body = jsonDecode(request.body) as Map<String, Object?>;
-      final challenge = body['challenge'] as String?;
-      final email = challenge != null && challenge.startsWith('c-')
-          ? challenge.substring(2)
-          : null;
-      final account = email == null ? null : accounts[email];
-      if (account == null || body['code'] != twoFactorCode) {
-        return http.Response('', 401);
+        final code = body['twoFactorCode'] ?? body['twoFactorRecoveryCode'];
+        if (code == null) {
+          return http.Response('{"error":"two_factor_required"}', 401);
+        }
+        if (code != twoFactorCode) return http.Response('', 401);
       }
       if (body['useCookies'] == true) {
         _cookieUser = account;
@@ -735,21 +703,6 @@ class FakeServer {
 
     if (caller == null) return http.Response('', 401);
 
-    if (path == '/api/v1/accounts/me/sessions' && request.method == 'GET') {
-      return json(sessions);
-    }
-    if (path == '/api/v1/accounts/me/sessions/logout-others' &&
-        request.method == 'POST') {
-      sessions.removeWhere((s) => s['current'] != true);
-      return http.Response('', 204);
-    }
-    if (path.startsWith('/api/v1/accounts/me/sessions/') &&
-        request.method == 'DELETE') {
-      final id = path.split('/').last;
-      final before = sessions.length;
-      sessions.removeWhere((s) => s['id'] == id);
-      return http.Response('', before == sessions.length ? 404 : 204);
-    }
     if (path == '/api/v1/accounts/me/two-factor' && request.method == 'GET') {
       return json({
         'enabled': caller.twoFactorEnabled,
@@ -3579,9 +3532,6 @@ class MemoryTokenStore implements TokenStore {
 
   @override
   Future<void> clear() async => token = null;
-
-  @override
-  Future<T> locked<T>(Future<T> Function() body) => body();
 }
 
 /// Keeps the theme choice in memory instead of the device's preferences.

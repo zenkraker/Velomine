@@ -51,13 +51,12 @@ public sealed class TwoFactorTests(PostgresFixture postgres)
             new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword),
             Ct);
 
-        Assert.Equal(HttpStatusCode.Accepted, login.StatusCode);
-        var required = await login.Content.ReadFromJsonAsync<TwoFactorRequiredResponse>(Ct);
-        Assert.True(required!.TwoFactorRequired);
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        Assert.Contains("two_factor_required", await login.Content.ReadAsStringAsync(Ct));
 
         var second = await api.CreateClient().PostAsJsonAsync(
-            "/api/v1/accounts/login/two-factor",
-            new LoginTwoFactorRequest(required.Challenge, Totp.Code(key, DateTimeOffset.UtcNow), DeviceLabel: "iPhone app"),
+            "/api/v1/accounts/login",
+            new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, TwoFactorCode: Totp.Code(key, DateTimeOffset.UtcNow)),
             Ct);
 
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
@@ -71,14 +70,12 @@ public sealed class TwoFactorTests(PostgresFixture postgres)
         await using var api = await TestApi.StartAsync(postgres);
         var (_, key, _) = await EnableAsync(api);
 
-        var login = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword), Ct);
-        var required = await login.Content.ReadFromJsonAsync<TwoFactorRequiredResponse>(Ct);
         var valid = Totp.Code(key, DateTimeOffset.UtcNow);
         var wrong = (char)('0' + (valid[0] - '0' + 1) % 10) + valid[1..];
 
         var second = await api.CreateClient().PostAsJsonAsync(
-            "/api/v1/accounts/login/two-factor",
-            new LoginTwoFactorRequest(required!.Challenge, wrong),
+            "/api/v1/accounts/login",
+            new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, TwoFactorCode: wrong),
             Ct);
 
         Assert.Equal(HttpStatusCode.Unauthorized, second.StatusCode);
@@ -90,18 +87,14 @@ public sealed class TwoFactorTests(PostgresFixture postgres)
         await using var api = await TestApi.StartAsync(postgres);
         var (_, _, codes) = await EnableAsync(api);
 
-        var first = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword), Ct);
-        var firstRequired = await first.Content.ReadFromJsonAsync<TwoFactorRequiredResponse>(Ct);
         Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().PostAsJsonAsync(
-            "/api/v1/accounts/login/two-factor",
-            new LoginTwoFactorRequest(firstRequired!.Challenge, codes[0]),
+            "/api/v1/accounts/login",
+            new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, TwoFactorRecoveryCode: codes[0]),
             Ct)).StatusCode);
 
-        var second = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword), Ct);
-        var secondRequired = await second.Content.ReadFromJsonAsync<TwoFactorRequiredResponse>(Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().PostAsJsonAsync(
-            "/api/v1/accounts/login/two-factor",
-            new LoginTwoFactorRequest(secondRequired!.Challenge, codes[0]),
+            "/api/v1/accounts/login",
+            new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword, TwoFactorRecoveryCode: codes[0]),
             Ct)).StatusCode);
     }
 

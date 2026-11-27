@@ -99,12 +99,11 @@ public sealed class EnableTwoFactorValidator : Validator<EnableTwoFactorRequest>
 
 /// <summary>
 /// Confirms the authenticator and turns the second factor on. The password is the confirmation, so a borrowed session
-/// cannot quietly lock the owner out. Other devices are signed out; this one stays.
+/// cannot quietly lock the owner out. Identity moves the security stamp, so every sign-in ends at its next check.
 /// </summary>
 public sealed class EnableTwoFactor(
     UserManager<User> users,
-    SignInManager<User> signIn,
-    UserSessions sessions) : Endpoint<EnableTwoFactorRequest, RecoveryCodesResponse>
+    SignInManager<User> signIn) : Endpoint<EnableTwoFactorRequest, RecoveryCodesResponse>
 {
     public override void Configure()
     {
@@ -150,7 +149,6 @@ public sealed class EnableTwoFactor(
 
         await users.SetTwoFactorEnabledAsync(user, true);
         var codes = await users.GenerateNewTwoFactorRecoveryCodesAsync(user, 10) ?? [];
-        if (User.SessionId() is { } current) await sessions.RevokeOthersAsync(user.Id, current, ct);
         await Send.OkAsync(new RecoveryCodesResponse([.. codes]), ct);
     }
 }
@@ -162,11 +160,10 @@ public sealed class PasswordConfirmationValidator : Validator<PasswordConfirmati
     public PasswordConfirmationValidator() => RuleFor(x => x.Password).NotEmpty();
 }
 
-/// <summary>Turns the second factor off. The password is the confirmation; every other device is signed out.</summary>
+/// <summary>Turns the second factor off. The password is the confirmation; Identity moves the security stamp, so every sign-in ends at its next check.</summary>
 public sealed class DisableTwoFactor(
     UserManager<User> users,
-    SignInManager<User> signIn,
-    UserSessions sessions) : Endpoint<PasswordConfirmation>
+    SignInManager<User> signIn) : Endpoint<PasswordConfirmation>
 {
     public override void Configure()
     {
@@ -196,7 +193,6 @@ public sealed class DisableTwoFactor(
 
         await users.SetTwoFactorEnabledAsync(user, false);
         await users.ResetAuthenticatorKeyAsync(user);
-        if (User.SessionId() is { } current) await sessions.RevokeOthersAsync(user.Id, current, ct);
         await Send.NoContentAsync(ct);
     }
 }

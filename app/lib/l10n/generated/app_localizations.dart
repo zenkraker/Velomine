@@ -728,66 +728,6 @@ abstract class AppLocalizations {
   /// **'Two-factor sign-in is on.'**
   String get twoFactorEnabled;
 
-  /// No description provided for @sessionsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Devices and sessions'**
-  String get sessionsTitle;
-
-  /// No description provided for @sessionsIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Where you are signed in now. Signing a device out asks for the password again there.'**
-  String get sessionsIntro;
-
-  /// No description provided for @sessionThisDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'This device'**
-  String get sessionThisDevice;
-
-  /// No description provided for @sessionLastUsed.
-  ///
-  /// In en, this message translates to:
-  /// **'Last used'**
-  String get sessionLastUsed;
-
-  /// No description provided for @sessionRevoke.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out'**
-  String get sessionRevoke;
-
-  /// No description provided for @sessionLogoutOthers.
-  ///
-  /// In en, this message translates to:
-  /// **'Log out other devices'**
-  String get sessionLogoutOthers;
-
-  /// No description provided for @sessionLogoutOthersBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This signs out every device except this one. They will need to sign in again.'**
-  String get sessionLogoutOthersBody;
-
-  /// No description provided for @sessionsEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No other devices are signed in.'**
-  String get sessionsEmpty;
-
-  /// No description provided for @sessionRevoked.
-  ///
-  /// In en, this message translates to:
-  /// **'That device is signed out.'**
-  String get sessionRevoked;
-
-  /// No description provided for @sessionOthersRevoked.
-  ///
-  /// In en, this message translates to:
-  /// **'Every other device is signed out.'**
-  String get sessionOthersRevoked;
-
   /// No description provided for @ssoEmailNotVerified.
   ///
   /// In en, this message translates to:
@@ -9877,12 +9817,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Two-factor sign-in is off.'**
   String get twoFactorStateOff;
-
-  /// No description provided for @sessionsCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 device} other{{count} devices}}'**
-  String sessionsCount(int count);
 
   /// No description provided for @privacyZoneRadiusLine.
   ///

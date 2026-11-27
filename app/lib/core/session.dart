@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
 import 'app_sso.dart';
@@ -320,7 +319,6 @@ class Session {
         ExchangeSsoTokenRequest(
           idToken: idToken,
           accessToken: result.accessToken,
-          deviceLabel: Optional.present(_deviceLabel),
         ),
       );
     } on ApiException catch (e) {
@@ -407,24 +405,31 @@ class Session {
     _notify();
   }
 
-  /// Returns null on success, or the reason it failed. A non-null challenge means the account has a second factor:
-  /// the screen asks for the code and calls [completeTwoFactor].
-  Future<({AuthProblem? problem, String? challenge})> signIn(
+  /// Returns null on success, or the reason it failed. [needsCode] means the account has a second factor: the screen
+  /// asks for the code and calls this again with it, as the server's one-call sign-in takes the password and the code
+  /// together. A six-digit [code] is the authenticator's; anything else is a recovery code.
+  Future<({AuthProblem? problem, bool needsCode})> signIn(
     String email,
     String password, {
     bool rememberMe = true,
+    String? code,
   }) async {
-    final result = await _signIn(email, password, rememberMe: rememberMe);
+    final result = await _signIn(
+      email,
+      password,
+      rememberMe: rememberMe,
+      code: code,
+    );
     final problem = result.problem;
     final resultName =
-        problem?.name ?? (result.challenge == null ? 'success' : 'two_factor');
+        problem?.name ?? (result.needsCode ? 'two_factor' : 'success');
     telemetry.count('sign_in', 1, attributes: {'result': resultName});
     if (problem == null) {
       telemetry.log(
         TelemetryLevel.info,
-        result.challenge == null
-            ? 'sign-in succeeded'
-            : 'sign-in needs a second factor',
+        result.needsCode
+            ? 'sign-in needs a second factor'
+            : 'sign-in succeeded',
       );
     } else {
       telemetry.log(
@@ -436,152 +441,80 @@ class Session {
     return result;
   }
 
-  Future<({AuthProblem? problem, String? challenge})> _signIn(
+  Future<({AuthProblem? problem, bool needsCode})> _signIn(
     String email,
     String password, {
     bool rememberMe = true,
+    String? code,
   }) async {
     // Keys and autofill can add a space at either end; it must not decide whether
     // an account matches.
     email = email.trim();
     password = password.trim();
+    code = code?.trim();
     restoreProblem = null;
 
     late final int statusCode;
-    String? challenge;
-    String? refusal;
+    String? body;
     TokenResponse? token;
     try {
+      final isAuthenticatorCode =
+          code != null && RegExp(r'^\d{6}$').hasMatch(code);
       final response = await accounts.loginWithHttpInfo(
         LoginRequest(
           email: email,
           password: password,
           useCookies: Optional.present(useCookies),
           rememberMe: Optional.present(rememberMe),
-          deviceLabel: Optional.present(_deviceLabel),
+          twoFactorCode: Optional.present(isAuthenticatorCode ? code : null),
+          twoFactorRecoveryCode: Optional.present(
+            code != null && !isAuthenticatorCode && code.isNotEmpty
+                ? code
+                : null,
+          ),
         ),
       );
       statusCode = response.statusCode;
-      refusal = response.body.contains('email_not_confirmed')
-          ? 'email_not_confirmed'
-          : null;
-      if (statusCode == 202) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        challenge = body['challenge'] as String?;
-      } else if (statusCode < 400 && response.body.isNotEmpty) {
+      body = response.body;
+      if (statusCode < 400 && body.isNotEmpty) {
         token = TokenResponse.fromJson(
-          jsonDecode(response.body) as Map<String, dynamic>,
+          jsonDecode(body) as Map<String, dynamic>,
         );
       }
     } on Object {
-      return (problem: AuthProblem.unavailable, challenge: null);
-    }
-
-    if (challenge != null) {
-      return (problem: null, challenge: challenge);
-    }
-
-    // A 202 without a challenge would otherwise look like a successful sign-in with no session.
-    if (statusCode == 202) {
-      return (problem: AuthProblem.unavailable, challenge: null);
+      return (problem: AuthProblem.unavailable, needsCode: false);
     }
 
     if (statusCode >= 400) {
+      // The server says a second factor is wanted with a 401 that carries this code.
+      if (statusCode == 401 && body.contains('two_factor_required')) {
+        return (problem: null, needsCode: true);
+      }
       if (statusCode == 401) await auth.clear();
       // A 403 is the server's word for why: the account waits for approval, or its address is unconfirmed.
-      final refusedForEmail = refusal == 'email_not_confirmed';
+      final refusedForEmail = body.contains('email_not_confirmed');
       return (
         problem: switch (statusCode) {
+          401 when code != null => AuthProblem.wrongCode,
           401 => AuthProblem.wrongPassword,
           403 when refusedForEmail => AuthProblem.emailNotConfirmed,
           403 => AuthProblem.notApproved,
           423 => AuthProblem.lockedOut,
           _ => AuthProblem.unavailable,
         },
-        challenge: null,
+        needsCode: false,
       );
     }
 
     if (!useCookies) {
       if (token == null) {
-        return (problem: AuthProblem.unavailable, challenge: null);
+        return (problem: AuthProblem.unavailable, needsCode: false);
       }
       await auth.accept(token, persist: rememberMe);
     }
 
     final problem = await _finishSignIn();
-    return (problem: problem, challenge: null);
-  }
-
-  /// The second step: the challenge from [signIn] and the code from the authenticator app, or a recovery code.
-  Future<AuthProblem?> completeTwoFactor(
-    String challenge,
-    String code, {
-    bool rememberMe = true,
-  }) async {
-    final problem = await _completeTwoFactor(
-      challenge,
-      code,
-      rememberMe: rememberMe,
-    );
-    telemetry.count(
-      'sign_in_two_factor',
-      1,
-      attributes: {'result': problem?.name ?? 'success'},
-    );
-    if (problem == null) {
-      telemetry.log(TelemetryLevel.info, 'two-factor sign-in succeeded');
-    } else {
-      telemetry.log(
-        TelemetryLevel.warning,
-        'two-factor sign-in failed',
-        attributes: {'reason': problem.name},
-      );
-    }
-    return problem;
-  }
-
-  Future<AuthProblem?> _completeTwoFactor(
-    String challenge,
-    String code, {
-    bool rememberMe = true,
-  }) async {
-    try {
-      final response = await accounts.loginTwoFactorWithHttpInfo(
-        LoginTwoFactorRequest(
-          challenge: challenge,
-          code: code.trim(),
-          useCookies: Optional.present(useCookies),
-          rememberMe: Optional.present(rememberMe),
-          deviceLabel: Optional.present(_deviceLabel),
-        ),
-      );
-
-      if (response.statusCode >= 400) {
-        if (response.statusCode == 401) await auth.clear();
-        return switch (response.statusCode) {
-          401 => AuthProblem.wrongCode,
-          403 when response.body.contains('email_not_confirmed') =>
-            AuthProblem.emailNotConfirmed,
-          403 => AuthProblem.notApproved,
-          423 => AuthProblem.lockedOut,
-          _ => AuthProblem.unavailable,
-        };
-      }
-
-      if (!useCookies) {
-        if (response.body.isEmpty) return AuthProblem.unavailable;
-        final token = TokenResponse.fromJson(
-          jsonDecode(response.body) as Map<String, dynamic>,
-        );
-        if (token == null) return AuthProblem.unavailable;
-        await auth.accept(token, persist: rememberMe);
-      }
-
-      return await _finishSignIn();
-    } on Object {
-      return AuthProblem.unavailable;
-    }
+    return (problem: problem, needsCode: false);
   }
 
   /// Reads the member after the server accepted the sign-in.
@@ -599,19 +532,6 @@ class Session {
     status = SessionStatus.signedIn;
     _notify();
     return null;
-  }
-
-  /// A label the session list can show, without asking the platform for a model name.
-  String get _deviceLabel {
-    if (kIsWeb) return 'Web app';
-    return switch (defaultTargetPlatform) {
-      TargetPlatform.android => 'Android app',
-      TargetPlatform.iOS => 'iPhone app',
-      TargetPlatform.macOS => 'Mac app',
-      TargetPlatform.windows => 'Windows app',
-      TargetPlatform.linux => 'Linux app',
-      _ => 'App',
-    };
   }
 
   /// Returns null on success. [approved] says whether the new account can sign in right away.

@@ -80,7 +80,6 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<PrivacyZone> PrivacyZones => Set<PrivacyZone>();
 
-    public DbSet<UserSession> UserSessions => Set<UserSession>();
 
     public DbSet<CyclingRoute> Routes => Set<CyclingRoute>();
 

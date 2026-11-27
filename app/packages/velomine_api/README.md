@@ -82,10 +82,8 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**getTelemetry**](doc//AccountsApi.md#gettelemetry) | **GET** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**getTwoFactor**](doc//AccountsApi.md#gettwofactor) | **GET** /api/v1/accounts/me/two-factor | 
 *AccountsApi* | [**getZones**](doc//AccountsApi.md#getzones) | **GET** /api/v1/accounts/me/zones | 
-*AccountsApi* | [**listSessions**](doc//AccountsApi.md#listsessions) | **GET** /api/v1/accounts/me/sessions | 
 *AccountsApi* | [**listUsers**](doc//AccountsApi.md#listusers) | **GET** /api/v1/accounts/users | 
 *AccountsApi* | [**login**](doc//AccountsApi.md#login) | **POST** /api/v1/accounts/login | 
-*AccountsApi* | [**loginTwoFactor**](doc//AccountsApi.md#logintwofactor) | **POST** /api/v1/accounts/login/two-factor | 
 *AccountsApi* | [**logout**](doc//AccountsApi.md#logout) | **POST** /api/v1/accounts/logout | 
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
 *AccountsApi* | [**regenerateRecoveryCodes**](doc//AccountsApi.md#regeneraterecoverycodes) | **POST** /api/v1/accounts/me/two-factor/recovery-codes | 
@@ -93,8 +91,6 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**resendVerification**](doc//AccountsApi.md#resendverification) | **POST** /api/v1/accounts/email/resend | 
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
 *AccountsApi* | [**resetZones**](doc//AccountsApi.md#resetzones) | **DELETE** /api/v1/accounts/me/zones/{set} | 
-*AccountsApi* | [**revokeOtherSessions**](doc//AccountsApi.md#revokeothersessions) | **POST** /api/v1/accounts/me/sessions/logout-others | 
-*AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**setHeartRate**](doc//AccountsApi.md#setheartrate) | **PUT** /api/v1/accounts/me/heart-rate/{kind} | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
@@ -346,7 +342,6 @@ Class | Method | HTTP request | Description
  - [ListServiceJobsResponse](doc//ListServiceJobsResponse.md)
  - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
- - [LoginTwoFactorRequest](doc//LoginTwoFactorRequest.md)
  - [MainSetTarget](doc//MainSetTarget.md)
  - [MaintenanceJob](doc//MaintenanceJob.md)
  - [MaintenanceReminderResponse](doc//MaintenanceReminderResponse.md)
@@ -407,7 +402,6 @@ Class | Method | HTTP request | Description
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
  - [SessionNote](doc//SessionNote.md)
- - [SessionResponse](doc//SessionResponse.md)
  - [SessionResult](doc//SessionResult.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
@@ -451,7 +445,6 @@ Class | Method | HTTP request | Description
  - [TrainingWeek](doc//TrainingWeek.md)
  - [TrainingWeekSession](doc//TrainingWeekSession.md)
  - [TrainingWeeksResponse](doc//TrainingWeeksResponse.md)
- - [TwoFactorRequiredResponse](doc//TwoFactorRequiredResponse.md)
  - [TwoFactorSetup](doc//TwoFactorSetup.md)
  - [TwoFactorState](doc//TwoFactorState.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)

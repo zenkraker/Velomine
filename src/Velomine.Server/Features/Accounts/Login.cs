@@ -7,9 +7,16 @@ namespace Velomine.Server.Features.Accounts;
 
 /// <summary>
 /// UseCookies: true for the web app (cookie session), false for the mobile app (bearer tokens). RememberMe: keep the
-/// web cookie after the browser closes. DeviceLabel is what the member sees in the session list; older clients leave it out.
+/// web cookie after the browser closes. TwoFactorCode or TwoFactorRecoveryCode: sent with the password when the account
+/// has a second factor, as Identity's own login takes them.
 /// </summary>
-public sealed record LoginRequest(string Email, string Password, bool UseCookies = false, bool RememberMe = true, string? DeviceLabel = null);
+public sealed record LoginRequest(
+    string Email,
+    string Password,
+    bool UseCookies = false,
+    bool RememberMe = true,
+    string? TwoFactorCode = null,
+    string? TwoFactorRecoveryCode = null);
 
 public sealed class LoginValidator : Validator<LoginRequest>
 {
@@ -17,15 +24,16 @@ public sealed class LoginValidator : Validator<LoginRequest>
     {
         RuleFor(x => x.Email).NotEmpty();
         RuleFor(x => x.Password).NotEmpty();
-        RuleFor(x => x.DeviceLabel).MaximumLength(60);
+        RuleFor(x => x.TwoFactorCode).MaximumLength(64);
+        RuleFor(x => x.TwoFactorRecoveryCode).MaximumLength(64);
     }
 }
 
-public sealed class Login(
-    UserManager<User> users,
-    SignInManager<User> signIn,
-    SessionSignIn sessions,
-    TwoFactorChallenges challenges) : Endpoint<LoginRequest>
+/// <summary>
+/// Signs in with Identity's own sequence (the one its /login endpoint uses): password, then the authenticator or
+/// recovery code when the account has a second factor. A wrong code counts toward the same lockout as a wrong password.
+/// </summary>
+public sealed class Login(UserManager<User> users, SignInManager<User> signIn) : Endpoint<LoginRequest>
 {
     public override void Configure()
     {
@@ -35,7 +43,6 @@ public sealed class Login(
         Description(
             d => d.Accepts<LoginRequest>("application/json")
                 .Produces<TokenResponse>(200, "application/json")
-                .Produces<TwoFactorRequiredResponse>(202, "application/json")
                 .Produces(204)
                 .ProducesProblem(400)
                 .Produces(401)
@@ -47,35 +54,29 @@ public sealed class Login(
 
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
-        // The password is checked here instead of PasswordSignInAsync so the session row exists before the cookie or
-        // the token pair is written, which is what carries the session id.
         if (await users.FindByEmailAsync(req.Email.Trim()) is not { } user)
         {
             await Send.UnauthorizedAsync(ct);
             return;
         }
 
-        var result = await signIn.CheckPasswordSignInAsync(user, req.Password, lockoutOnFailure: true);
+        // On success the cookie or the token pair is written as the response.
+        signIn.AuthenticationScheme = req.UseCookies ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+        var isPersistent = req.UseCookies && req.RememberMe;
+        var result = await signIn.PasswordSignInAsync(user, req.Password, isPersistent, lockoutOnFailure: true);
 
-        // CheckPasswordSignInAsync only proves the password; the second factor is decided here.
-        if (result.Succeeded && user.TwoFactorEnabled)
+        if (result.RequiresTwoFactor)
         {
-            await Send.ResponseAsync(new TwoFactorRequiredResponse(true, challenges.Issue(user.Id)), 202, ct);
-            return;
+            if (!string.IsNullOrEmpty(req.TwoFactorCode))
+                result = await signIn.TwoFactorAuthenticatorSignInAsync(req.TwoFactorCode, isPersistent, rememberClient: false);
+            else if (!string.IsNullOrEmpty(req.TwoFactorRecoveryCode))
+                result = await signIn.TwoFactorRecoveryCodeSignInAsync(req.TwoFactorRecoveryCode);
         }
 
-        if (result.Succeeded)
-        {
-            await sessions.SignInAsync(
-                user,
-                req.UseCookies ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme,
-                isPersistent: req.UseCookies && req.RememberMe,
-                req.DeviceLabel,
-                ct);
-            return;
-        }
+        if (result.Succeeded) return;
 
-        if (result.IsLockedOut) await Send.ResponseAsync(new { error = "locked_out" }, 423, ct);
+        if (result.RequiresTwoFactor) await Send.ResponseAsync(new { error = "two_factor_required" }, 401, ct);
+        else if (result.IsLockedOut) await Send.ResponseAsync(new { error = "locked_out" }, 423, ct);
         else if (result.IsNotAllowed) await Send.ResponseAsync(new { error = Refusal(user) }, 403, ct);
         else await Send.UnauthorizedAsync(ct);
     }

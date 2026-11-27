@@ -30,7 +30,7 @@ class RideUploadWorker(
         val store = RideStore(applicationContext)
         val tokens = SecureTokenStore(applicationContext)
 
-        // Nothing ready to send: stop before refreshing. Every refresh rotates the token the open app also holds.
+        // Nothing ready to send: stop before refreshing.
         if (store.list().none { it["state"] == "ready" && it["uploadState"] != "uploaded" }) {
             log("worker: no rides to upload")
             return Result.success()
@@ -184,33 +184,26 @@ class RideUploadWorker(
         }
     }
 
-    /** One rotation at a time: the app may be refreshing the same token while the worker runs. */
     private fun refresh(serverUrl: String, tokens: SecureTokenStore): RefreshOutcome {
-        val locked = tokens.lock()
-        try {
-            // Read after the lock: the other writer may have left a newer token behind.
-            val refreshToken = tokens.read() ?: return RefreshOutcome(null)
-            val body = JSONObject().put("refreshToken", refreshToken).toString().toByteArray()
-            val response = request(
-                "$serverUrl/api/v1/accounts/refresh",
-                "POST",
-                mapOf("Content-Type" to "application/json"),
-                body,
-            )
-            if (response.networkError) return RefreshOutcome(null, networkError = true)
-            if (response.code == 401) return RefreshOutcome(null)
-            if (response.code != 200) return RefreshOutcome(null, networkError = true)
-            return try {
-                val json = JSONObject(response.body)
-                val access = json.optString("accessToken")
-                val newRefresh = json.optString("refreshToken")
-                if (newRefresh.isNotEmpty()) tokens.write(newRefresh)
-                RefreshOutcome(access.ifEmpty { null })
-            } catch (_: Exception) {
-                RefreshOutcome(null)
-            }
-        } finally {
-            if (locked) tokens.unlock()
+        val refreshToken = tokens.read() ?: return RefreshOutcome(null)
+        val body = JSONObject().put("refreshToken", refreshToken).toString().toByteArray()
+        val response = request(
+            "$serverUrl/api/v1/accounts/refresh",
+            "POST",
+            mapOf("Content-Type" to "application/json"),
+            body,
+        )
+        if (response.networkError) return RefreshOutcome(null, networkError = true)
+        if (response.code == 401) return RefreshOutcome(null)
+        if (response.code != 200) return RefreshOutcome(null, networkError = true)
+        return try {
+            val json = JSONObject(response.body)
+            val access = json.optString("accessToken")
+            val newRefresh = json.optString("refreshToken")
+            if (newRefresh.isNotEmpty()) tokens.write(newRefresh)
+            RefreshOutcome(access.ifEmpty { null })
+        } catch (_: Exception) {
+            RefreshOutcome(null)
         }
     }
 

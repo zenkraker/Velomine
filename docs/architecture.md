@@ -100,7 +100,7 @@ The original file is saved before `202` is returned, and on start the service re
 Everything runs inside the application as hosted services; PostgreSQL holds data, not a job system.
 
 - **Ingestion:** the queue above.
-- **Timers:** email notifications (batched so a burst becomes one email), the parts catalogue sync, part contributions to the catalogue publisher, the sharing view log (three months) and ended sessions (a week). Each timer recomputes its work from the data, so a missed run is caught up next time.
+- **Timers:** email notifications (batched so a burst becomes one email), the parts catalogue sync, part contributions to the catalogue publisher, the sharing view log (three months). Each timer recomputes its work from the data, so a missed run is caught up next time.
 - **Parts catalogue:** one list maintained by a publisher, mirrored every hour. Members never write to it. A part the list does not have waits in a table until the publisher answers, because losing it would mean asking the member to type it again. Only the part itself is sent: no member, bike, club or address.
 
 Most numbers are computed when asked for (wear, totals, goals). Training load and power bests are stored per ride, because the dashboard and power curve sum them over long ranges.
@@ -119,7 +119,6 @@ erDiagram
   RIDE ||--o| RIDE_FEEL : "felt as"
   USER ||--o{ CHECK_IN : daily
   USER ||--o{ PRIVACY_ZONE : defines
-  USER ||--o{ SESSION : "signed in on"
   CLUB ||--o{ MEMBERSHIP : has
   USER ||--o| MEMBERSHIP : "one club"
   CLUB ||--o{ SHARE_GRANT : scopes
@@ -136,7 +135,7 @@ erDiagram
 - Everything a non-owner sees passes through one privacy function: privacy zones around saved places, start and end trimming, and no position data without a route grant. Those hide the route only: a coach with a grant sees every number and stream of what was shared.
 - Wellbeing is health data: explicit, versioned consent; notes never leave the owner.
 - Every coach view of a member's data is logged, and the member can read the log.
-- Sessions are listed and revocable per device; refresh tokens rotate and a reused one ends the session.
+- Sign-in is Identity's own cookie and bearer tokens with its defaults. A security change moves the account's security stamp, which ends every cookie and refresh token at its next check (`docs/rules/api.md`, `docs/adr/0001-identity-sessions.md`).
 - Email verification: a confirmed address is required to sign in only on the cloud service (`VELOMINE__ACCOUNTS__CLOUD`) with SMTP configured, and there nobody waits for an admin. A self-hosted server never sends a verification email; with admin approval on, the admins are notified of each sign-up and the account waits for one of them.
 - Operational logs never contain member data. Member telemetry from the app is opt-in; server telemetry is anonymised and used only to fix bugs and performance problems.
 

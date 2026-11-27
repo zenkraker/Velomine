@@ -72,7 +72,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Future<void> _verifyCode() async {
-    await ref.read(signInViewModelProvider.notifier).verifyCode(_code.text);
+    await ref
+        .read(signInViewModelProvider.notifier)
+        .verifyCode(_email.text.trim(), _password.text, _code.text);
   }
 
   @override
@@ -92,9 +94,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     return AuthPage(
       title: l10n.signInTitle,
       help: l10n.signInHelp,
-      primaryLabel: s.challenge != null ? l10n.twoFactorVerify : l10n.signIn,
-      primaryKey: Key(s.challenge != null ? 'two-factor-verify' : 'sign-in'),
-      onPrimary: s.challenge != null ? _verifyCode : _signIn,
+      primaryLabel: s.needsCode ? l10n.twoFactorVerify : l10n.signIn,
+      primaryKey: Key(s.needsCode ? 'two-factor-verify' : 'sign-in'),
+      onPrimary: s.needsCode ? _verifyCode : _signIn,
       primaryBusy: s.command.running,
       children: [
         if (widget.onChangeServer != null) ...[
@@ -117,7 +119,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ],
           ),
         ],
-        if (s.challenge != null) ...[
+        if (s.needsCode) ...[
           Text(
             l10n.twoFactorTitle,
             style: Theme.of(context).textTheme.titleLarge,
