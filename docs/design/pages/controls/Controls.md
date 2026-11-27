@@ -15,3 +15,5 @@ The four controls every page draws from: the main action, the period selector, t
 - Show a destructive action as a visible button.
 
 **Flutter:** `FilledButton`, `SegmentedButton`, `ChoiceChip` and `PageMenu` themed from the tokens.
+
+**The saved badge:** a screen that edits something that already exists has no Save button. Each save that goes through shows one small green `AppBadge` (a check and "Saved.") in the bottom-right corner of the window for about two seconds, above the floating pill on a phone, so it sits where the member is looking whatever the page's length. A failed save shows its error and no badge. Flutter: `SavedMarkHost` once around the app's pages, fed by `SavedMarkViewModel`.

@@ -1,17 +1,20 @@
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine/core/units.dart';
 import 'package:velomine/core/widgets/section_card.dart';
-import 'package:velomine/core/widgets/saved_mark.dart';
+import 'package:velomine/core/saved_mark_view_model.dart';
 import 'package:velomine/core/widgets/source_note.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
 
 import 'fake_server.dart';
 
-bool savedMarkVisible(WidgetTester tester) =>
-    tester.widget<SavedMark>(find.byKey(const Key('profile-saved'))).visible;
+/// Whether the app's "Saved." mark is showing, read from the same container the screen saves through.
+bool savedMarkVisible(WidgetTester tester) => ProviderScope.containerOf(
+  tester.element(find.byKey(const Key('profile-name'))),
+).read(savedMarkViewModelProvider);
 
 /// Goes back from the profile with a field still focused, the way the back action pops the route.
 void popProfile(WidgetTester tester) {
@@ -742,8 +745,7 @@ void main() {
     expect(find.text('Saved.'), findsOneWidget);
 
     // The mark goes on its own once the two seconds have passed.
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 3));
     expect(savedMarkVisible(tester), isFalse);
   });
 

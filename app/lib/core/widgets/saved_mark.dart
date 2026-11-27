@@ -1,12 +1,15 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n.dart';
 import '../motion.dart';
+import '../saved_mark_view_model.dart';
 import '../tokens.dart';
+import 'bottom_action_bar.dart';
+import 'badge.dart';
 
-/// The "Saved." confirmation after a save: a check and the word, faded in while [visible] and out when not. Its
-/// height is kept either way, so the card it sits in does not jump when it appears. Read once, when it shows, by
-/// a screen reader.
+/// The "Saved." confirmation after a save: a small green badge with a check, faded in while [visible] and out
+/// when not. Read once, when it shows, by a screen reader.
 class SavedMark extends StatelessWidget {
   const SavedMark({super.key, required this.visible});
 
@@ -14,8 +17,6 @@ class SavedMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.primary;
     return ExcludeSemantics(
       excluding: !visible,
       child: Semantics(
@@ -25,30 +26,46 @@ class SavedMark extends StatelessWidget {
           opacity: visible ? 1 : 0,
           duration: motionDuration(context, AppMotion.standard),
           curve: motionCurve(context, AppMotion.emphasized),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: AppSourceNote.minHeight,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: AppSpacing.xs,
-              children: [
-                ExcludeSemantics(
-                  child: Icon(
-                    Icons.check,
-                    size: AppLoading.errorIcon,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  context.l10n.saved,
-                  style: theme.textTheme.bodySmall?.copyWith(color: color),
-                ),
-              ],
-            ),
+          child: AppBadge(
+            context.l10n.saved,
+            tone: AppBadgeTone.good,
+            icon: Icons.check,
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Draws the [SavedMark] in the bottom-right corner of the window, over every screen and above the floating
+/// navigation pill on a phone, so it shows where the member is looking whatever the page's length. Put it once,
+/// around the app's pages.
+class SavedMarkHost extends ConsumerWidget {
+  const SavedMarkHost({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final width = MediaQuery.sizeOf(context).width;
+    final phone = width < AppBreakpoint.compactWidth;
+    return Stack(
+      children: [
+        child,
+        PositionedDirectional(
+          end: AppLayout.gutterFor(width),
+          bottom:
+              bottomClearanceOf(context) +
+              (phone ? AppNav.pillClearance : 0) +
+              AppSpacing.md,
+          child: IgnorePointer(
+            child: SavedMark(
+              key: const Key('saved-mark'),
+              visible: ref.watch(savedMarkViewModelProvider),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

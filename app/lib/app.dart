@@ -11,6 +11,7 @@ import 'package:velomine_api/api.dart';
 
 import 'core/widgets/loading_state.dart';
 import 'core/widgets/page_scaffold.dart';
+import 'core/widgets/saved_mark.dart';
 import 'core/back_guard.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
@@ -708,13 +709,15 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final page = IncomingRidesArea(
-          // "Share to Velomine" ends on the ride list, like a drop on the web.
-          onOpenRides: () => _router.go('/rides'),
-          child: RideDropArea(
-            // A folder dropped on any page is followed on the ride list.
-            onStarted: () => _router.go('/rides'),
-            child: child!,
+        final page = SavedMarkHost(
+          child: IncomingRidesArea(
+            // "Share to Velomine" ends on the ride list, like a drop on the web.
+            onOpenRides: () => _router.go('/rides'),
+            child: RideDropArea(
+              // A folder dropped on any page is followed on the ride list.
+              onStarted: () => _router.go('/rides'),
+              child: child!,
+            ),
           ),
         );
         if (!reduceMotion(context)) return page;

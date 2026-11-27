@@ -1,11 +1,10 @@
-import 'dart:async' show Timer;
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
+import '../../core/saved_mark_view_model.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
@@ -13,7 +12,6 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/more_details.dart';
-import '../../core/widgets/saved_mark.dart';
 import '../../core/widgets/section_card.dart';
 
 /// The settings an admin can change, and (read-only) what only the server's environment sets. Each switch saves
@@ -26,33 +24,19 @@ class SettingsTab extends ConsumerStatefulWidget {
 }
 
 class _SettingsTabState extends ConsumerState<SettingsTab> {
-  /// How long the "Saved." mark stays after a save that went through.
-  static const _savedFor = Duration(seconds: 2);
-
-  /// Whether the "Saved." mark shows, and the timer that hides it again.
-  bool _savedShown = false;
-  Timer? _savedTimer;
-
-  @override
-  void dispose() {
-    _savedTimer?.cancel();
-    super.dispose();
-  }
-
-  /// Shows the mark when a switch's save went through. A failed save hides it; a change that sent nothing leaves it
-  /// as it is.
+  /// Shows the "Saved." badge when a switch's save went through. A failed save hides it; a change that sent nothing
+  /// leaves it as it is.
   Future<void> _showSaved(Future<bool> save) async {
     final saved = await save;
     if (!mounted) return;
     final failed =
         ref.read(adminSettingsViewModelProvider).save.failure != null;
     if (!saved && !failed) return;
-    _savedTimer?.cancel();
-    setState(() => _savedShown = saved);
+    final badge = ref.read(savedMarkViewModelProvider.notifier);
     if (saved) {
-      _savedTimer = Timer(_savedFor, () {
-        if (mounted) setState(() => _savedShown = false);
-      });
+      badge.show();
+    } else {
+      badge.hide();
     }
   }
 
@@ -140,10 +124,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                         failureText(l10n, failure),
                         key: const Key('settings-error'),
                       ),
-                    SavedMark(
-                      key: const Key('settings-saved'),
-                      visible: _savedShown,
-                    ),
                   ],
                 ),
                 SectionCard(

@@ -1,14 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/saved_mark_view_model.dart';
 import 'package:velomine/core/widgets/bottom_action_bar.dart';
-import 'package:velomine/core/widgets/saved_mark.dart';
 import 'package:velomine/core/widgets/section_card.dart';
 
 import 'fake_server.dart';
 
+/// Whether the app-level "Saved." mark is showing.
 bool savedMarkVisible(WidgetTester tester) =>
-    tester.widget<SavedMark>(find.byKey(const Key('privacy-saved'))).visible;
+    containerOf(tester).read(savedMarkViewModelProvider);
 
 /// Leaves whatever field has the focus, the way a rider taps away from it.
 Future<void> leaveField(WidgetTester tester) async {
@@ -138,8 +139,7 @@ void main() {
       expect(find.text('Saved.'), findsOneWidget);
 
       // The mark goes on its own once the two seconds have passed.
-      await tester.pump(const Duration(seconds: 2));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 3));
       expect(savedMarkVisible(tester), isFalse);
     },
   );

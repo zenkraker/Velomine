@@ -1,4 +1,4 @@
-import 'dart:async' show Timer, scheduleMicrotask;
+import 'dart:async' show scheduleMicrotask;
 
 import '../../core/confirm.dart';
 import '../../core/widgets/form_sheet.dart';
@@ -12,13 +12,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/saved_mark_view_model.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/saved_mark.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/units.dart';
 import '../../core/location_service.dart';
@@ -65,11 +65,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   /// Read through this, not `ref`, because a queued save can run after the State is disposed.
   late final ProviderContainer _container;
 
-  static const _savedFor = Duration(seconds: 2);
-
-  /// Whether the "Saved." mark shows, and the timer that hides it again.
-  bool _savedShown = false;
-  Timer? _savedTimer;
   late final ProviderSubscription<PrivacyResponse?> _privacySub;
 
   @override
@@ -100,7 +95,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
 
   @override
   void dispose() {
-    _savedTimer?.cancel();
     // Only the field still being typed in can hold a value nobody has saved: the other was saved when it was left.
     // The provider stays listened to until that save is done, so it still reaches the provider once the screen is gone.
     if (_trimStartFocus.hasFocus) _commitTrim(_TrimField.start);
@@ -190,15 +184,14 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     _showSaved(sent);
   }
 
-  /// Shows the "Saved." mark for two seconds after a save that went through. A failed save hides it.
+  /// Shows the "Saved." mark for two seconds after a save that went through. A failed save hides it. Through
+  /// `_container`, so a save that finishes after the screen is gone still shows the app-level mark.
   void _showSaved(bool saved) {
-    if (!mounted) return;
-    _savedTimer?.cancel();
-    setState(() => _savedShown = saved);
+    final mark = _container.read(savedMarkViewModelProvider.notifier);
     if (saved) {
-      _savedTimer = Timer(_savedFor, () {
-        if (mounted) setState(() => _savedShown = false);
-      });
+      mark.show();
+    } else {
+      mark.hide();
     }
   }
 
@@ -310,10 +303,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                           l10n.privacyErrorTrim,
                           key: const Key('privacy-error'),
                         ),
-                      SavedMark(
-                        key: const Key('privacy-saved'),
-                        visible: _savedShown,
-                      ),
                     ],
                   ),
                   SectionCard(

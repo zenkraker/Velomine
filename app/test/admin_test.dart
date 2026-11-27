@@ -8,10 +8,11 @@ import 'package:velomine/core/session.dart';
 import 'package:velomine/core/widgets/badge.dart';
 import 'package:velomine/core/widgets/empty_state.dart';
 import 'package:velomine/core/widgets/error_state.dart';
-import 'package:velomine/core/widgets/saved_mark.dart';
+import 'package:velomine/core/saved_mark_view_model.dart';
 import 'package:velomine/core/widgets/section_card.dart';
 import 'package:velomine/features/admin/admin_data.dart';
 import 'package:velomine/features/admin/admin_view_models.dart';
+import 'package:velomine/features/admin/settings_tab.dart';
 import 'package:velomine_api/api.dart';
 
 import 'fake_server.dart';
@@ -229,7 +230,8 @@ void main() {
   });
 
   bool savedMarkVisible(WidgetTester tester) =>
-      tester.widget<SavedMark>(find.byKey(const Key('settings-saved'))).visible;
+      ProviderScope.containerOf(tester.element(find.byType(SettingsTab)))
+          .read(savedMarkViewModelProvider);
 
   testWidgets('SettingsTab_ShouldSaveAndShowTheMark_WhenASwitchChanges', (
     tester,
@@ -247,6 +249,8 @@ void main() {
       'clubCreationEnabled': false,
     });
     expect(savedMarkVisible(tester), isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    expect(savedMarkVisible(tester), isFalse);
   });
 
   test('SettingsTab_ShouldNotSend_WhenSwitchIsAlreadyItsSavedValue', () async {

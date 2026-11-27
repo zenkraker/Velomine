@@ -1,13 +1,12 @@
-import 'dart:async' show Timer;
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/l10n.dart';
+import '../../../core/saved_mark_view_model.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
-import '../../../core/widgets/saved_mark.dart';
 
 /// How hard the ride felt and an optional note. Owner-only; coaches see the RPE but never the note.
 class RideFeelCard extends StatefulWidget {
@@ -29,7 +28,8 @@ class RideFeelCard extends StatefulWidget {
 }
 
 class _RideFeelCardState extends State<RideFeelCard> {
-  static const _savedFor = Duration(seconds: 2);
+  /// Read in initState: a save can finish after this card is gone, and the badge is app-level.
+  late final ProviderContainer _container;
 
   final _notes = TextEditingController();
   final _notesFocus = FocusNode();
@@ -43,13 +43,10 @@ class _RideFeelCardState extends State<RideFeelCard> {
   Future<void> _saves = Future.value();
   bool _inFlight = false;
 
-  /// Whether the "Saved." mark shows, and the timer that hides it again.
-  bool _savedShown = false;
-  Timer? _savedTimer;
-
   @override
   void initState() {
     super.initState();
+    _container = ProviderScope.containerOf(context, listen: false);
     _syncFromFeel();
     _notesFocus.addListener(_onNotesFocusChanged);
   }
@@ -72,7 +69,6 @@ class _RideFeelCardState extends State<RideFeelCard> {
 
   @override
   void dispose() {
-    _savedTimer?.cancel();
     _notesFocus.removeListener(_onNotesFocusChanged);
     _notesFocus.dispose();
     _notes.dispose();
@@ -104,14 +100,13 @@ class _RideFeelCardState extends State<RideFeelCard> {
     _showSaved(ok);
   }
 
-  /// Shows the "Saved." mark for two seconds after a save that went through. A failed save hides it.
+  /// Shows the "Saved." badge for a save that went through. A failed save hides it.
   void _showSaved(bool saved) {
-    _savedTimer?.cancel();
-    setState(() => _savedShown = saved);
+    final badge = _container.read(savedMarkViewModelProvider.notifier);
     if (saved) {
-      _savedTimer = Timer(_savedFor, () {
-        if (mounted) setState(() => _savedShown = false);
-      });
+      badge.show();
+    } else {
+      badge.hide();
     }
   }
 
@@ -183,7 +178,6 @@ class _RideFeelCardState extends State<RideFeelCard> {
                 child: Text(l10n.wellbeingRpeDelete),
               ),
             ),
-          SavedMark(key: const Key('ride-feel-mark'), visible: _savedShown),
         ],
       ),
     );

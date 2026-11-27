@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/rider_mode.dart';
+import 'package:velomine/core/saved_mark_view_model.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
 import 'package:velomine/core/widgets/badge.dart';
@@ -119,14 +120,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  double markOpacity(WidgetTester tester) => tester
-      .widget<AnimatedOpacity>(
-        find.descendant(
-          of: find.byKey(const Key('ride-feel-mark')),
-          matching: find.byType(AnimatedOpacity),
-        ),
-      )
-      .opacity;
+  bool savedMarkVisible(WidgetTester tester) => ProviderScope.containerOf(
+    tester.element(find.byKey(const Key('ride-feel-card'))),
+  ).read(savedMarkViewModelProvider);
 
   /// Leaves the notes field, which saves them when they changed.
   Future<void> leaveNotes(WidgetTester tester) async {
@@ -927,8 +923,9 @@ void main() {
       expect(server.feelSaves, [
         {'rpe': 7, 'notes': null},
       ]);
-      expect(markOpacity(tester), 1);
+      expect(savedMarkVisible(tester), isTrue);
       await tester.pump(const Duration(seconds: 3));
+      expect(savedMarkVisible(tester), isFalse);
     },
   );
 
@@ -948,8 +945,9 @@ void main() {
     await leaveNotes(tester);
 
     expect(server.feelSaves.last, {'rpe': 7, 'notes': 'Felt strong'});
-    expect(markOpacity(tester), 1);
+    expect(savedMarkVisible(tester), isTrue);
     await tester.pump(const Duration(seconds: 3));
+    expect(savedMarkVisible(tester), isFalse);
   });
 
   testWidgets('RideDetailScreen_ShouldSendNothing_WhenNothingChanged', (
@@ -982,7 +980,7 @@ void main() {
     await leaveNotes(tester);
 
     expect(server.feelSaves, isEmpty);
-    expect(markOpacity(tester), 0);
+    expect(savedMarkVisible(tester), isFalse);
   });
 
   testWidgets(
@@ -1003,7 +1001,7 @@ void main() {
             .selected,
         isTrue,
       );
-      expect(markOpacity(tester), 0);
+      expect(savedMarkVisible(tester), isFalse);
 
       // The typing stays on screen, and a failed save shows no mark.
       await tester.enterText(
@@ -1019,7 +1017,7 @@ void main() {
         findsOneWidget,
       );
       expect(server.feelSaves.last, {'rpe': 7, 'notes': 'Felt strong'});
-      expect(markOpacity(tester), 0);
+      expect(savedMarkVisible(tester), isFalse);
     },
   );
 

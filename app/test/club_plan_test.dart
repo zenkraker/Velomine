@@ -1,8 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:velomine_api/api.dart';
+import 'package:velomine/core/saved_mark_view_model.dart';
 import 'package:velomine/features/notifications/notifications_text.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -295,6 +297,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.adminSettings['clubCreationEnabled'], isTrue);
+    expect(
+      ProviderScope.containerOf(
+        tester.element(find.byKey(const Key('setting-club-creation'))),
+      ).read(savedMarkViewModelProvider),
+      isTrue,
+    );
+    await tester.pump(const Duration(seconds: 3));
+    expect(
+      ProviderScope.containerOf(
+        tester.element(find.byKey(const Key('setting-club-creation'))),
+      ).read(savedMarkViewModelProvider),
+      isFalse,
+    );
   });
 
   test('NotificationText_ShouldNameTheDay_WhenAPlanIsEndingInEachLanguage', () async {

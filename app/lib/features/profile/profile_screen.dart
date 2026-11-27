@@ -1,9 +1,8 @@
-import 'dart:async' show Timer, scheduleMicrotask;
+import 'dart:async' show scheduleMicrotask;
 
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
-import '../../core/widgets/saved_mark.dart';
 import '../../core/widgets/inline_error.dart';
 
 import 'package:material_ui/material_ui.dart';
@@ -13,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/saved_mark_view_model.dart';
 import '../../core/confirm.dart';
 import '../../core/device_time_zone.dart';
 import '../../core/time_zones.dart';
@@ -135,13 +135,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   /// Whether a field is saving itself. The screen keeps the text the rider is typing while it is true.
   bool _saving = false;
-
-  /// How long the "Saved." mark stays after a save that went through.
-  static const _savedFor = Duration(seconds: 2);
-
-  /// Whether the "Saved." mark shows, and the timer that hides it again.
-  bool _savedShown = false;
-  Timer? _savedTimer;
 
   final _nameFocus = FocusNode();
   final _ftpFocus = FocusNode();
@@ -293,7 +286,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
-    _savedTimer?.cancel();
     // Only the field still being typed in can hold a value nobody has saved: the others were saved when they were
     // left. Its save takes the text now, so it still sends once the State is gone.
     if (_nameFocus.hasFocus) _commitAthlete(_AthleteField.name);
@@ -518,19 +510,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  /// Shows the "Saved." mark for [_savedFor] after a save that went through. A failed save hides it; a save that
-  /// sent nothing (unchanged or refused) leaves it as it is.
+  /// Shows the app's "Saved." mark after a save that went through. A failed save hides it; a save that sent nothing
+  /// (unchanged or refused) leaves it as it is. It may run after the screen is gone, so it uses [_container], and the
+  /// badge is app-level, so it is right to show it then too.
   void _showSaved(bool saved) {
-    if (!mounted) return;
-    final vm = ref.read(profileViewModelProvider);
+    final vm = _container.read(profileViewModelProvider);
     final failed = vm.save.failure != null || vm.heartRate.failure != null;
-    if (!saved && !failed) return;
-    _savedTimer?.cancel();
-    setState(() => _savedShown = saved);
+    final mark = _container.read(savedMarkViewModelProvider.notifier);
     if (saved) {
-      _savedTimer = Timer(_savedFor, () {
-        if (mounted) setState(() => _savedShown = false);
-      });
+      mark.show();
+    } else if (failed) {
+      mark.hide();
     }
   }
 
@@ -875,7 +865,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : null))
               case final message?)
             InlineError(message, key: const Key('profile-error')),
-          SavedMark(key: const Key('profile-saved'), visible: _savedShown),
         ],
       ),
       // The zones in use, from the numbers above: a list, with their limits editable and back to automatic.
