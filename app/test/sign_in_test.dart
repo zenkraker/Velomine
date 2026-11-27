@@ -170,12 +170,24 @@ void main() {
       TextField field(String key) =>
           tester.widget<TextField>(find.byKey(Key(key)));
 
-      expect(
-        field('email').autofillHints,
-        containsAll([AutofillHints.email, AutofillHints.username]),
-      );
+      expect(field('email').autofillHints, [AutofillHints.username]);
       expect(field('email').textInputAction, TextInputAction.next);
-      expect(field('password').autofillHints!.first, AutofillHints.password);
+      expect(field('password').autofillHints, [AutofillHints.password]);
+      // Both boxes sit in one group, or the password manager sees two unrelated fields.
+      expect(
+        find.ancestor(
+          of: find.byKey(const Key('email')),
+          matching: find.byType(AutofillGroup),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.ancestor(
+          of: find.byKey(const Key('password')),
+          matching: find.byType(AutofillGroup),
+        ),
+        findsOneWidget,
+      );
       expect(field('password').textInputAction, TextInputAction.done);
     },
   );

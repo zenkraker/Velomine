@@ -113,10 +113,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       label: l10n.email,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      autofillHints: const [
-                        AutofillHints.email,
-                        AutofillHints.username,
-                      ],
+                      // `username` alone, as on sign-in: on the web several field names make the
+                      // `autocomplete` value invalid and the browser ignores it.
+                      autofillHints: const [AutofillHints.username],
                     ),
                     const SizedBox(height: AppSpacing.md),
                     PasswordField(

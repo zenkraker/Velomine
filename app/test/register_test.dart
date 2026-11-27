@@ -88,10 +88,7 @@ void main() {
       TextField field(String key) =>
           tester.widget<TextField>(find.byKey(Key(key)));
 
-      expect(
-        field('email').autofillHints,
-        containsAll([AutofillHints.email, AutofillHints.username]),
-      );
+      expect(field('email').autofillHints, [AutofillHints.username]);
       expect(field('email').textInputAction, TextInputAction.next);
       // new, not password: that is what makes the manager offer to generate a strong one.
       expect(field('password').autofillHints, [AutofillHints.newPassword]);

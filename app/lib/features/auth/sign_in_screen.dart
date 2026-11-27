@@ -8,6 +8,7 @@ import '../../core/hooks.dart';
 import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../core/session.dart';
+import '../../core/tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'auth_page.dart';
 import 'auth_view_models.dart';
@@ -144,26 +145,33 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             child: Text(l10n.twoFactorUseAnother),
           ),
         ] else ...[
-          AppTextField(
-            fieldKey: const Key('email'),
-            controller: _email,
-            label: l10n.email,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            // An address, not a typed-named login: the browser pairs it with the password below
-            // and every password manager recognises the pair.
-            autofillHints: const [AutofillHints.email, AutofillHints.username],
-          ),
-          PasswordField(
-            fieldKey: const Key('password'),
-            visibilityKey: const Key('password-visibility'),
-            controller: _password,
-            label: l10n.password,
-            autofillHints: const [
-              AutofillHints.password,
-              AutofillHints.newPassword,
-            ],
-            onSubmitted: (_) => _signIn(),
+          // One group, so the two boxes are one login form to the browser and to the phone's autofill
+          // service; alone, each is its own context and a password manager cannot pair them.
+          AutofillGroup(
+            onDisposeAction: AutofillContextAction.cancel,
+            child: Column(
+              spacing: AppSpacing.md,
+              children: [
+                AppTextField(
+                  fieldKey: const Key('email'),
+                  controller: _email,
+                  label: l10n.email,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  // `username` alone: on the web the hints become one `autocomplete` value, and
+                  // several field names make it invalid, so the browser ignores it.
+                  autofillHints: const [AutofillHints.username],
+                ),
+                PasswordField(
+                  fieldKey: const Key('password'),
+                  visibilityKey: const Key('password-visibility'),
+                  controller: _password,
+                  label: l10n.password,
+                  autofillHints: const [AutofillHints.password],
+                  onSubmitted: (_) => _signIn(),
+                ),
+              ],
+            ),
           ),
           SwitchListTile(
             key: const Key('stay-signed-in'),
