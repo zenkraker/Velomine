@@ -10,7 +10,7 @@ The toolchain is a dev container in `.devcontainer/`. It holds the editor, the a
 
 **Docker runs inside the container.** The `docker-in-docker` feature starts its own daemon there, so `just up` and the tests' Testcontainers start containers in it. Your host's Docker socket is never mounted; the container is `--privileged` for its own daemon, and that privilege stays inside it. Ports 8080 (the stack) and 5556 (Dex) are forwarded to your machine.
 
-**State stays off your machine.** Build caches (NuGet, pub, Gradle, npm, the Android SDK's home) go to `.dev/` in the repository, which is git-ignored and safe to delete. Agent logins and settings go to one Docker volume, `velomine-state`, mounted at `~/.state`. Without the volume the container is disposable.
+**State stays off your machine.** Build caches (NuGet, pub, Gradle, npm, the Android SDK's home) go to a second Docker volume, `velomine-cache`, mounted at `~/.dev-cache`: many small files, which a volume reads faster than a bind mount on macOS and Windows, and safe to delete (the next build downloads them again). `.dev/` in the repository, git-ignored, keeps only what you make by hand: screenshots and local keys. Agent logins and settings go to one Docker volume, `velomine-state`, mounted at `~/.state`. Without the volume the container is disposable.
 
 **The server is never run from a shell.** `docker-compose.yml` is the stack, `compose.development.yaml` adds Dex, and `just up` runs both. That is the same file a self-hoster uses; nothing in the repository starts the server as a host process.
 
@@ -20,7 +20,8 @@ The toolchain is a dev container in `.devcontainer/`. It holds the editor, the a
 |-------|------|-----------|
 | Your machine (Docker, VS Code) | The container runtime, the editor, a Chromium-based browser | Things a container cannot provide |
 | `.devcontainer/` | The toolchain: every tool and version the project needs | Pinned and reproducible; the only place versions are set |
-| `.dev/` in the repository | Build caches, the Android home | Machine-local and writable; safe to delete |
+| `.dev/` in the repository | Screenshots, local keys | Machine-local and writable; safe to delete |
+| The `velomine-cache` volume | Build caches (NuGet, pub, Gradle, npm), the Android home | Fast small-file I/O on every host; `docker volume rm velomine-cache` removes all of it |
 | The `velomine-state` volume | Logins, settings, sessions and caches of the agents and the editor | Survives a rebuild; `docker volume rm velomine-state` removes all of it |
 | Docker | PostgreSQL, Dex, the server and the web image | The same containers as `just up`; see [the compose file](../docker-compose.yml) and [the development overlay](../compose.development.yaml) |
 
@@ -41,8 +42,9 @@ The toolchain is a dev container in `.devcontainer/`. It holds the editor, the a
 | GitHub CLI (`gh`) | 2.105.0 | `/usr/local/bin`, for releases and tags |
 | Claude Code | 2.1.329 | npm, in the volume; the agents' CLI |
 | Sentry MCP | 0.49.0 | npm, in the volume; the local server Pi starts |
+| Playwright MCP | 0.0.86 (Playwright 1.66 alpha) | npm, in the volume; the agents' browser, with its headless Chromium in `~/.dev-cache/playwright` |
 
-The image is Debian 12, the last Debian whose apt has JDK 17, which Gradle 9, the Android Gradle Plugin 9, CI and the OpenAPI generator all need. **Not in the container:** the Android emulator and its system images (no hardware acceleration inside a container, so use a phone with `just phone`). A browser for a person to click in is not there either: use `just up`, or `flutter run -d web-server` and open the forwarded port on your machine. **In the container:** `chrome-headless-shell` (Chrome for Testing, pinned in the `Dockerfile`), which `dart run tools/screenshots.dart` drives for the screenshot check — it takes pictures, it is not a browser to work in. iOS builds need macOS with Xcode.
+The image is Debian 12, the last Debian whose apt has JDK 17, which Gradle 9, the Android Gradle Plugin 9, CI and the OpenAPI generator all need. **Not in the container:** the Android emulator and its system images (no hardware acceleration inside a container, so use a phone with `just phone`). A browser for a person to click in is not there either: use `just up`, or `flutter run -d web-server` and open the forwarded port on your machine. **In the container:** Playwright's headless Chromium, which the Playwright MCP server drives for the agents' screenshot check — it is not a browser to work in. iOS builds need macOS with Xcode.
 
 ## Set up
 
@@ -119,6 +121,8 @@ claude plugin install dart-flutter@dart-flutter
 
 **Sentry MCP** is available in two forms, both read-only (`inspect,triage`). Claude Code uses the hosted server in `.mcp.json` and signs in through `/mcp`. Pi starts the local `@sentry/mcp-server` that `post-create.sh` installs, with the same skills from the `env` of `.pi/mcp.json`. Without an LLM provider the local server's AI-powered search tools are unavailable, but project/DSN discovery and the other tools work. To add `project-management` for a setup task, add it to that `env` and re-authorize; never commit a token.
 
+**Playwright MCP** gives the agents a headless browser for the app that `just up` serves on http://localhost:8080 (`.mcp.json`, `.pi/mcp.json`, config in `tools/playwright-mcp.json`: an isolated profile, only the app and Dex as origins, files in `.dev/playwright/`). `post-create.sh` installs it at an exact version, and the headless Chromium that its Playwright asks for, into the volumes, so a rebuild does not download them again. It runs without the browser sandbox (`--no-sandbox`) because the container is the boundary. Its `browser_run_code_unsafe` tool runs any code in the MCP process, so keep it to this container.
+
 **Scaleway MCP** is Scaleway's own server, built into the CLI (`scw mcp server serve`). `.mcp.json` and `.pi/mcp.json` start it read-only (`read-only=true`), so only get and list commands exist, limited to the namespaces `instance`, `rdb`, `dns`, `object`, `iam`, `registry` and `vpc`. The flags are in those two files, so there is no wrapper script to keep in step.
 
 It runs under the CLI profile `velomine-readonly`. Create the key for it once:
@@ -159,13 +163,7 @@ Run `just` on its own to list every command.
 
 ### Screenshots of the app
 
-A change that alters what a page looks like is checked with screenshots taken in this run, never claimed from reading code. `just up` puts the app on http://localhost:8080, and only there does the session cookie work, so do not use `flutter run -d chrome`:
-
-```
-dart run tools/screenshots.dart --routes /rides,/progress/fitness --widths 390,600,820,1300
-```
-
-It drives one headless Chrome, signs in as the dev account (`admin.local` / `Velomine-dev-1`), sets each width, waits for the frame to settle and writes `.dev/screens/<screen>-<width>.png`. `--theme day` renders the Day theme; Night is the default. Compare each shot with the page's mock-up in `docs/design/pages/<area>/<Page>.html` at 390 and 1300, and at 600 and 820 when the page changes structure there. A missing Chrome or script means the check failed, not passed; a blank, unstyled or sign-in screenshot is a harness failure to fix and retake. Every changed page also gets a width test with fake data (`<Screen>_ShouldNotOverflow_WhenWidthIs<N>` at 390, 600, 820 and 1300), and a "RenderFlex overflowed" error is fixed in the layout, not hidden with `ClipRect`.
+A change that alters what a page looks like is checked with screenshots taken in this run, never claimed from reading code. `just up` puts the app on http://localhost:8080, and only there does the session cookie work, so do not use `flutter run -d chrome`. The agent uses the Playwright MCP server (`playwright`, configured in `tools/playwright-mcp.json`): it signs in as the dev account (`admin.local` / `Velomine-dev-1`), sets each width with `browser_resize` (390, 600, 820 and 1300), picks Day or Night with `browser_emulate_media` (`prefers-color-scheme`), opens each route and takes `browser_take_screenshot`; the files go to `.dev/playwright/`. `just up` builds the web app with `VELOMINE_SEMANTICS=true` (`compose.development.yaml`), so `browser_snapshot` lists every page by the names of its buttons, headings and fields; a release build leaves it off. Compare each shot with the page's mock-up in `docs/design/pages/<area>/<Page>.html` at 390 and 1300, and at 600 and 820 when the page changes structure there. A missing browser or MCP server means the check failed, not passed; a blank, unstyled or sign-in screenshot is a harness failure to fix and retake. Every changed page also gets a width test with fake data (`<Screen>_ShouldNotOverflow_WhenWidthIs<N>` at 390, 600, 820 and 1300), and a "RenderFlex overflowed" error is fixed in the layout, not hidden with `ClipRect`.
 
 `just emu` runs the app on an Android emulator and is meant for a machine where one is installed: the dev container has no emulator or system image, so use `just phone` there.
 
@@ -199,4 +197,4 @@ Every version is in `.devcontainer/` or, for Flutter, in `app/Dockerfile` too. A
 
 ## Removing it
 
-Delete the container and its image from the Dev Containers view, then `docker volume rm velomine-state` and delete `.dev/`. The stack's own data goes with `just nuke`; `docker image prune` removes the images it built.
+Delete the container and its image from the Dev Containers view, then `docker volume rm velomine-state velomine-cache` and delete `.dev/`. The stack's own data goes with `just nuke`; `docker image prune` removes the images it built.

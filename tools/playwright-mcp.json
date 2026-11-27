@@ -1,0 +1,11 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "isolated": true,
+    "launchOptions": { "headless": true, "args": ["--no-sandbox"] }
+  },
+  "outputDir": "../.dev/playwright",
+  "network": {
+    "allowedOrigins": ["http://localhost:8080", "http://dex.localhost:5556"]
+  }
+}

@@ -25,7 +25,9 @@ RUN flutter pub get --enforce-lockfile
 COPY app/lib lib
 COPY app/assets assets
 COPY app/web web
-RUN flutter build web --release --no-web-resources-cdn \
+# "true" only in development (compose.development.yaml); CI and every release build with the default.
+ARG VELOMINE_SEMANTICS=false
+RUN flutter build web --release --no-web-resources-cdn --dart-define=VELOMINE_SEMANTICS=${VELOMINE_SEMANTICS} \
     && find build/web -name '*.map' -delete
 
 # The official nginx image, as the unprivileged nginx user, on port 8080. It writes only to /tmp.

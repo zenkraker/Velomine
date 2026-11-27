@@ -24,6 +24,14 @@
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp?skills=inspect,triage"
     },
+    "playwright": {
+      "type": "stdio",
+      "command": "playwright-mcp",
+      "args": [
+        "--config",
+        "tools/playwright-mcp.json"
+      ]
+    },
     "scaleway": {
       "type": "stdio",
       "command": "scw",

@@ -26,11 +26,16 @@ seed() { # source folder, target folder
 seed "$here/config/claude" "$HOME/.state/claude"
 seed "$here/config/pi" "$HOME/.state/pi"
 
-# The two agent programs that are npm packages, into the volume so they survive a rebuild and are on PATH through
-# remoteEnv: Claude Code, and the local Sentry MCP server Pi starts. Update them deliberately.
-# CodeGraph, the Sentry CLI and the Scaleway CLI are in the image (Dockerfile).
+# The agent programs that are npm packages, into the volume so they survive a rebuild and are on PATH through
+# the image's PATH (Dockerfile): Claude Code, the local Sentry MCP server Pi starts, and the Playwright MCP server, the
+# agents' browser. Update them deliberately. CodeGraph, the Sentry CLI and the Scaleway CLI are in the image (Dockerfile).
 npm install -g --prefix "$HOME/.state/npm-global" \
   @anthropic-ai/claude-code@2.1.329 \
-  @sentry/mcp-server@0.49.0
+  @sentry/mcp-server@0.49.0 \
+  @playwright/mcp@0.0.86
+
+# Playwright's headless Chromium, the exact build the Playwright inside the MCP server asks for, into the cache volume
+# (PLAYWRIGHT_BROWSERS_PATH in devcontainer.json). The libraries it needs are in the image (Dockerfile).
+"$HOME/.state/npm-global/lib/node_modules/@playwright/mcp/node_modules/.bin/playwright" install --only-shell chromium
 
 echo "velomine: dev container ready."

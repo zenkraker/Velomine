@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -12,6 +13,11 @@ import 'root.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Only the development web build sets this (compose.development.yaml): the browser agent then sees every page by
+  // the names of its buttons and fields from the first frame. A release leaves it to the platform's screen readers.
+  if (const bool.fromEnvironment('VELOMINE_SEMANTICS')) {
+    SemanticsBinding.instance.ensureSemantics();
+  }
   usePathUrlStrategy(); // real URLs on the web ("/rides"), not "/#/rides"; the server falls back to index.html
 
   final container = ProviderContainer(

@@ -59,6 +59,7 @@ App:
 
 Environment:
 - A tool needed to build or test goes into `.devcontainer/` at a pinned version. Running the stack needs Docker only, and no script runs the server from the host shell.
+- A tool in the dev container is found through the image, never through `remoteEnv` (it reaches only the editor's own processes, not the agent or its MCP servers). A single binary goes into `/usr/local/bin`, by download or symlink (`just`, `scw`, `sentry-cli`, `gh`, `flutter`, `dart`). A tool with a `bin` folder of its own, or one that fills up after the build, gets an entry in the Dockerfile's `ENV PATH` (npm-global, the pub cache, Android platform-tools, CodeGraph).
 - The Flutter version agrees between `app/Dockerfile` and `.devcontainer/Dockerfile` (`tools/check-versions.sh`). Never publish `latest`.
 
 ## Security and privacy in code

@@ -28,6 +28,12 @@ services:
       timeout: 3s
       retries: 10
 
+  web:
+    build:
+      args:
+        # The page's names for the browser agent, from the first frame (app/lib/main.dart). Never set in a release.
+        VELOMINE_SEMANTICS: "true"
+
   server:
     depends_on:
       dex:

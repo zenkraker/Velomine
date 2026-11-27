@@ -19,6 +19,12 @@
       "exposure": "deferred",
       "description": "Read-only Sentry: production errors, traces and logs"
     },
+    "playwright": {
+      "command": "playwright-mcp",
+      "args": ["--config", "tools/playwright-mcp.json"],
+      "exposure": "deferred",
+      "description": "A browser for the running app on localhost:8080: pages by their names, clicks, screenshots, console and network"
+    },
     "scaleway": {
       "command": "scw",
       "args": [
